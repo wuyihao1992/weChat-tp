@@ -1,0 +1,15 @@
+#idea
+.idea
+*.iml
+*.ipr
+*.iws
+
+#eclipse
+.project
+.settings
+
+/Public/bower_components
+/Public/node_modules
+
+*/**/*.bak
+/Application/Runtime
