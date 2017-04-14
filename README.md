@@ -5,7 +5,7 @@ This is a ThinkPHP project for weChat
 #### {{hostname}} 域名/ip地址
 *   运行环境：php + apache + mysql
 *   构建工具：node + npm + gulp + bower + sass
-*   开发环境：http://localhost:8088
+*   开发环境：hostname = http://localhost:8088
 
 #### 首页地址
 *   {{hostname}}/weChat/
