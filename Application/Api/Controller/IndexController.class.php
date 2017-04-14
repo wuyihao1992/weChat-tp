@@ -72,9 +72,17 @@
 		
 		public function test($data){
 			echo 'success! welcome to Index/test<br/>';
-			echo 'data:';
-			var_dump($data);
+			echo '您请求的参数为:<br/>';
+
+			$str = '';
+			foreach ($data as $k => $val){
+                $str .= '<tr><td>'. $k .'</td><td>'. $val .'</td></tr>';
+            }
+
+            echo '<style>#table-5 thead th {background-color: rgb(156, 186, 95);color: #fff;border-bottom-width: 0;}#table-5 td {color: #000;}#table-5 tr, #table-5 th {border: 1px solid rgb(156, 186, 95);}#table-5 td, #table-5 th {padding: 5px 10px;font-size: 12px;font-family: Verdana;font-weight: bold;}#table-5 tr:nth-child(even){background: rgb(230, 238, 214)}#table-5 tr:nth-child(odd){background: #FFF}</style>'.
+                '<table id="table-5"><thead><tr><td>参数</td><td>值</td></tr></thead><tbody>'. $str .'</tbody></table>';
 		}
 	}
 
 ?>
+

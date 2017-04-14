@@ -28,7 +28,7 @@ This is a ThinkPHP project for weChat
 *   参数说明：
   
         `tranCode` : 业务操作码
-        `data`  : 业务参数
+        `data`  : 业务操作对应参数
 
 
 #### 后台管理地址
