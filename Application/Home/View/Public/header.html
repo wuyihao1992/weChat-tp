@@ -15,11 +15,21 @@
 	<link href="__PUBLIC__/img/favicon.ico" rel="shortcut icon" type="image/x-icon">
 		
     <link href="__PUBLIC__/assets/css/framework.css?v=${STARTUP}" rel="stylesheet"/>
-	<script src="__PUBLIC__/assets/js/framework.js?v=${STARTUP}" ></script>
-	<script src="__PUBLIC__/assets/layer/layer.js?v=${STARTUP}" ></script>			
+	<script src="__PUBLIC__/assets/js/framework.js?v=${STARTUP}"></script>
+	<script src="__PUBLIC__/assets/layer/layer.js?v=${STARTUP}"></script>
 		
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
       <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
-    <![endif]-->		
+    <![endif]-->
+
+    <script src="//cdn.bootcss.com/require.js/2.3.2/require.min.js" data-main="__PUBLIC__/js/main"></script>
+    <script>
+        define('conf',{
+            path : '__ROOT__',
+            app : '__APP__',
+            PUBLIC : '__PUBLIC__',
+            version : '${STARTUP}'
+        });
+    </script>
 </head>

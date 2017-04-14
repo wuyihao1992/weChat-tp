@@ -1,6 +1,5 @@
 !define(['conf'] , function($conf){
-
-	var unSerial = function( key ){
+	var unSerial = function(key){
 		var data = location.hash.replace(/^#/,'').split('!');
 		if( data.length < 3 )return {};
 		var tab = {tabs:{},active:data[0]};
@@ -18,30 +17,30 @@
 	var Controller = function(){
 
 		this.request = function( param ){
-            if( !param.url || !param.module )return false;
+            if( !param.url || !param.module ){
+                return false;
+			}
 
-			serial( param );
+			serial(param);
 
-			if( param.title && $tab.tabs('exists', param.title ) ){
+			if(param.title){
 //				$tab.tabs('select', param.title );
 				return ;
 			}
-			return;
-
         };
 
 		this.reload = function(){
 			location.reload();
 		};
 
-		this.getParam = function( name ){
+		this.getParam = function(name){
 			return unSerial(name);
-		}
+		};
 
 		this.back = function(){
 			history.back();
 			this.reload();
-		}
+		};
 	};
 
 	return new Controller;

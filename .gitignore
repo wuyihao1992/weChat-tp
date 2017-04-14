@@ -1,15 +1,19 @@
-#idea
+# idea
 .idea
 *.iml
 *.ipr
 *.iws
 
-#eclipse
+# eclipse
 .project
 .settings
 
+# Public
 /Public/bower_components
 /Public/node_modules
 
+# app
 */**/*.bak
 /Application/Runtime
+# /Application/Home/View/Index/test.html
+# /Public/js/models/Home/Index/test.js

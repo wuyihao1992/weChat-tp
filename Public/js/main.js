@@ -13,36 +13,56 @@
 
 	require.config({
 		urlArgs: $conf.version,
-		basePath: $conf.path + '/js/',
+		basePath: $conf.PUBLIC + '/js/',
 		paths: {
-//			"easyuiOption": $conf.path + '/js/easyuiCustomOptions',
+			"easyuiOption": $conf.path + '/js/easyuiCustomOptions'
 		}
 	});
 
 //	require(['menu'],function( menu ){ menu() });
 
-	require(['controller', 'conf' ], function(controller, $conf) {
+	require(['controller', 'conf'], function(controller, $conf) {
+        // TODO: 加载js模块
+        var paths = location.pathname.replace(/^\//, '').replace(/;.*$/, '').split(/(?!^)\//)
+        var tab = paths[paths.length - 1],
+            module = paths[paths.length - 2],
+            pModule = paths[paths.length - 3];
+        /*
+        console.group('main');
+        console.log(window.location);
+        console.log(paths);
+        console.log(tab);
+        console.log(module);
+        console.log(pModule);
+        console.groupEnd();
+        */
+        if(['login', 'main'].indexOf(tab) > -1){
+            require(['m_' + tab]);
+        }else{
+            require([$conf.PUBLIC + '/js/models/' + pModule + '/' + module + '/' + tab + '.js']);
+        }
 
-		if( !$conf.isFrame )controller.request(controller.getParam() || {});
-
-		NProgress = parent.NProgress;
-
+		// NProgress = parent.NProgress;
 		NProgress.count = 0;
-		NProgress.configure({ trickleRate: 0.01, trickleSpeed: 800 });
+        NProgress.configure({
+            trickleRate: 0.01,
+            trickleSpeed: 800
+		});
+
 		$(document).on('click', '[data-url]', function() {
 			controller.request($(this).data());
-		}).on('ajaxStart',function(){
+		}).on('ajaxStart', function(){
 			NProgress.start();
 			NProgress.count++;
-		}).on('ajaxStop',function(){
+		}).on('ajaxStop', function(){
 			NProgress.count--;
 			NProgress.count < 0 && (NProgress.count = 0);
 			NProgress.count == 0 && NProgress.done();
 		});
 
-//		$('#userName').html(userInfo.name);
-
-		if( !$conf.isFrame )return;
+		if(!$conf.isFrame){
+            return;
+        }
 
 		param = controller.getParam();
 

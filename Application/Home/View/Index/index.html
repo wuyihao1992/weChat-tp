@@ -1,22 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN">
-	
 	<include file="Public/header" />
-
-	<body style="overflow-y: hidden;">
-		welcome to home
+	<body>
+		welcome to Home
 		
 		<include file="Public/app" />
-		
-		<script src="//cdn.bootcss.com/require.js/2.3.2/require.min.js" data-main="__PUBLIC__/js/main" ></script>
-		<script>
-			define('conf',{
-				path : '__ROOT__',
-				app : '__APP__',
-				PUBLIC : '__PUBLIC__',
-				version : '${STARTUP}'
-			});
-		</script>		
-		
 	</body>
 </html>

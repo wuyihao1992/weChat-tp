@@ -106,15 +106,15 @@ gulp.task('framework', function() {
 
 gulp.task('js', function() {
     return gulp.src([])
-                    .pipe(maps.init())
-                    .pipe(concat('base-data.js'))
-                    .pipe(gulp.dest('assets/js'))
-                    .pipe(rename({
-                        suffix: '.min'
-                    }))
-                    .pipe(uglify())
-                    .pipe(maps.write('.'))
-                    .pipe(gulp.dest('assets/js'));
+        .pipe(maps.init())
+        .pipe(concat('base-data.js'))
+        .pipe(gulp.dest('assets/js'))
+        .pipe(rename({
+            suffix: '.min'
+        }))
+        .pipe(uglify())
+        .pipe(maps.write('.'))
+        .pipe(gulp.dest('assets/js'));
 });
 
 gulp.task('watch', ['clean', 'sass'], function() {
