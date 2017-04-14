@@ -1,7 +1,11 @@
-﻿npm install --save-dev
+﻿#### install
+*   npm install --save-dev
+*   bower install
 
-bower install
+#### run task
+*   gulp framework
+*   gulp sass
+*   gulp
 
-gulp framework
-
-gulp sass
+#### run server
+*   node server

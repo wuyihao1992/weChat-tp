@@ -56,7 +56,7 @@ gulp.task('framework', function() {
             'bower_components/distpicker/dist/distpicker.data.min.js',
             'bower_components/distpicker/dist/distpicker.min.js',
             'bower_components/jquery.dateFormat.min/index.js'
-        ])
+    ])
         .pipe(maps.init())
         .pipe(concat('framework.js'))
         //.pipe(uglify())
@@ -70,7 +70,7 @@ gulp.task('framework', function() {
             'bower_components/easyui/themes/metro-pms/easyui.css',
             'bower_components/easyui/themes/icon.css',
             'bower_components/easyui/themes/color.css'
-        ])
+    ])
         .pipe(maps.init())
         .pipe(cleanCSS())
         .pipe(concat('framework.css'))
@@ -87,10 +87,12 @@ gulp.task('framework', function() {
             'bower_components/easyui/themes/icons/*'
         ])
         .pipe(gulp.dest('assets/css/icons'));
+
     gulp.src([
             'bower_components/easyui/themes/metro-pms/images/*'
         ])
         .pipe(gulp.dest('assets/css/images'));
+
     gulp.src([
         'bower_components/layer/src/**/*'
     ])
@@ -100,21 +102,19 @@ gulp.task('framework', function() {
         'sass/layerskin*/*.css'
     ])
         .pipe(gulp.dest('assets/layer/skin'));
-
-
 });
 
 gulp.task('js', function() {
     return gulp.src([])
-        .pipe(maps.init())
-        .pipe(concat('base-data.js'))
-        .pipe(gulp.dest('assets/js'))
-        .pipe(rename({
-            suffix: '.min'
-        }))
-        .pipe(uglify())
-        .pipe(maps.write('.'))
-        .pipe(gulp.dest('assets/js'));
+                    .pipe(maps.init())
+                    .pipe(concat('base-data.js'))
+                    .pipe(gulp.dest('assets/js'))
+                    .pipe(rename({
+                        suffix: '.min'
+                    }))
+                    .pipe(uglify())
+                    .pipe(maps.write('.'))
+                    .pipe(gulp.dest('assets/js'));
 });
 
 gulp.task('watch', ['clean', 'sass'], function() {

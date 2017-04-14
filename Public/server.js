@@ -17,7 +17,7 @@ var proxySrv = function(req, res) {
 			console.log('response data \n', data);
 			res.write(data);
 		}).on('end', () => {
-			res.end()
+			res.end();
 		});
 	});
 
