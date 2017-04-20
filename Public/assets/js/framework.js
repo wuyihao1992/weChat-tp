@@ -9813,2384 +9813,6 @@ if ( !noGlobal ) {
 return jQuery;
 }));
 
-/*!
- * Bootstrap v3.3.7 (http://getbootstrap.com)
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under the MIT license
- */
-
-if (typeof jQuery === 'undefined') {
-  throw new Error('Bootstrap\'s JavaScript requires jQuery')
-}
-
-+function ($) {
-  'use strict';
-  var version = $.fn.jquery.split(' ')[0].split('.')
-  if ((version[0] < 2 && version[1] < 9) || (version[0] == 1 && version[1] == 9 && version[2] < 1) || (version[0] > 3)) {
-    throw new Error('Bootstrap\'s JavaScript requires jQuery version 1.9.1 or higher, but lower than version 4')
-  }
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: transition.js v3.3.7
- * http://getbootstrap.com/javascript/#transitions
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
-  // ============================================================
-
-  function transitionEnd() {
-    var el = document.createElement('bootstrap')
-
-    var transEndEventNames = {
-      WebkitTransition : 'webkitTransitionEnd',
-      MozTransition    : 'transitionend',
-      OTransition      : 'oTransitionEnd otransitionend',
-      transition       : 'transitionend'
-    }
-
-    for (var name in transEndEventNames) {
-      if (el.style[name] !== undefined) {
-        return { end: transEndEventNames[name] }
-      }
-    }
-
-    return false // explicit for ie8 (  ._.)
-  }
-
-  // http://blog.alexmaccaw.com/css-transitions
-  $.fn.emulateTransitionEnd = function (duration) {
-    var called = false
-    var $el = this
-    $(this).one('bsTransitionEnd', function () { called = true })
-    var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
-    setTimeout(callback, duration)
-    return this
-  }
-
-  $(function () {
-    $.support.transition = transitionEnd()
-
-    if (!$.support.transition) return
-
-    $.event.special.bsTransitionEnd = {
-      bindType: $.support.transition.end,
-      delegateType: $.support.transition.end,
-      handle: function (e) {
-        if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
-      }
-    }
-  })
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: alert.js v3.3.7
- * http://getbootstrap.com/javascript/#alerts
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // ALERT CLASS DEFINITION
-  // ======================
-
-  var dismiss = '[data-dismiss="alert"]'
-  var Alert   = function (el) {
-    $(el).on('click', dismiss, this.close)
-  }
-
-  Alert.VERSION = '3.3.7'
-
-  Alert.TRANSITION_DURATION = 150
-
-  Alert.prototype.close = function (e) {
-    var $this    = $(this)
-    var selector = $this.attr('data-target')
-
-    if (!selector) {
-      selector = $this.attr('href')
-      selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
-    }
-
-    var $parent = $(selector === '#' ? [] : selector)
-
-    if (e) e.preventDefault()
-
-    if (!$parent.length) {
-      $parent = $this.closest('.alert')
-    }
-
-    $parent.trigger(e = $.Event('close.bs.alert'))
-
-    if (e.isDefaultPrevented()) return
-
-    $parent.removeClass('in')
-
-    function removeElement() {
-      // detach from parent, fire event then clean up data
-      $parent.detach().trigger('closed.bs.alert').remove()
-    }
-
-    $.support.transition && $parent.hasClass('fade') ?
-      $parent
-        .one('bsTransitionEnd', removeElement)
-        .emulateTransitionEnd(Alert.TRANSITION_DURATION) :
-      removeElement()
-  }
-
-
-  // ALERT PLUGIN DEFINITION
-  // =======================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this = $(this)
-      var data  = $this.data('bs.alert')
-
-      if (!data) $this.data('bs.alert', (data = new Alert(this)))
-      if (typeof option == 'string') data[option].call($this)
-    })
-  }
-
-  var old = $.fn.alert
-
-  $.fn.alert             = Plugin
-  $.fn.alert.Constructor = Alert
-
-
-  // ALERT NO CONFLICT
-  // =================
-
-  $.fn.alert.noConflict = function () {
-    $.fn.alert = old
-    return this
-  }
-
-
-  // ALERT DATA-API
-  // ==============
-
-  $(document).on('click.bs.alert.data-api', dismiss, Alert.prototype.close)
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: button.js v3.3.7
- * http://getbootstrap.com/javascript/#buttons
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // BUTTON PUBLIC CLASS DEFINITION
-  // ==============================
-
-  var Button = function (element, options) {
-    this.$element  = $(element)
-    this.options   = $.extend({}, Button.DEFAULTS, options)
-    this.isLoading = false
-  }
-
-  Button.VERSION  = '3.3.7'
-
-  Button.DEFAULTS = {
-    loadingText: 'loading...'
-  }
-
-  Button.prototype.setState = function (state) {
-    var d    = 'disabled'
-    var $el  = this.$element
-    var val  = $el.is('input') ? 'val' : 'html'
-    var data = $el.data()
-
-    state += 'Text'
-
-    if (data.resetText == null) $el.data('resetText', $el[val]())
-
-    // push to event loop to allow forms to submit
-    setTimeout($.proxy(function () {
-      $el[val](data[state] == null ? this.options[state] : data[state])
-
-      if (state == 'loadingText') {
-        this.isLoading = true
-        $el.addClass(d).attr(d, d).prop(d, true)
-      } else if (this.isLoading) {
-        this.isLoading = false
-        $el.removeClass(d).removeAttr(d).prop(d, false)
-      }
-    }, this), 0)
-  }
-
-  Button.prototype.toggle = function () {
-    var changed = true
-    var $parent = this.$element.closest('[data-toggle="buttons"]')
-
-    if ($parent.length) {
-      var $input = this.$element.find('input')
-      if ($input.prop('type') == 'radio') {
-        if ($input.prop('checked')) changed = false
-        $parent.find('.active').removeClass('active')
-        this.$element.addClass('active')
-      } else if ($input.prop('type') == 'checkbox') {
-        if (($input.prop('checked')) !== this.$element.hasClass('active')) changed = false
-        this.$element.toggleClass('active')
-      }
-      $input.prop('checked', this.$element.hasClass('active'))
-      if (changed) $input.trigger('change')
-    } else {
-      this.$element.attr('aria-pressed', !this.$element.hasClass('active'))
-      this.$element.toggleClass('active')
-    }
-  }
-
-
-  // BUTTON PLUGIN DEFINITION
-  // ========================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.button')
-      var options = typeof option == 'object' && option
-
-      if (!data) $this.data('bs.button', (data = new Button(this, options)))
-
-      if (option == 'toggle') data.toggle()
-      else if (option) data.setState(option)
-    })
-  }
-
-  var old = $.fn.button
-
-  $.fn.button             = Plugin
-  $.fn.button.Constructor = Button
-
-
-  // BUTTON NO CONFLICT
-  // ==================
-
-  $.fn.button.noConflict = function () {
-    $.fn.button = old
-    return this
-  }
-
-
-  // BUTTON DATA-API
-  // ===============
-
-  $(document)
-    .on('click.bs.button.data-api', '[data-toggle^="button"]', function (e) {
-      var $btn = $(e.target).closest('.btn')
-      Plugin.call($btn, 'toggle')
-      if (!($(e.target).is('input[type="radio"], input[type="checkbox"]'))) {
-        // Prevent double click on radios, and the double selections (so cancellation) on checkboxes
-        e.preventDefault()
-        // The target component still receive the focus
-        if ($btn.is('input,button')) $btn.trigger('focus')
-        else $btn.find('input:visible,button:visible').first().trigger('focus')
-      }
-    })
-    .on('focus.bs.button.data-api blur.bs.button.data-api', '[data-toggle^="button"]', function (e) {
-      $(e.target).closest('.btn').toggleClass('focus', /^focus(in)?$/.test(e.type))
-    })
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: carousel.js v3.3.7
- * http://getbootstrap.com/javascript/#carousel
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // CAROUSEL CLASS DEFINITION
-  // =========================
-
-  var Carousel = function (element, options) {
-    this.$element    = $(element)
-    this.$indicators = this.$element.find('.carousel-indicators')
-    this.options     = options
-    this.paused      = null
-    this.sliding     = null
-    this.interval    = null
-    this.$active     = null
-    this.$items      = null
-
-    this.options.keyboard && this.$element.on('keydown.bs.carousel', $.proxy(this.keydown, this))
-
-    this.options.pause == 'hover' && !('ontouchstart' in document.documentElement) && this.$element
-      .on('mouseenter.bs.carousel', $.proxy(this.pause, this))
-      .on('mouseleave.bs.carousel', $.proxy(this.cycle, this))
-  }
-
-  Carousel.VERSION  = '3.3.7'
-
-  Carousel.TRANSITION_DURATION = 600
-
-  Carousel.DEFAULTS = {
-    interval: 5000,
-    pause: 'hover',
-    wrap: true,
-    keyboard: true
-  }
-
-  Carousel.prototype.keydown = function (e) {
-    if (/input|textarea/i.test(e.target.tagName)) return
-    switch (e.which) {
-      case 37: this.prev(); break
-      case 39: this.next(); break
-      default: return
-    }
-
-    e.preventDefault()
-  }
-
-  Carousel.prototype.cycle = function (e) {
-    e || (this.paused = false)
-
-    this.interval && clearInterval(this.interval)
-
-    this.options.interval
-      && !this.paused
-      && (this.interval = setInterval($.proxy(this.next, this), this.options.interval))
-
-    return this
-  }
-
-  Carousel.prototype.getItemIndex = function (item) {
-    this.$items = item.parent().children('.item')
-    return this.$items.index(item || this.$active)
-  }
-
-  Carousel.prototype.getItemForDirection = function (direction, active) {
-    var activeIndex = this.getItemIndex(active)
-    var willWrap = (direction == 'prev' && activeIndex === 0)
-                || (direction == 'next' && activeIndex == (this.$items.length - 1))
-    if (willWrap && !this.options.wrap) return active
-    var delta = direction == 'prev' ? -1 : 1
-    var itemIndex = (activeIndex + delta) % this.$items.length
-    return this.$items.eq(itemIndex)
-  }
-
-  Carousel.prototype.to = function (pos) {
-    var that        = this
-    var activeIndex = this.getItemIndex(this.$active = this.$element.find('.item.active'))
-
-    if (pos > (this.$items.length - 1) || pos < 0) return
-
-    if (this.sliding)       return this.$element.one('slid.bs.carousel', function () { that.to(pos) }) // yes, "slid"
-    if (activeIndex == pos) return this.pause().cycle()
-
-    return this.slide(pos > activeIndex ? 'next' : 'prev', this.$items.eq(pos))
-  }
-
-  Carousel.prototype.pause = function (e) {
-    e || (this.paused = true)
-
-    if (this.$element.find('.next, .prev').length && $.support.transition) {
-      this.$element.trigger($.support.transition.end)
-      this.cycle(true)
-    }
-
-    this.interval = clearInterval(this.interval)
-
-    return this
-  }
-
-  Carousel.prototype.next = function () {
-    if (this.sliding) return
-    return this.slide('next')
-  }
-
-  Carousel.prototype.prev = function () {
-    if (this.sliding) return
-    return this.slide('prev')
-  }
-
-  Carousel.prototype.slide = function (type, next) {
-    var $active   = this.$element.find('.item.active')
-    var $next     = next || this.getItemForDirection(type, $active)
-    var isCycling = this.interval
-    var direction = type == 'next' ? 'left' : 'right'
-    var that      = this
-
-    if ($next.hasClass('active')) return (this.sliding = false)
-
-    var relatedTarget = $next[0]
-    var slideEvent = $.Event('slide.bs.carousel', {
-      relatedTarget: relatedTarget,
-      direction: direction
-    })
-    this.$element.trigger(slideEvent)
-    if (slideEvent.isDefaultPrevented()) return
-
-    this.sliding = true
-
-    isCycling && this.pause()
-
-    if (this.$indicators.length) {
-      this.$indicators.find('.active').removeClass('active')
-      var $nextIndicator = $(this.$indicators.children()[this.getItemIndex($next)])
-      $nextIndicator && $nextIndicator.addClass('active')
-    }
-
-    var slidEvent = $.Event('slid.bs.carousel', { relatedTarget: relatedTarget, direction: direction }) // yes, "slid"
-    if ($.support.transition && this.$element.hasClass('slide')) {
-      $next.addClass(type)
-      $next[0].offsetWidth // force reflow
-      $active.addClass(direction)
-      $next.addClass(direction)
-      $active
-        .one('bsTransitionEnd', function () {
-          $next.removeClass([type, direction].join(' ')).addClass('active')
-          $active.removeClass(['active', direction].join(' '))
-          that.sliding = false
-          setTimeout(function () {
-            that.$element.trigger(slidEvent)
-          }, 0)
-        })
-        .emulateTransitionEnd(Carousel.TRANSITION_DURATION)
-    } else {
-      $active.removeClass('active')
-      $next.addClass('active')
-      this.sliding = false
-      this.$element.trigger(slidEvent)
-    }
-
-    isCycling && this.cycle()
-
-    return this
-  }
-
-
-  // CAROUSEL PLUGIN DEFINITION
-  // ==========================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.carousel')
-      var options = $.extend({}, Carousel.DEFAULTS, $this.data(), typeof option == 'object' && option)
-      var action  = typeof option == 'string' ? option : options.slide
-
-      if (!data) $this.data('bs.carousel', (data = new Carousel(this, options)))
-      if (typeof option == 'number') data.to(option)
-      else if (action) data[action]()
-      else if (options.interval) data.pause().cycle()
-    })
-  }
-
-  var old = $.fn.carousel
-
-  $.fn.carousel             = Plugin
-  $.fn.carousel.Constructor = Carousel
-
-
-  // CAROUSEL NO CONFLICT
-  // ====================
-
-  $.fn.carousel.noConflict = function () {
-    $.fn.carousel = old
-    return this
-  }
-
-
-  // CAROUSEL DATA-API
-  // =================
-
-  var clickHandler = function (e) {
-    var href
-    var $this   = $(this)
-    var $target = $($this.attr('data-target') || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')) // strip for ie7
-    if (!$target.hasClass('carousel')) return
-    var options = $.extend({}, $target.data(), $this.data())
-    var slideIndex = $this.attr('data-slide-to')
-    if (slideIndex) options.interval = false
-
-    Plugin.call($target, options)
-
-    if (slideIndex) {
-      $target.data('bs.carousel').to(slideIndex)
-    }
-
-    e.preventDefault()
-  }
-
-  $(document)
-    .on('click.bs.carousel.data-api', '[data-slide]', clickHandler)
-    .on('click.bs.carousel.data-api', '[data-slide-to]', clickHandler)
-
-  $(window).on('load', function () {
-    $('[data-ride="carousel"]').each(function () {
-      var $carousel = $(this)
-      Plugin.call($carousel, $carousel.data())
-    })
-  })
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: collapse.js v3.3.7
- * http://getbootstrap.com/javascript/#collapse
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-/* jshint latedef: false */
-
-+function ($) {
-  'use strict';
-
-  // COLLAPSE PUBLIC CLASS DEFINITION
-  // ================================
-
-  var Collapse = function (element, options) {
-    this.$element      = $(element)
-    this.options       = $.extend({}, Collapse.DEFAULTS, options)
-    this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
-                           '[data-toggle="collapse"][data-target="#' + element.id + '"]')
-    this.transitioning = null
-
-    if (this.options.parent) {
-      this.$parent = this.getParent()
-    } else {
-      this.addAriaAndCollapsedClass(this.$element, this.$trigger)
-    }
-
-    if (this.options.toggle) this.toggle()
-  }
-
-  Collapse.VERSION  = '3.3.7'
-
-  Collapse.TRANSITION_DURATION = 350
-
-  Collapse.DEFAULTS = {
-    toggle: true
-  }
-
-  Collapse.prototype.dimension = function () {
-    var hasWidth = this.$element.hasClass('width')
-    return hasWidth ? 'width' : 'height'
-  }
-
-  Collapse.prototype.show = function () {
-    if (this.transitioning || this.$element.hasClass('in')) return
-
-    var activesData
-    var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
-
-    if (actives && actives.length) {
-      activesData = actives.data('bs.collapse')
-      if (activesData && activesData.transitioning) return
-    }
-
-    var startEvent = $.Event('show.bs.collapse')
-    this.$element.trigger(startEvent)
-    if (startEvent.isDefaultPrevented()) return
-
-    if (actives && actives.length) {
-      Plugin.call(actives, 'hide')
-      activesData || actives.data('bs.collapse', null)
-    }
-
-    var dimension = this.dimension()
-
-    this.$element
-      .removeClass('collapse')
-      .addClass('collapsing')[dimension](0)
-      .attr('aria-expanded', true)
-
-    this.$trigger
-      .removeClass('collapsed')
-      .attr('aria-expanded', true)
-
-    this.transitioning = 1
-
-    var complete = function () {
-      this.$element
-        .removeClass('collapsing')
-        .addClass('collapse in')[dimension]('')
-      this.transitioning = 0
-      this.$element
-        .trigger('shown.bs.collapse')
-    }
-
-    if (!$.support.transition) return complete.call(this)
-
-    var scrollSize = $.camelCase(['scroll', dimension].join('-'))
-
-    this.$element
-      .one('bsTransitionEnd', $.proxy(complete, this))
-      .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
-  }
-
-  Collapse.prototype.hide = function () {
-    if (this.transitioning || !this.$element.hasClass('in')) return
-
-    var startEvent = $.Event('hide.bs.collapse')
-    this.$element.trigger(startEvent)
-    if (startEvent.isDefaultPrevented()) return
-
-    var dimension = this.dimension()
-
-    this.$element[dimension](this.$element[dimension]())[0].offsetHeight
-
-    this.$element
-      .addClass('collapsing')
-      .removeClass('collapse in')
-      .attr('aria-expanded', false)
-
-    this.$trigger
-      .addClass('collapsed')
-      .attr('aria-expanded', false)
-
-    this.transitioning = 1
-
-    var complete = function () {
-      this.transitioning = 0
-      this.$element
-        .removeClass('collapsing')
-        .addClass('collapse')
-        .trigger('hidden.bs.collapse')
-    }
-
-    if (!$.support.transition) return complete.call(this)
-
-    this.$element
-      [dimension](0)
-      .one('bsTransitionEnd', $.proxy(complete, this))
-      .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
-  }
-
-  Collapse.prototype.toggle = function () {
-    this[this.$element.hasClass('in') ? 'hide' : 'show']()
-  }
-
-  Collapse.prototype.getParent = function () {
-    return $(this.options.parent)
-      .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
-      .each($.proxy(function (i, element) {
-        var $element = $(element)
-        this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
-      }, this))
-      .end()
-  }
-
-  Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
-    var isOpen = $element.hasClass('in')
-
-    $element.attr('aria-expanded', isOpen)
-    $trigger
-      .toggleClass('collapsed', !isOpen)
-      .attr('aria-expanded', isOpen)
-  }
-
-  function getTargetFromTrigger($trigger) {
-    var href
-    var target = $trigger.attr('data-target')
-      || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
-
-    return $(target)
-  }
-
-
-  // COLLAPSE PLUGIN DEFINITION
-  // ==========================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.collapse')
-      var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
-
-      if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
-      if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  var old = $.fn.collapse
-
-  $.fn.collapse             = Plugin
-  $.fn.collapse.Constructor = Collapse
-
-
-  // COLLAPSE NO CONFLICT
-  // ====================
-
-  $.fn.collapse.noConflict = function () {
-    $.fn.collapse = old
-    return this
-  }
-
-
-  // COLLAPSE DATA-API
-  // =================
-
-  $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
-    var $this   = $(this)
-
-    if (!$this.attr('data-target')) e.preventDefault()
-
-    var $target = getTargetFromTrigger($this)
-    var data    = $target.data('bs.collapse')
-    var option  = data ? 'toggle' : $this.data()
-
-    Plugin.call($target, option)
-  })
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: dropdown.js v3.3.7
- * http://getbootstrap.com/javascript/#dropdowns
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // DROPDOWN CLASS DEFINITION
-  // =========================
-
-  var backdrop = '.dropdown-backdrop'
-  var toggle   = '[data-toggle="dropdown"]'
-  var Dropdown = function (element) {
-    $(element).on('click.bs.dropdown', this.toggle)
-  }
-
-  Dropdown.VERSION = '3.3.7'
-
-  function getParent($this) {
-    var selector = $this.attr('data-target')
-
-    if (!selector) {
-      selector = $this.attr('href')
-      selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
-    }
-
-    var $parent = selector && $(selector)
-
-    return $parent && $parent.length ? $parent : $this.parent()
-  }
-
-  function clearMenus(e) {
-    if (e && e.which === 3) return
-    $(backdrop).remove()
-    $(toggle).each(function () {
-      var $this         = $(this)
-      var $parent       = getParent($this)
-      var relatedTarget = { relatedTarget: this }
-
-      if (!$parent.hasClass('open')) return
-
-      if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
-
-      $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
-
-      if (e.isDefaultPrevented()) return
-
-      $this.attr('aria-expanded', 'false')
-      $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
-    })
-  }
-
-  Dropdown.prototype.toggle = function (e) {
-    var $this = $(this)
-
-    if ($this.is('.disabled, :disabled')) return
-
-    var $parent  = getParent($this)
-    var isActive = $parent.hasClass('open')
-
-    clearMenus()
-
-    if (!isActive) {
-      if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
-        // if mobile we use a backdrop because click events don't delegate
-        $(document.createElement('div'))
-          .addClass('dropdown-backdrop')
-          .insertAfter($(this))
-          .on('click', clearMenus)
-      }
-
-      var relatedTarget = { relatedTarget: this }
-      $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
-
-      if (e.isDefaultPrevented()) return
-
-      $this
-        .trigger('focus')
-        .attr('aria-expanded', 'true')
-
-      $parent
-        .toggleClass('open')
-        .trigger($.Event('shown.bs.dropdown', relatedTarget))
-    }
-
-    return false
-  }
-
-  Dropdown.prototype.keydown = function (e) {
-    if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
-
-    var $this = $(this)
-
-    e.preventDefault()
-    e.stopPropagation()
-
-    if ($this.is('.disabled, :disabled')) return
-
-    var $parent  = getParent($this)
-    var isActive = $parent.hasClass('open')
-
-    if (!isActive && e.which != 27 || isActive && e.which == 27) {
-      if (e.which == 27) $parent.find(toggle).trigger('focus')
-      return $this.trigger('click')
-    }
-
-    var desc = ' li:not(.disabled):visible a'
-    var $items = $parent.find('.dropdown-menu' + desc)
-
-    if (!$items.length) return
-
-    var index = $items.index(e.target)
-
-    if (e.which == 38 && index > 0)                 index--         // up
-    if (e.which == 40 && index < $items.length - 1) index++         // down
-    if (!~index)                                    index = 0
-
-    $items.eq(index).trigger('focus')
-  }
-
-
-  // DROPDOWN PLUGIN DEFINITION
-  // ==========================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this = $(this)
-      var data  = $this.data('bs.dropdown')
-
-      if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
-      if (typeof option == 'string') data[option].call($this)
-    })
-  }
-
-  var old = $.fn.dropdown
-
-  $.fn.dropdown             = Plugin
-  $.fn.dropdown.Constructor = Dropdown
-
-
-  // DROPDOWN NO CONFLICT
-  // ====================
-
-  $.fn.dropdown.noConflict = function () {
-    $.fn.dropdown = old
-    return this
-  }
-
-
-  // APPLY TO STANDARD DROPDOWN ELEMENTS
-  // ===================================
-
-  $(document)
-    .on('click.bs.dropdown.data-api', clearMenus)
-    .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
-    .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
-    .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
-    .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: modal.js v3.3.7
- * http://getbootstrap.com/javascript/#modals
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // MODAL CLASS DEFINITION
-  // ======================
-
-  var Modal = function (element, options) {
-    this.options             = options
-    this.$body               = $(document.body)
-    this.$element            = $(element)
-    this.$dialog             = this.$element.find('.modal-dialog')
-    this.$backdrop           = null
-    this.isShown             = null
-    this.originalBodyPad     = null
-    this.scrollbarWidth      = 0
-    this.ignoreBackdropClick = false
-
-    if (this.options.remote) {
-      this.$element
-        .find('.modal-content')
-        .load(this.options.remote, $.proxy(function () {
-          this.$element.trigger('loaded.bs.modal')
-        }, this))
-    }
-  }
-
-  Modal.VERSION  = '3.3.7'
-
-  Modal.TRANSITION_DURATION = 300
-  Modal.BACKDROP_TRANSITION_DURATION = 150
-
-  Modal.DEFAULTS = {
-    backdrop: true,
-    keyboard: true,
-    show: true
-  }
-
-  Modal.prototype.toggle = function (_relatedTarget) {
-    return this.isShown ? this.hide() : this.show(_relatedTarget)
-  }
-
-  Modal.prototype.show = function (_relatedTarget) {
-    var that = this
-    var e    = $.Event('show.bs.modal', { relatedTarget: _relatedTarget })
-
-    this.$element.trigger(e)
-
-    if (this.isShown || e.isDefaultPrevented()) return
-
-    this.isShown = true
-
-    this.checkScrollbar()
-    this.setScrollbar()
-    this.$body.addClass('modal-open')
-
-    this.escape()
-    this.resize()
-
-    this.$element.on('click.dismiss.bs.modal', '[data-dismiss="modal"]', $.proxy(this.hide, this))
-
-    this.$dialog.on('mousedown.dismiss.bs.modal', function () {
-      that.$element.one('mouseup.dismiss.bs.modal', function (e) {
-        if ($(e.target).is(that.$element)) that.ignoreBackdropClick = true
-      })
-    })
-
-    this.backdrop(function () {
-      var transition = $.support.transition && that.$element.hasClass('fade')
-
-      if (!that.$element.parent().length) {
-        that.$element.appendTo(that.$body) // don't move modals dom position
-      }
-
-      that.$element
-        .show()
-        .scrollTop(0)
-
-      that.adjustDialog()
-
-      if (transition) {
-        that.$element[0].offsetWidth // force reflow
-      }
-
-      that.$element.addClass('in')
-
-      that.enforceFocus()
-
-      var e = $.Event('shown.bs.modal', { relatedTarget: _relatedTarget })
-
-      transition ?
-        that.$dialog // wait for modal to slide in
-          .one('bsTransitionEnd', function () {
-            that.$element.trigger('focus').trigger(e)
-          })
-          .emulateTransitionEnd(Modal.TRANSITION_DURATION) :
-        that.$element.trigger('focus').trigger(e)
-    })
-  }
-
-  Modal.prototype.hide = function (e) {
-    if (e) e.preventDefault()
-
-    e = $.Event('hide.bs.modal')
-
-    this.$element.trigger(e)
-
-    if (!this.isShown || e.isDefaultPrevented()) return
-
-    this.isShown = false
-
-    this.escape()
-    this.resize()
-
-    $(document).off('focusin.bs.modal')
-
-    this.$element
-      .removeClass('in')
-      .off('click.dismiss.bs.modal')
-      .off('mouseup.dismiss.bs.modal')
-
-    this.$dialog.off('mousedown.dismiss.bs.modal')
-
-    $.support.transition && this.$element.hasClass('fade') ?
-      this.$element
-        .one('bsTransitionEnd', $.proxy(this.hideModal, this))
-        .emulateTransitionEnd(Modal.TRANSITION_DURATION) :
-      this.hideModal()
-  }
-
-  Modal.prototype.enforceFocus = function () {
-    $(document)
-      .off('focusin.bs.modal') // guard against infinite focus loop
-      .on('focusin.bs.modal', $.proxy(function (e) {
-        if (document !== e.target &&
-            this.$element[0] !== e.target &&
-            !this.$element.has(e.target).length) {
-          this.$element.trigger('focus')
-        }
-      }, this))
-  }
-
-  Modal.prototype.escape = function () {
-    if (this.isShown && this.options.keyboard) {
-      this.$element.on('keydown.dismiss.bs.modal', $.proxy(function (e) {
-        e.which == 27 && this.hide()
-      }, this))
-    } else if (!this.isShown) {
-      this.$element.off('keydown.dismiss.bs.modal')
-    }
-  }
-
-  Modal.prototype.resize = function () {
-    if (this.isShown) {
-      $(window).on('resize.bs.modal', $.proxy(this.handleUpdate, this))
-    } else {
-      $(window).off('resize.bs.modal')
-    }
-  }
-
-  Modal.prototype.hideModal = function () {
-    var that = this
-    this.$element.hide()
-    this.backdrop(function () {
-      that.$body.removeClass('modal-open')
-      that.resetAdjustments()
-      that.resetScrollbar()
-      that.$element.trigger('hidden.bs.modal')
-    })
-  }
-
-  Modal.prototype.removeBackdrop = function () {
-    this.$backdrop && this.$backdrop.remove()
-    this.$backdrop = null
-  }
-
-  Modal.prototype.backdrop = function (callback) {
-    var that = this
-    var animate = this.$element.hasClass('fade') ? 'fade' : ''
-
-    if (this.isShown && this.options.backdrop) {
-      var doAnimate = $.support.transition && animate
-
-      this.$backdrop = $(document.createElement('div'))
-        .addClass('modal-backdrop ' + animate)
-        .appendTo(this.$body)
-
-      this.$element.on('click.dismiss.bs.modal', $.proxy(function (e) {
-        if (this.ignoreBackdropClick) {
-          this.ignoreBackdropClick = false
-          return
-        }
-        if (e.target !== e.currentTarget) return
-        this.options.backdrop == 'static'
-          ? this.$element[0].focus()
-          : this.hide()
-      }, this))
-
-      if (doAnimate) this.$backdrop[0].offsetWidth // force reflow
-
-      this.$backdrop.addClass('in')
-
-      if (!callback) return
-
-      doAnimate ?
-        this.$backdrop
-          .one('bsTransitionEnd', callback)
-          .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :
-        callback()
-
-    } else if (!this.isShown && this.$backdrop) {
-      this.$backdrop.removeClass('in')
-
-      var callbackRemove = function () {
-        that.removeBackdrop()
-        callback && callback()
-      }
-      $.support.transition && this.$element.hasClass('fade') ?
-        this.$backdrop
-          .one('bsTransitionEnd', callbackRemove)
-          .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :
-        callbackRemove()
-
-    } else if (callback) {
-      callback()
-    }
-  }
-
-  // these following methods are used to handle overflowing modals
-
-  Modal.prototype.handleUpdate = function () {
-    this.adjustDialog()
-  }
-
-  Modal.prototype.adjustDialog = function () {
-    var modalIsOverflowing = this.$element[0].scrollHeight > document.documentElement.clientHeight
-
-    this.$element.css({
-      paddingLeft:  !this.bodyIsOverflowing && modalIsOverflowing ? this.scrollbarWidth : '',
-      paddingRight: this.bodyIsOverflowing && !modalIsOverflowing ? this.scrollbarWidth : ''
-    })
-  }
-
-  Modal.prototype.resetAdjustments = function () {
-    this.$element.css({
-      paddingLeft: '',
-      paddingRight: ''
-    })
-  }
-
-  Modal.prototype.checkScrollbar = function () {
-    var fullWindowWidth = window.innerWidth
-    if (!fullWindowWidth) { // workaround for missing window.innerWidth in IE8
-      var documentElementRect = document.documentElement.getBoundingClientRect()
-      fullWindowWidth = documentElementRect.right - Math.abs(documentElementRect.left)
-    }
-    this.bodyIsOverflowing = document.body.clientWidth < fullWindowWidth
-    this.scrollbarWidth = this.measureScrollbar()
-  }
-
-  Modal.prototype.setScrollbar = function () {
-    var bodyPad = parseInt((this.$body.css('padding-right') || 0), 10)
-    this.originalBodyPad = document.body.style.paddingRight || ''
-    if (this.bodyIsOverflowing) this.$body.css('padding-right', bodyPad + this.scrollbarWidth)
-  }
-
-  Modal.prototype.resetScrollbar = function () {
-    this.$body.css('padding-right', this.originalBodyPad)
-  }
-
-  Modal.prototype.measureScrollbar = function () { // thx walsh
-    var scrollDiv = document.createElement('div')
-    scrollDiv.className = 'modal-scrollbar-measure'
-    this.$body.append(scrollDiv)
-    var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth
-    this.$body[0].removeChild(scrollDiv)
-    return scrollbarWidth
-  }
-
-
-  // MODAL PLUGIN DEFINITION
-  // =======================
-
-  function Plugin(option, _relatedTarget) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.modal')
-      var options = $.extend({}, Modal.DEFAULTS, $this.data(), typeof option == 'object' && option)
-
-      if (!data) $this.data('bs.modal', (data = new Modal(this, options)))
-      if (typeof option == 'string') data[option](_relatedTarget)
-      else if (options.show) data.show(_relatedTarget)
-    })
-  }
-
-  var old = $.fn.modal
-
-  $.fn.modal             = Plugin
-  $.fn.modal.Constructor = Modal
-
-
-  // MODAL NO CONFLICT
-  // =================
-
-  $.fn.modal.noConflict = function () {
-    $.fn.modal = old
-    return this
-  }
-
-
-  // MODAL DATA-API
-  // ==============
-
-  $(document).on('click.bs.modal.data-api', '[data-toggle="modal"]', function (e) {
-    var $this   = $(this)
-    var href    = $this.attr('href')
-    var $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, ''))) // strip for ie7
-    var option  = $target.data('bs.modal') ? 'toggle' : $.extend({ remote: !/#/.test(href) && href }, $target.data(), $this.data())
-
-    if ($this.is('a')) e.preventDefault()
-
-    $target.one('show.bs.modal', function (showEvent) {
-      if (showEvent.isDefaultPrevented()) return // only register focus restorer if modal will actually get shown
-      $target.one('hidden.bs.modal', function () {
-        $this.is(':visible') && $this.trigger('focus')
-      })
-    })
-    Plugin.call($target, option, this)
-  })
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: tooltip.js v3.3.7
- * http://getbootstrap.com/javascript/#tooltip
- * Inspired by the original jQuery.tipsy by Jason Frame
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // TOOLTIP PUBLIC CLASS DEFINITION
-  // ===============================
-
-  var Tooltip = function (element, options) {
-    this.type       = null
-    this.options    = null
-    this.enabled    = null
-    this.timeout    = null
-    this.hoverState = null
-    this.$element   = null
-    this.inState    = null
-
-    this.init('tooltip', element, options)
-  }
-
-  Tooltip.VERSION  = '3.3.7'
-
-  Tooltip.TRANSITION_DURATION = 150
-
-  Tooltip.DEFAULTS = {
-    animation: true,
-    placement: 'top',
-    selector: false,
-    template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',
-    trigger: 'hover focus',
-    title: '',
-    delay: 0,
-    html: false,
-    container: false,
-    viewport: {
-      selector: 'body',
-      padding: 0
-    }
-  }
-
-  Tooltip.prototype.init = function (type, element, options) {
-    this.enabled   = true
-    this.type      = type
-    this.$element  = $(element)
-    this.options   = this.getOptions(options)
-    this.$viewport = this.options.viewport && $($.isFunction(this.options.viewport) ? this.options.viewport.call(this, this.$element) : (this.options.viewport.selector || this.options.viewport))
-    this.inState   = { click: false, hover: false, focus: false }
-
-    if (this.$element[0] instanceof document.constructor && !this.options.selector) {
-      throw new Error('`selector` option must be specified when initializing ' + this.type + ' on the window.document object!')
-    }
-
-    var triggers = this.options.trigger.split(' ')
-
-    for (var i = triggers.length; i--;) {
-      var trigger = triggers[i]
-
-      if (trigger == 'click') {
-        this.$element.on('click.' + this.type, this.options.selector, $.proxy(this.toggle, this))
-      } else if (trigger != 'manual') {
-        var eventIn  = trigger == 'hover' ? 'mouseenter' : 'focusin'
-        var eventOut = trigger == 'hover' ? 'mouseleave' : 'focusout'
-
-        this.$element.on(eventIn  + '.' + this.type, this.options.selector, $.proxy(this.enter, this))
-        this.$element.on(eventOut + '.' + this.type, this.options.selector, $.proxy(this.leave, this))
-      }
-    }
-
-    this.options.selector ?
-      (this._options = $.extend({}, this.options, { trigger: 'manual', selector: '' })) :
-      this.fixTitle()
-  }
-
-  Tooltip.prototype.getDefaults = function () {
-    return Tooltip.DEFAULTS
-  }
-
-  Tooltip.prototype.getOptions = function (options) {
-    options = $.extend({}, this.getDefaults(), this.$element.data(), options)
-
-    if (options.delay && typeof options.delay == 'number') {
-      options.delay = {
-        show: options.delay,
-        hide: options.delay
-      }
-    }
-
-    return options
-  }
-
-  Tooltip.prototype.getDelegateOptions = function () {
-    var options  = {}
-    var defaults = this.getDefaults()
-
-    this._options && $.each(this._options, function (key, value) {
-      if (defaults[key] != value) options[key] = value
-    })
-
-    return options
-  }
-
-  Tooltip.prototype.enter = function (obj) {
-    var self = obj instanceof this.constructor ?
-      obj : $(obj.currentTarget).data('bs.' + this.type)
-
-    if (!self) {
-      self = new this.constructor(obj.currentTarget, this.getDelegateOptions())
-      $(obj.currentTarget).data('bs.' + this.type, self)
-    }
-
-    if (obj instanceof $.Event) {
-      self.inState[obj.type == 'focusin' ? 'focus' : 'hover'] = true
-    }
-
-    if (self.tip().hasClass('in') || self.hoverState == 'in') {
-      self.hoverState = 'in'
-      return
-    }
-
-    clearTimeout(self.timeout)
-
-    self.hoverState = 'in'
-
-    if (!self.options.delay || !self.options.delay.show) return self.show()
-
-    self.timeout = setTimeout(function () {
-      if (self.hoverState == 'in') self.show()
-    }, self.options.delay.show)
-  }
-
-  Tooltip.prototype.isInStateTrue = function () {
-    for (var key in this.inState) {
-      if (this.inState[key]) return true
-    }
-
-    return false
-  }
-
-  Tooltip.prototype.leave = function (obj) {
-    var self = obj instanceof this.constructor ?
-      obj : $(obj.currentTarget).data('bs.' + this.type)
-
-    if (!self) {
-      self = new this.constructor(obj.currentTarget, this.getDelegateOptions())
-      $(obj.currentTarget).data('bs.' + this.type, self)
-    }
-
-    if (obj instanceof $.Event) {
-      self.inState[obj.type == 'focusout' ? 'focus' : 'hover'] = false
-    }
-
-    if (self.isInStateTrue()) return
-
-    clearTimeout(self.timeout)
-
-    self.hoverState = 'out'
-
-    if (!self.options.delay || !self.options.delay.hide) return self.hide()
-
-    self.timeout = setTimeout(function () {
-      if (self.hoverState == 'out') self.hide()
-    }, self.options.delay.hide)
-  }
-
-  Tooltip.prototype.show = function () {
-    var e = $.Event('show.bs.' + this.type)
-
-    if (this.hasContent() && this.enabled) {
-      this.$element.trigger(e)
-
-      var inDom = $.contains(this.$element[0].ownerDocument.documentElement, this.$element[0])
-      if (e.isDefaultPrevented() || !inDom) return
-      var that = this
-
-      var $tip = this.tip()
-
-      var tipId = this.getUID(this.type)
-
-      this.setContent()
-      $tip.attr('id', tipId)
-      this.$element.attr('aria-describedby', tipId)
-
-      if (this.options.animation) $tip.addClass('fade')
-
-      var placement = typeof this.options.placement == 'function' ?
-        this.options.placement.call(this, $tip[0], this.$element[0]) :
-        this.options.placement
-
-      var autoToken = /\s?auto?\s?/i
-      var autoPlace = autoToken.test(placement)
-      if (autoPlace) placement = placement.replace(autoToken, '') || 'top'
-
-      $tip
-        .detach()
-        .css({ top: 0, left: 0, display: 'block' })
-        .addClass(placement)
-        .data('bs.' + this.type, this)
-
-      this.options.container ? $tip.appendTo(this.options.container) : $tip.insertAfter(this.$element)
-      this.$element.trigger('inserted.bs.' + this.type)
-
-      var pos          = this.getPosition()
-      var actualWidth  = $tip[0].offsetWidth
-      var actualHeight = $tip[0].offsetHeight
-
-      if (autoPlace) {
-        var orgPlacement = placement
-        var viewportDim = this.getPosition(this.$viewport)
-
-        placement = placement == 'bottom' && pos.bottom + actualHeight > viewportDim.bottom ? 'top'    :
-                    placement == 'top'    && pos.top    - actualHeight < viewportDim.top    ? 'bottom' :
-                    placement == 'right'  && pos.right  + actualWidth  > viewportDim.width  ? 'left'   :
-                    placement == 'left'   && pos.left   - actualWidth  < viewportDim.left   ? 'right'  :
-                    placement
-
-        $tip
-          .removeClass(orgPlacement)
-          .addClass(placement)
-      }
-
-      var calculatedOffset = this.getCalculatedOffset(placement, pos, actualWidth, actualHeight)
-
-      this.applyPlacement(calculatedOffset, placement)
-
-      var complete = function () {
-        var prevHoverState = that.hoverState
-        that.$element.trigger('shown.bs.' + that.type)
-        that.hoverState = null
-
-        if (prevHoverState == 'out') that.leave(that)
-      }
-
-      $.support.transition && this.$tip.hasClass('fade') ?
-        $tip
-          .one('bsTransitionEnd', complete)
-          .emulateTransitionEnd(Tooltip.TRANSITION_DURATION) :
-        complete()
-    }
-  }
-
-  Tooltip.prototype.applyPlacement = function (offset, placement) {
-    var $tip   = this.tip()
-    var width  = $tip[0].offsetWidth
-    var height = $tip[0].offsetHeight
-
-    // manually read margins because getBoundingClientRect includes difference
-    var marginTop = parseInt($tip.css('margin-top'), 10)
-    var marginLeft = parseInt($tip.css('margin-left'), 10)
-
-    // we must check for NaN for ie 8/9
-    if (isNaN(marginTop))  marginTop  = 0
-    if (isNaN(marginLeft)) marginLeft = 0
-
-    offset.top  += marginTop
-    offset.left += marginLeft
-
-    // $.fn.offset doesn't round pixel values
-    // so we use setOffset directly with our own function B-0
-    $.offset.setOffset($tip[0], $.extend({
-      using: function (props) {
-        $tip.css({
-          top: Math.round(props.top),
-          left: Math.round(props.left)
-        })
-      }
-    }, offset), 0)
-
-    $tip.addClass('in')
-
-    // check to see if placing tip in new offset caused the tip to resize itself
-    var actualWidth  = $tip[0].offsetWidth
-    var actualHeight = $tip[0].offsetHeight
-
-    if (placement == 'top' && actualHeight != height) {
-      offset.top = offset.top + height - actualHeight
-    }
-
-    var delta = this.getViewportAdjustedDelta(placement, offset, actualWidth, actualHeight)
-
-    if (delta.left) offset.left += delta.left
-    else offset.top += delta.top
-
-    var isVertical          = /top|bottom/.test(placement)
-    var arrowDelta          = isVertical ? delta.left * 2 - width + actualWidth : delta.top * 2 - height + actualHeight
-    var arrowOffsetPosition = isVertical ? 'offsetWidth' : 'offsetHeight'
-
-    $tip.offset(offset)
-    this.replaceArrow(arrowDelta, $tip[0][arrowOffsetPosition], isVertical)
-  }
-
-  Tooltip.prototype.replaceArrow = function (delta, dimension, isVertical) {
-    this.arrow()
-      .css(isVertical ? 'left' : 'top', 50 * (1 - delta / dimension) + '%')
-      .css(isVertical ? 'top' : 'left', '')
-  }
-
-  Tooltip.prototype.setContent = function () {
-    var $tip  = this.tip()
-    var title = this.getTitle()
-
-    $tip.find('.tooltip-inner')[this.options.html ? 'html' : 'text'](title)
-    $tip.removeClass('fade in top bottom left right')
-  }
-
-  Tooltip.prototype.hide = function (callback) {
-    var that = this
-    var $tip = $(this.$tip)
-    var e    = $.Event('hide.bs.' + this.type)
-
-    function complete() {
-      if (that.hoverState != 'in') $tip.detach()
-      if (that.$element) { // TODO: Check whether guarding this code with this `if` is really necessary.
-        that.$element
-          .removeAttr('aria-describedby')
-          .trigger('hidden.bs.' + that.type)
-      }
-      callback && callback()
-    }
-
-    this.$element.trigger(e)
-
-    if (e.isDefaultPrevented()) return
-
-    $tip.removeClass('in')
-
-    $.support.transition && $tip.hasClass('fade') ?
-      $tip
-        .one('bsTransitionEnd', complete)
-        .emulateTransitionEnd(Tooltip.TRANSITION_DURATION) :
-      complete()
-
-    this.hoverState = null
-
-    return this
-  }
-
-  Tooltip.prototype.fixTitle = function () {
-    var $e = this.$element
-    if ($e.attr('title') || typeof $e.attr('data-original-title') != 'string') {
-      $e.attr('data-original-title', $e.attr('title') || '').attr('title', '')
-    }
-  }
-
-  Tooltip.prototype.hasContent = function () {
-    return this.getTitle()
-  }
-
-  Tooltip.prototype.getPosition = function ($element) {
-    $element   = $element || this.$element
-
-    var el     = $element[0]
-    var isBody = el.tagName == 'BODY'
-
-    var elRect    = el.getBoundingClientRect()
-    if (elRect.width == null) {
-      // width and height are missing in IE8, so compute them manually; see https://github.com/twbs/bootstrap/issues/14093
-      elRect = $.extend({}, elRect, { width: elRect.right - elRect.left, height: elRect.bottom - elRect.top })
-    }
-    var isSvg = window.SVGElement && el instanceof window.SVGElement
-    // Avoid using $.offset() on SVGs since it gives incorrect results in jQuery 3.
-    // See https://github.com/twbs/bootstrap/issues/20280
-    var elOffset  = isBody ? { top: 0, left: 0 } : (isSvg ? null : $element.offset())
-    var scroll    = { scroll: isBody ? document.documentElement.scrollTop || document.body.scrollTop : $element.scrollTop() }
-    var outerDims = isBody ? { width: $(window).width(), height: $(window).height() } : null
-
-    return $.extend({}, elRect, scroll, outerDims, elOffset)
-  }
-
-  Tooltip.prototype.getCalculatedOffset = function (placement, pos, actualWidth, actualHeight) {
-    return placement == 'bottom' ? { top: pos.top + pos.height,   left: pos.left + pos.width / 2 - actualWidth / 2 } :
-           placement == 'top'    ? { top: pos.top - actualHeight, left: pos.left + pos.width / 2 - actualWidth / 2 } :
-           placement == 'left'   ? { top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left - actualWidth } :
-        /* placement == 'right' */ { top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left + pos.width }
-
-  }
-
-  Tooltip.prototype.getViewportAdjustedDelta = function (placement, pos, actualWidth, actualHeight) {
-    var delta = { top: 0, left: 0 }
-    if (!this.$viewport) return delta
-
-    var viewportPadding = this.options.viewport && this.options.viewport.padding || 0
-    var viewportDimensions = this.getPosition(this.$viewport)
-
-    if (/right|left/.test(placement)) {
-      var topEdgeOffset    = pos.top - viewportPadding - viewportDimensions.scroll
-      var bottomEdgeOffset = pos.top + viewportPadding - viewportDimensions.scroll + actualHeight
-      if (topEdgeOffset < viewportDimensions.top) { // top overflow
-        delta.top = viewportDimensions.top - topEdgeOffset
-      } else if (bottomEdgeOffset > viewportDimensions.top + viewportDimensions.height) { // bottom overflow
-        delta.top = viewportDimensions.top + viewportDimensions.height - bottomEdgeOffset
-      }
-    } else {
-      var leftEdgeOffset  = pos.left - viewportPadding
-      var rightEdgeOffset = pos.left + viewportPadding + actualWidth
-      if (leftEdgeOffset < viewportDimensions.left) { // left overflow
-        delta.left = viewportDimensions.left - leftEdgeOffset
-      } else if (rightEdgeOffset > viewportDimensions.right) { // right overflow
-        delta.left = viewportDimensions.left + viewportDimensions.width - rightEdgeOffset
-      }
-    }
-
-    return delta
-  }
-
-  Tooltip.prototype.getTitle = function () {
-    var title
-    var $e = this.$element
-    var o  = this.options
-
-    title = $e.attr('data-original-title')
-      || (typeof o.title == 'function' ? o.title.call($e[0]) :  o.title)
-
-    return title
-  }
-
-  Tooltip.prototype.getUID = function (prefix) {
-    do prefix += ~~(Math.random() * 1000000)
-    while (document.getElementById(prefix))
-    return prefix
-  }
-
-  Tooltip.prototype.tip = function () {
-    if (!this.$tip) {
-      this.$tip = $(this.options.template)
-      if (this.$tip.length != 1) {
-        throw new Error(this.type + ' `template` option must consist of exactly 1 top-level element!')
-      }
-    }
-    return this.$tip
-  }
-
-  Tooltip.prototype.arrow = function () {
-    return (this.$arrow = this.$arrow || this.tip().find('.tooltip-arrow'))
-  }
-
-  Tooltip.prototype.enable = function () {
-    this.enabled = true
-  }
-
-  Tooltip.prototype.disable = function () {
-    this.enabled = false
-  }
-
-  Tooltip.prototype.toggleEnabled = function () {
-    this.enabled = !this.enabled
-  }
-
-  Tooltip.prototype.toggle = function (e) {
-    var self = this
-    if (e) {
-      self = $(e.currentTarget).data('bs.' + this.type)
-      if (!self) {
-        self = new this.constructor(e.currentTarget, this.getDelegateOptions())
-        $(e.currentTarget).data('bs.' + this.type, self)
-      }
-    }
-
-    if (e) {
-      self.inState.click = !self.inState.click
-      if (self.isInStateTrue()) self.enter(self)
-      else self.leave(self)
-    } else {
-      self.tip().hasClass('in') ? self.leave(self) : self.enter(self)
-    }
-  }
-
-  Tooltip.prototype.destroy = function () {
-    var that = this
-    clearTimeout(this.timeout)
-    this.hide(function () {
-      that.$element.off('.' + that.type).removeData('bs.' + that.type)
-      if (that.$tip) {
-        that.$tip.detach()
-      }
-      that.$tip = null
-      that.$arrow = null
-      that.$viewport = null
-      that.$element = null
-    })
-  }
-
-
-  // TOOLTIP PLUGIN DEFINITION
-  // =========================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.tooltip')
-      var options = typeof option == 'object' && option
-
-      if (!data && /destroy|hide/.test(option)) return
-      if (!data) $this.data('bs.tooltip', (data = new Tooltip(this, options)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  var old = $.fn.tooltip
-
-  $.fn.tooltip             = Plugin
-  $.fn.tooltip.Constructor = Tooltip
-
-
-  // TOOLTIP NO CONFLICT
-  // ===================
-
-  $.fn.tooltip.noConflict = function () {
-    $.fn.tooltip = old
-    return this
-  }
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: popover.js v3.3.7
- * http://getbootstrap.com/javascript/#popovers
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // POPOVER PUBLIC CLASS DEFINITION
-  // ===============================
-
-  var Popover = function (element, options) {
-    this.init('popover', element, options)
-  }
-
-  if (!$.fn.tooltip) throw new Error('Popover requires tooltip.js')
-
-  Popover.VERSION  = '3.3.7'
-
-  Popover.DEFAULTS = $.extend({}, $.fn.tooltip.Constructor.DEFAULTS, {
-    placement: 'right',
-    trigger: 'click',
-    content: '',
-    template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'
-  })
-
-
-  // NOTE: POPOVER EXTENDS tooltip.js
-  // ================================
-
-  Popover.prototype = $.extend({}, $.fn.tooltip.Constructor.prototype)
-
-  Popover.prototype.constructor = Popover
-
-  Popover.prototype.getDefaults = function () {
-    return Popover.DEFAULTS
-  }
-
-  Popover.prototype.setContent = function () {
-    var $tip    = this.tip()
-    var title   = this.getTitle()
-    var content = this.getContent()
-
-    $tip.find('.popover-title')[this.options.html ? 'html' : 'text'](title)
-    $tip.find('.popover-content').children().detach().end()[ // we use append for html objects to maintain js events
-      this.options.html ? (typeof content == 'string' ? 'html' : 'append') : 'text'
-    ](content)
-
-    $tip.removeClass('fade top bottom left right in')
-
-    // IE8 doesn't accept hiding via the `:empty` pseudo selector, we have to do
-    // this manually by checking the contents.
-    if (!$tip.find('.popover-title').html()) $tip.find('.popover-title').hide()
-  }
-
-  Popover.prototype.hasContent = function () {
-    return this.getTitle() || this.getContent()
-  }
-
-  Popover.prototype.getContent = function () {
-    var $e = this.$element
-    var o  = this.options
-
-    return $e.attr('data-content')
-      || (typeof o.content == 'function' ?
-            o.content.call($e[0]) :
-            o.content)
-  }
-
-  Popover.prototype.arrow = function () {
-    return (this.$arrow = this.$arrow || this.tip().find('.arrow'))
-  }
-
-
-  // POPOVER PLUGIN DEFINITION
-  // =========================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.popover')
-      var options = typeof option == 'object' && option
-
-      if (!data && /destroy|hide/.test(option)) return
-      if (!data) $this.data('bs.popover', (data = new Popover(this, options)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  var old = $.fn.popover
-
-  $.fn.popover             = Plugin
-  $.fn.popover.Constructor = Popover
-
-
-  // POPOVER NO CONFLICT
-  // ===================
-
-  $.fn.popover.noConflict = function () {
-    $.fn.popover = old
-    return this
-  }
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: scrollspy.js v3.3.7
- * http://getbootstrap.com/javascript/#scrollspy
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // SCROLLSPY CLASS DEFINITION
-  // ==========================
-
-  function ScrollSpy(element, options) {
-    this.$body          = $(document.body)
-    this.$scrollElement = $(element).is(document.body) ? $(window) : $(element)
-    this.options        = $.extend({}, ScrollSpy.DEFAULTS, options)
-    this.selector       = (this.options.target || '') + ' .nav li > a'
-    this.offsets        = []
-    this.targets        = []
-    this.activeTarget   = null
-    this.scrollHeight   = 0
-
-    this.$scrollElement.on('scroll.bs.scrollspy', $.proxy(this.process, this))
-    this.refresh()
-    this.process()
-  }
-
-  ScrollSpy.VERSION  = '3.3.7'
-
-  ScrollSpy.DEFAULTS = {
-    offset: 10
-  }
-
-  ScrollSpy.prototype.getScrollHeight = function () {
-    return this.$scrollElement[0].scrollHeight || Math.max(this.$body[0].scrollHeight, document.documentElement.scrollHeight)
-  }
-
-  ScrollSpy.prototype.refresh = function () {
-    var that          = this
-    var offsetMethod  = 'offset'
-    var offsetBase    = 0
-
-    this.offsets      = []
-    this.targets      = []
-    this.scrollHeight = this.getScrollHeight()
-
-    if (!$.isWindow(this.$scrollElement[0])) {
-      offsetMethod = 'position'
-      offsetBase   = this.$scrollElement.scrollTop()
-    }
-
-    this.$body
-      .find(this.selector)
-      .map(function () {
-        var $el   = $(this)
-        var href  = $el.data('target') || $el.attr('href')
-        var $href = /^#./.test(href) && $(href)
-
-        return ($href
-          && $href.length
-          && $href.is(':visible')
-          && [[$href[offsetMethod]().top + offsetBase, href]]) || null
-      })
-      .sort(function (a, b) { return a[0] - b[0] })
-      .each(function () {
-        that.offsets.push(this[0])
-        that.targets.push(this[1])
-      })
-  }
-
-  ScrollSpy.prototype.process = function () {
-    var scrollTop    = this.$scrollElement.scrollTop() + this.options.offset
-    var scrollHeight = this.getScrollHeight()
-    var maxScroll    = this.options.offset + scrollHeight - this.$scrollElement.height()
-    var offsets      = this.offsets
-    var targets      = this.targets
-    var activeTarget = this.activeTarget
-    var i
-
-    if (this.scrollHeight != scrollHeight) {
-      this.refresh()
-    }
-
-    if (scrollTop >= maxScroll) {
-      return activeTarget != (i = targets[targets.length - 1]) && this.activate(i)
-    }
-
-    if (activeTarget && scrollTop < offsets[0]) {
-      this.activeTarget = null
-      return this.clear()
-    }
-
-    for (i = offsets.length; i--;) {
-      activeTarget != targets[i]
-        && scrollTop >= offsets[i]
-        && (offsets[i + 1] === undefined || scrollTop < offsets[i + 1])
-        && this.activate(targets[i])
-    }
-  }
-
-  ScrollSpy.prototype.activate = function (target) {
-    this.activeTarget = target
-
-    this.clear()
-
-    var selector = this.selector +
-      '[data-target="' + target + '"],' +
-      this.selector + '[href="' + target + '"]'
-
-    var active = $(selector)
-      .parents('li')
-      .addClass('active')
-
-    if (active.parent('.dropdown-menu').length) {
-      active = active
-        .closest('li.dropdown')
-        .addClass('active')
-    }
-
-    active.trigger('activate.bs.scrollspy')
-  }
-
-  ScrollSpy.prototype.clear = function () {
-    $(this.selector)
-      .parentsUntil(this.options.target, '.active')
-      .removeClass('active')
-  }
-
-
-  // SCROLLSPY PLUGIN DEFINITION
-  // ===========================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.scrollspy')
-      var options = typeof option == 'object' && option
-
-      if (!data) $this.data('bs.scrollspy', (data = new ScrollSpy(this, options)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  var old = $.fn.scrollspy
-
-  $.fn.scrollspy             = Plugin
-  $.fn.scrollspy.Constructor = ScrollSpy
-
-
-  // SCROLLSPY NO CONFLICT
-  // =====================
-
-  $.fn.scrollspy.noConflict = function () {
-    $.fn.scrollspy = old
-    return this
-  }
-
-
-  // SCROLLSPY DATA-API
-  // ==================
-
-  $(window).on('load.bs.scrollspy.data-api', function () {
-    $('[data-spy="scroll"]').each(function () {
-      var $spy = $(this)
-      Plugin.call($spy, $spy.data())
-    })
-  })
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: tab.js v3.3.7
- * http://getbootstrap.com/javascript/#tabs
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // TAB CLASS DEFINITION
-  // ====================
-
-  var Tab = function (element) {
-    // jscs:disable requireDollarBeforejQueryAssignment
-    this.element = $(element)
-    // jscs:enable requireDollarBeforejQueryAssignment
-  }
-
-  Tab.VERSION = '3.3.7'
-
-  Tab.TRANSITION_DURATION = 150
-
-  Tab.prototype.show = function () {
-    var $this    = this.element
-    var $ul      = $this.closest('ul:not(.dropdown-menu)')
-    var selector = $this.data('target')
-
-    if (!selector) {
-      selector = $this.attr('href')
-      selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
-    }
-
-    if ($this.parent('li').hasClass('active')) return
-
-    var $previous = $ul.find('.active:last a')
-    var hideEvent = $.Event('hide.bs.tab', {
-      relatedTarget: $this[0]
-    })
-    var showEvent = $.Event('show.bs.tab', {
-      relatedTarget: $previous[0]
-    })
-
-    $previous.trigger(hideEvent)
-    $this.trigger(showEvent)
-
-    if (showEvent.isDefaultPrevented() || hideEvent.isDefaultPrevented()) return
-
-    var $target = $(selector)
-
-    this.activate($this.closest('li'), $ul)
-    this.activate($target, $target.parent(), function () {
-      $previous.trigger({
-        type: 'hidden.bs.tab',
-        relatedTarget: $this[0]
-      })
-      $this.trigger({
-        type: 'shown.bs.tab',
-        relatedTarget: $previous[0]
-      })
-    })
-  }
-
-  Tab.prototype.activate = function (element, container, callback) {
-    var $active    = container.find('> .active')
-    var transition = callback
-      && $.support.transition
-      && ($active.length && $active.hasClass('fade') || !!container.find('> .fade').length)
-
-    function next() {
-      $active
-        .removeClass('active')
-        .find('> .dropdown-menu > .active')
-          .removeClass('active')
-        .end()
-        .find('[data-toggle="tab"]')
-          .attr('aria-expanded', false)
-
-      element
-        .addClass('active')
-        .find('[data-toggle="tab"]')
-          .attr('aria-expanded', true)
-
-      if (transition) {
-        element[0].offsetWidth // reflow for transition
-        element.addClass('in')
-      } else {
-        element.removeClass('fade')
-      }
-
-      if (element.parent('.dropdown-menu').length) {
-        element
-          .closest('li.dropdown')
-            .addClass('active')
-          .end()
-          .find('[data-toggle="tab"]')
-            .attr('aria-expanded', true)
-      }
-
-      callback && callback()
-    }
-
-    $active.length && transition ?
-      $active
-        .one('bsTransitionEnd', next)
-        .emulateTransitionEnd(Tab.TRANSITION_DURATION) :
-      next()
-
-    $active.removeClass('in')
-  }
-
-
-  // TAB PLUGIN DEFINITION
-  // =====================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this = $(this)
-      var data  = $this.data('bs.tab')
-
-      if (!data) $this.data('bs.tab', (data = new Tab(this)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  var old = $.fn.tab
-
-  $.fn.tab             = Plugin
-  $.fn.tab.Constructor = Tab
-
-
-  // TAB NO CONFLICT
-  // ===============
-
-  $.fn.tab.noConflict = function () {
-    $.fn.tab = old
-    return this
-  }
-
-
-  // TAB DATA-API
-  // ============
-
-  var clickHandler = function (e) {
-    e.preventDefault()
-    Plugin.call($(this), 'show')
-  }
-
-  $(document)
-    .on('click.bs.tab.data-api', '[data-toggle="tab"]', clickHandler)
-    .on('click.bs.tab.data-api', '[data-toggle="pill"]', clickHandler)
-
-}(jQuery);
-
-/* ========================================================================
- * Bootstrap: affix.js v3.3.7
- * http://getbootstrap.com/javascript/#affix
- * ========================================================================
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- * ======================================================================== */
-
-
-+function ($) {
-  'use strict';
-
-  // AFFIX CLASS DEFINITION
-  // ======================
-
-  var Affix = function (element, options) {
-    this.options = $.extend({}, Affix.DEFAULTS, options)
-
-    this.$target = $(this.options.target)
-      .on('scroll.bs.affix.data-api', $.proxy(this.checkPosition, this))
-      .on('click.bs.affix.data-api',  $.proxy(this.checkPositionWithEventLoop, this))
-
-    this.$element     = $(element)
-    this.affixed      = null
-    this.unpin        = null
-    this.pinnedOffset = null
-
-    this.checkPosition()
-  }
-
-  Affix.VERSION  = '3.3.7'
-
-  Affix.RESET    = 'affix affix-top affix-bottom'
-
-  Affix.DEFAULTS = {
-    offset: 0,
-    target: window
-  }
-
-  Affix.prototype.getState = function (scrollHeight, height, offsetTop, offsetBottom) {
-    var scrollTop    = this.$target.scrollTop()
-    var position     = this.$element.offset()
-    var targetHeight = this.$target.height()
-
-    if (offsetTop != null && this.affixed == 'top') return scrollTop < offsetTop ? 'top' : false
-
-    if (this.affixed == 'bottom') {
-      if (offsetTop != null) return (scrollTop + this.unpin <= position.top) ? false : 'bottom'
-      return (scrollTop + targetHeight <= scrollHeight - offsetBottom) ? false : 'bottom'
-    }
-
-    var initializing   = this.affixed == null
-    var colliderTop    = initializing ? scrollTop : position.top
-    var colliderHeight = initializing ? targetHeight : height
-
-    if (offsetTop != null && scrollTop <= offsetTop) return 'top'
-    if (offsetBottom != null && (colliderTop + colliderHeight >= scrollHeight - offsetBottom)) return 'bottom'
-
-    return false
-  }
-
-  Affix.prototype.getPinnedOffset = function () {
-    if (this.pinnedOffset) return this.pinnedOffset
-    this.$element.removeClass(Affix.RESET).addClass('affix')
-    var scrollTop = this.$target.scrollTop()
-    var position  = this.$element.offset()
-    return (this.pinnedOffset = position.top - scrollTop)
-  }
-
-  Affix.prototype.checkPositionWithEventLoop = function () {
-    setTimeout($.proxy(this.checkPosition, this), 1)
-  }
-
-  Affix.prototype.checkPosition = function () {
-    if (!this.$element.is(':visible')) return
-
-    var height       = this.$element.height()
-    var offset       = this.options.offset
-    var offsetTop    = offset.top
-    var offsetBottom = offset.bottom
-    var scrollHeight = Math.max($(document).height(), $(document.body).height())
-
-    if (typeof offset != 'object')         offsetBottom = offsetTop = offset
-    if (typeof offsetTop == 'function')    offsetTop    = offset.top(this.$element)
-    if (typeof offsetBottom == 'function') offsetBottom = offset.bottom(this.$element)
-
-    var affix = this.getState(scrollHeight, height, offsetTop, offsetBottom)
-
-    if (this.affixed != affix) {
-      if (this.unpin != null) this.$element.css('top', '')
-
-      var affixType = 'affix' + (affix ? '-' + affix : '')
-      var e         = $.Event(affixType + '.bs.affix')
-
-      this.$element.trigger(e)
-
-      if (e.isDefaultPrevented()) return
-
-      this.affixed = affix
-      this.unpin = affix == 'bottom' ? this.getPinnedOffset() : null
-
-      this.$element
-        .removeClass(Affix.RESET)
-        .addClass(affixType)
-        .trigger(affixType.replace('affix', 'affixed') + '.bs.affix')
-    }
-
-    if (affix == 'bottom') {
-      this.$element.offset({
-        top: scrollHeight - height - offsetBottom
-      })
-    }
-  }
-
-
-  // AFFIX PLUGIN DEFINITION
-  // =======================
-
-  function Plugin(option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.affix')
-      var options = typeof option == 'object' && option
-
-      if (!data) $this.data('bs.affix', (data = new Affix(this, options)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  var old = $.fn.affix
-
-  $.fn.affix             = Plugin
-  $.fn.affix.Constructor = Affix
-
-
-  // AFFIX NO CONFLICT
-  // =================
-
-  $.fn.affix.noConflict = function () {
-    $.fn.affix = old
-    return this
-  }
-
-
-  // AFFIX DATA-API
-  // ==============
-
-  $(window).on('load', function () {
-    $('[data-spy="affix"]').each(function () {
-      var $spy = $(this)
-      var data = $spy.data()
-
-      data.offset = data.offset || {}
-
-      if (data.offsetBottom != null) data.offset.bottom = data.offsetBottom
-      if (data.offsetTop    != null) data.offset.top    = data.offsetTop
-
-      Plugin.call($spy, data)
-    })
-  })
-
-}(jQuery);
-
 /* NProgress, (c) 2013, 2014 Rico Sta. Cruz - http://ricostacruz.com/nprogress
  * @license MIT */
 
@@ -12668,6 +10290,2145 @@ if (typeof jQuery === 'undefined') {
 });
 
 
+/* Zepto v1.2.0 - zepto event ajax form ie - zeptojs.com/license */
+(function(global, factory) {
+  if (typeof define === 'function' && define.amd)
+    define(function() { return factory(global) })
+  else
+    factory(global)
+}(this, function(window) {
+  var Zepto = (function() {
+  var undefined, key, $, classList, emptyArray = [], concat = emptyArray.concat, filter = emptyArray.filter, slice = emptyArray.slice,
+    document = window.document,
+    elementDisplay = {}, classCache = {},
+    cssNumber = { 'column-count': 1, 'columns': 1, 'font-weight': 1, 'line-height': 1,'opacity': 1, 'z-index': 1, 'zoom': 1 },
+    fragmentRE = /^\s*<(\w+|!)[^>]*>/,
+    singleTagRE = /^<(\w+)\s*\/?>(?:<\/\1>|)$/,
+    tagExpanderRE = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/ig,
+    rootNodeRE = /^(?:body|html)$/i,
+    capitalRE = /([A-Z])/g,
+
+    // special attributes that should be get/set via method calls
+    methodAttributes = ['val', 'css', 'html', 'text', 'data', 'width', 'height', 'offset'],
+
+    adjacencyOperators = [ 'after', 'prepend', 'before', 'append' ],
+    table = document.createElement('table'),
+    tableRow = document.createElement('tr'),
+    containers = {
+      'tr': document.createElement('tbody'),
+      'tbody': table, 'thead': table, 'tfoot': table,
+      'td': tableRow, 'th': tableRow,
+      '*': document.createElement('div')
+    },
+    readyRE = /complete|loaded|interactive/,
+    simpleSelectorRE = /^[\w-]*$/,
+    class2type = {},
+    toString = class2type.toString,
+    zepto = {},
+    camelize, uniq,
+    tempParent = document.createElement('div'),
+    propMap = {
+      'tabindex': 'tabIndex',
+      'readonly': 'readOnly',
+      'for': 'htmlFor',
+      'class': 'className',
+      'maxlength': 'maxLength',
+      'cellspacing': 'cellSpacing',
+      'cellpadding': 'cellPadding',
+      'rowspan': 'rowSpan',
+      'colspan': 'colSpan',
+      'usemap': 'useMap',
+      'frameborder': 'frameBorder',
+      'contenteditable': 'contentEditable'
+    },
+    isArray = Array.isArray ||
+      function(object){ return object instanceof Array }
+
+  zepto.matches = function(element, selector) {
+    if (!selector || !element || element.nodeType !== 1) return false
+    var matchesSelector = element.matches || element.webkitMatchesSelector ||
+                          element.mozMatchesSelector || element.oMatchesSelector ||
+                          element.matchesSelector
+    if (matchesSelector) return matchesSelector.call(element, selector)
+    // fall back to performing a selector:
+    var match, parent = element.parentNode, temp = !parent
+    if (temp) (parent = tempParent).appendChild(element)
+    match = ~zepto.qsa(parent, selector).indexOf(element)
+    temp && tempParent.removeChild(element)
+    return match
+  }
+
+  function type(obj) {
+    return obj == null ? String(obj) :
+      class2type[toString.call(obj)] || "object"
+  }
+
+  function isFunction(value) { return type(value) == "function" }
+  function isWindow(obj)     { return obj != null && obj == obj.window }
+  function isDocument(obj)   { return obj != null && obj.nodeType == obj.DOCUMENT_NODE }
+  function isObject(obj)     { return type(obj) == "object" }
+  function isPlainObject(obj) {
+    return isObject(obj) && !isWindow(obj) && Object.getPrototypeOf(obj) == Object.prototype
+  }
+
+  function likeArray(obj) {
+    var length = !!obj && 'length' in obj && obj.length,
+      type = $.type(obj)
+
+    return 'function' != type && !isWindow(obj) && (
+      'array' == type || length === 0 ||
+        (typeof length == 'number' && length > 0 && (length - 1) in obj)
+    )
+  }
+
+  function compact(array) { return filter.call(array, function(item){ return item != null }) }
+  function flatten(array) { return array.length > 0 ? $.fn.concat.apply([], array) : array }
+  camelize = function(str){ return str.replace(/-+(.)?/g, function(match, chr){ return chr ? chr.toUpperCase() : '' }) }
+  function dasherize(str) {
+    return str.replace(/::/g, '/')
+           .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
+           .replace(/([a-z\d])([A-Z])/g, '$1_$2')
+           .replace(/_/g, '-')
+           .toLowerCase()
+  }
+  uniq = function(array){ return filter.call(array, function(item, idx){ return array.indexOf(item) == idx }) }
+
+  function classRE(name) {
+    return name in classCache ?
+      classCache[name] : (classCache[name] = new RegExp('(^|\\s)' + name + '(\\s|$)'))
+  }
+
+  function maybeAddPx(name, value) {
+    return (typeof value == "number" && !cssNumber[dasherize(name)]) ? value + "px" : value
+  }
+
+  function defaultDisplay(nodeName) {
+    var element, display
+    if (!elementDisplay[nodeName]) {
+      element = document.createElement(nodeName)
+      document.body.appendChild(element)
+      display = getComputedStyle(element, '').getPropertyValue("display")
+      element.parentNode.removeChild(element)
+      display == "none" && (display = "block")
+      elementDisplay[nodeName] = display
+    }
+    return elementDisplay[nodeName]
+  }
+
+  function children(element) {
+    return 'children' in element ?
+      slice.call(element.children) :
+      $.map(element.childNodes, function(node){ if (node.nodeType == 1) return node })
+  }
+
+  function Z(dom, selector) {
+    var i, len = dom ? dom.length : 0
+    for (i = 0; i < len; i++) this[i] = dom[i]
+    this.length = len
+    this.selector = selector || ''
+  }
+
+  // `$.zepto.fragment` takes a html string and an optional tag name
+  // to generate DOM nodes from the given html string.
+  // The generated DOM nodes are returned as an array.
+  // This function can be overridden in plugins for example to make
+  // it compatible with browsers that don't support the DOM fully.
+  zepto.fragment = function(html, name, properties) {
+    var dom, nodes, container
+
+    // A special case optimization for a single tag
+    if (singleTagRE.test(html)) dom = $(document.createElement(RegExp.$1))
+
+    if (!dom) {
+      if (html.replace) html = html.replace(tagExpanderRE, "<$1></$2>")
+      if (name === undefined) name = fragmentRE.test(html) && RegExp.$1
+      if (!(name in containers)) name = '*'
+
+      container = containers[name]
+      container.innerHTML = '' + html
+      dom = $.each(slice.call(container.childNodes), function(){
+        container.removeChild(this)
+      })
+    }
+
+    if (isPlainObject(properties)) {
+      nodes = $(dom)
+      $.each(properties, function(key, value) {
+        if (methodAttributes.indexOf(key) > -1) nodes[key](value)
+        else nodes.attr(key, value)
+      })
+    }
+
+    return dom
+  }
+
+  // `$.zepto.Z` swaps out the prototype of the given `dom` array
+  // of nodes with `$.fn` and thus supplying all the Zepto functions
+  // to the array. This method can be overridden in plugins.
+  zepto.Z = function(dom, selector) {
+    return new Z(dom, selector)
+  }
+
+  // `$.zepto.isZ` should return `true` if the given object is a Zepto
+  // collection. This method can be overridden in plugins.
+  zepto.isZ = function(object) {
+    return object instanceof zepto.Z
+  }
+
+  // `$.zepto.init` is Zepto's counterpart to jQuery's `$.fn.init` and
+  // takes a CSS selector and an optional context (and handles various
+  // special cases).
+  // This method can be overridden in plugins.
+  zepto.init = function(selector, context) {
+    var dom
+    // If nothing given, return an empty Zepto collection
+    if (!selector) return zepto.Z()
+    // Optimize for string selectors
+    else if (typeof selector == 'string') {
+      selector = selector.trim()
+      // If it's a html fragment, create nodes from it
+      // Note: In both Chrome 21 and Firefox 15, DOM error 12
+      // is thrown if the fragment doesn't begin with <
+      if (selector[0] == '<' && fragmentRE.test(selector))
+        dom = zepto.fragment(selector, RegExp.$1, context), selector = null
+      // If there's a context, create a collection on that context first, and select
+      // nodes from there
+      else if (context !== undefined) return $(context).find(selector)
+      // If it's a CSS selector, use it to select nodes.
+      else dom = zepto.qsa(document, selector)
+    }
+    // If a function is given, call it when the DOM is ready
+    else if (isFunction(selector)) return $(document).ready(selector)
+    // If a Zepto collection is given, just return it
+    else if (zepto.isZ(selector)) return selector
+    else {
+      // normalize array if an array of nodes is given
+      if (isArray(selector)) dom = compact(selector)
+      // Wrap DOM nodes.
+      else if (isObject(selector))
+        dom = [selector], selector = null
+      // If it's a html fragment, create nodes from it
+      else if (fragmentRE.test(selector))
+        dom = zepto.fragment(selector.trim(), RegExp.$1, context), selector = null
+      // If there's a context, create a collection on that context first, and select
+      // nodes from there
+      else if (context !== undefined) return $(context).find(selector)
+      // And last but no least, if it's a CSS selector, use it to select nodes.
+      else dom = zepto.qsa(document, selector)
+    }
+    // create a new Zepto collection from the nodes found
+    return zepto.Z(dom, selector)
+  }
+
+  // `$` will be the base `Zepto` object. When calling this
+  // function just call `$.zepto.init, which makes the implementation
+  // details of selecting nodes and creating Zepto collections
+  // patchable in plugins.
+  $ = function(selector, context){
+    return zepto.init(selector, context)
+  }
+
+  function extend(target, source, deep) {
+    for (key in source)
+      if (deep && (isPlainObject(source[key]) || isArray(source[key]))) {
+        if (isPlainObject(source[key]) && !isPlainObject(target[key]))
+          target[key] = {}
+        if (isArray(source[key]) && !isArray(target[key]))
+          target[key] = []
+        extend(target[key], source[key], deep)
+      }
+      else if (source[key] !== undefined) target[key] = source[key]
+  }
+
+  // Copy all but undefined properties from one or more
+  // objects to the `target` object.
+  $.extend = function(target){
+    var deep, args = slice.call(arguments, 1)
+    if (typeof target == 'boolean') {
+      deep = target
+      target = args.shift()
+    }
+    args.forEach(function(arg){ extend(target, arg, deep) })
+    return target
+  }
+
+  // `$.zepto.qsa` is Zepto's CSS selector implementation which
+  // uses `document.querySelectorAll` and optimizes for some special cases, like `#id`.
+  // This method can be overridden in plugins.
+  zepto.qsa = function(element, selector){
+    var found,
+        maybeID = selector[0] == '#',
+        maybeClass = !maybeID && selector[0] == '.',
+        nameOnly = maybeID || maybeClass ? selector.slice(1) : selector, // Ensure that a 1 char tag name still gets checked
+        isSimple = simpleSelectorRE.test(nameOnly)
+    return (element.getElementById && isSimple && maybeID) ? // Safari DocumentFragment doesn't have getElementById
+      ( (found = element.getElementById(nameOnly)) ? [found] : [] ) :
+      (element.nodeType !== 1 && element.nodeType !== 9 && element.nodeType !== 11) ? [] :
+      slice.call(
+        isSimple && !maybeID && element.getElementsByClassName ? // DocumentFragment doesn't have getElementsByClassName/TagName
+          maybeClass ? element.getElementsByClassName(nameOnly) : // If it's simple, it could be a class
+          element.getElementsByTagName(selector) : // Or a tag
+          element.querySelectorAll(selector) // Or it's not simple, and we need to query all
+      )
+  }
+
+  function filtered(nodes, selector) {
+    return selector == null ? $(nodes) : $(nodes).filter(selector)
+  }
+
+  $.contains = document.documentElement.contains ?
+    function(parent, node) {
+      return parent !== node && parent.contains(node)
+    } :
+    function(parent, node) {
+      while (node && (node = node.parentNode))
+        if (node === parent) return true
+      return false
+    }
+
+  function funcArg(context, arg, idx, payload) {
+    return isFunction(arg) ? arg.call(context, idx, payload) : arg
+  }
+
+  function setAttribute(node, name, value) {
+    value == null ? node.removeAttribute(name) : node.setAttribute(name, value)
+  }
+
+  // access className property while respecting SVGAnimatedString
+  function className(node, value){
+    var klass = node.className || '',
+        svg   = klass && klass.baseVal !== undefined
+
+    if (value === undefined) return svg ? klass.baseVal : klass
+    svg ? (klass.baseVal = value) : (node.className = value)
+  }
+
+  // "true"  => true
+  // "false" => false
+  // "null"  => null
+  // "42"    => 42
+  // "42.5"  => 42.5
+  // "08"    => "08"
+  // JSON    => parse if valid
+  // String  => self
+  function deserializeValue(value) {
+    try {
+      return value ?
+        value == "true" ||
+        ( value == "false" ? false :
+          value == "null" ? null :
+          +value + "" == value ? +value :
+          /^[\[\{]/.test(value) ? $.parseJSON(value) :
+          value )
+        : value
+    } catch(e) {
+      return value
+    }
+  }
+
+  $.type = type
+  $.isFunction = isFunction
+  $.isWindow = isWindow
+  $.isArray = isArray
+  $.isPlainObject = isPlainObject
+
+  $.isEmptyObject = function(obj) {
+    var name
+    for (name in obj) return false
+    return true
+  }
+
+  $.isNumeric = function(val) {
+    var num = Number(val), type = typeof val
+    return val != null && type != 'boolean' &&
+      (type != 'string' || val.length) &&
+      !isNaN(num) && isFinite(num) || false
+  }
+
+  $.inArray = function(elem, array, i){
+    return emptyArray.indexOf.call(array, elem, i)
+  }
+
+  $.camelCase = camelize
+  $.trim = function(str) {
+    return str == null ? "" : String.prototype.trim.call(str)
+  }
+
+  // plugin compatibility
+  $.uuid = 0
+  $.support = { }
+  $.expr = { }
+  $.noop = function() {}
+
+  $.map = function(elements, callback){
+    var value, values = [], i, key
+    if (likeArray(elements))
+      for (i = 0; i < elements.length; i++) {
+        value = callback(elements[i], i)
+        if (value != null) values.push(value)
+      }
+    else
+      for (key in elements) {
+        value = callback(elements[key], key)
+        if (value != null) values.push(value)
+      }
+    return flatten(values)
+  }
+
+  $.each = function(elements, callback){
+    var i, key
+    if (likeArray(elements)) {
+      for (i = 0; i < elements.length; i++)
+        if (callback.call(elements[i], i, elements[i]) === false) return elements
+    } else {
+      for (key in elements)
+        if (callback.call(elements[key], key, elements[key]) === false) return elements
+    }
+
+    return elements
+  }
+
+  $.grep = function(elements, callback){
+    return filter.call(elements, callback)
+  }
+
+  if (window.JSON) $.parseJSON = JSON.parse
+
+  // Populate the class2type map
+  $.each("Boolean Number String Function Array Date RegExp Object Error".split(" "), function(i, name) {
+    class2type[ "[object " + name + "]" ] = name.toLowerCase()
+  })
+
+  // Define methods that will be available on all
+  // Zepto collections
+  $.fn = {
+    constructor: zepto.Z,
+    length: 0,
+
+    // Because a collection acts like an array
+    // copy over these useful array functions.
+    forEach: emptyArray.forEach,
+    reduce: emptyArray.reduce,
+    push: emptyArray.push,
+    sort: emptyArray.sort,
+    splice: emptyArray.splice,
+    indexOf: emptyArray.indexOf,
+    concat: function(){
+      var i, value, args = []
+      for (i = 0; i < arguments.length; i++) {
+        value = arguments[i]
+        args[i] = zepto.isZ(value) ? value.toArray() : value
+      }
+      return concat.apply(zepto.isZ(this) ? this.toArray() : this, args)
+    },
+
+    // `map` and `slice` in the jQuery API work differently
+    // from their array counterparts
+    map: function(fn){
+      return $($.map(this, function(el, i){ return fn.call(el, i, el) }))
+    },
+    slice: function(){
+      return $(slice.apply(this, arguments))
+    },
+
+    ready: function(callback){
+      // need to check if document.body exists for IE as that browser reports
+      // document ready when it hasn't yet created the body element
+      if (readyRE.test(document.readyState) && document.body) callback($)
+      else document.addEventListener('DOMContentLoaded', function(){ callback($) }, false)
+      return this
+    },
+    get: function(idx){
+      return idx === undefined ? slice.call(this) : this[idx >= 0 ? idx : idx + this.length]
+    },
+    toArray: function(){ return this.get() },
+    size: function(){
+      return this.length
+    },
+    remove: function(){
+      return this.each(function(){
+        if (this.parentNode != null)
+          this.parentNode.removeChild(this)
+      })
+    },
+    each: function(callback){
+      emptyArray.every.call(this, function(el, idx){
+        return callback.call(el, idx, el) !== false
+      })
+      return this
+    },
+    filter: function(selector){
+      if (isFunction(selector)) return this.not(this.not(selector))
+      return $(filter.call(this, function(element){
+        return zepto.matches(element, selector)
+      }))
+    },
+    add: function(selector,context){
+      return $(uniq(this.concat($(selector,context))))
+    },
+    is: function(selector){
+      return this.length > 0 && zepto.matches(this[0], selector)
+    },
+    not: function(selector){
+      var nodes=[]
+      if (isFunction(selector) && selector.call !== undefined)
+        this.each(function(idx){
+          if (!selector.call(this,idx)) nodes.push(this)
+        })
+      else {
+        var excludes = typeof selector == 'string' ? this.filter(selector) :
+          (likeArray(selector) && isFunction(selector.item)) ? slice.call(selector) : $(selector)
+        this.forEach(function(el){
+          if (excludes.indexOf(el) < 0) nodes.push(el)
+        })
+      }
+      return $(nodes)
+    },
+    has: function(selector){
+      return this.filter(function(){
+        return isObject(selector) ?
+          $.contains(this, selector) :
+          $(this).find(selector).size()
+      })
+    },
+    eq: function(idx){
+      return idx === -1 ? this.slice(idx) : this.slice(idx, + idx + 1)
+    },
+    first: function(){
+      var el = this[0]
+      return el && !isObject(el) ? el : $(el)
+    },
+    last: function(){
+      var el = this[this.length - 1]
+      return el && !isObject(el) ? el : $(el)
+    },
+    find: function(selector){
+      var result, $this = this
+      if (!selector) result = $()
+      else if (typeof selector == 'object')
+        result = $(selector).filter(function(){
+          var node = this
+          return emptyArray.some.call($this, function(parent){
+            return $.contains(parent, node)
+          })
+        })
+      else if (this.length == 1) result = $(zepto.qsa(this[0], selector))
+      else result = this.map(function(){ return zepto.qsa(this, selector) })
+      return result
+    },
+    closest: function(selector, context){
+      var nodes = [], collection = typeof selector == 'object' && $(selector)
+      this.each(function(_, node){
+        while (node && !(collection ? collection.indexOf(node) >= 0 : zepto.matches(node, selector)))
+          node = node !== context && !isDocument(node) && node.parentNode
+        if (node && nodes.indexOf(node) < 0) nodes.push(node)
+      })
+      return $(nodes)
+    },
+    parents: function(selector){
+      var ancestors = [], nodes = this
+      while (nodes.length > 0)
+        nodes = $.map(nodes, function(node){
+          if ((node = node.parentNode) && !isDocument(node) && ancestors.indexOf(node) < 0) {
+            ancestors.push(node)
+            return node
+          }
+        })
+      return filtered(ancestors, selector)
+    },
+    parent: function(selector){
+      return filtered(uniq(this.pluck('parentNode')), selector)
+    },
+    children: function(selector){
+      return filtered(this.map(function(){ return children(this) }), selector)
+    },
+    contents: function() {
+      return this.map(function() { return this.contentDocument || slice.call(this.childNodes) })
+    },
+    siblings: function(selector){
+      return filtered(this.map(function(i, el){
+        return filter.call(children(el.parentNode), function(child){ return child!==el })
+      }), selector)
+    },
+    empty: function(){
+      return this.each(function(){ this.innerHTML = '' })
+    },
+    // `pluck` is borrowed from Prototype.js
+    pluck: function(property){
+      return $.map(this, function(el){ return el[property] })
+    },
+    show: function(){
+      return this.each(function(){
+        this.style.display == "none" && (this.style.display = '')
+        if (getComputedStyle(this, '').getPropertyValue("display") == "none")
+          this.style.display = defaultDisplay(this.nodeName)
+      })
+    },
+    replaceWith: function(newContent){
+      return this.before(newContent).remove()
+    },
+    wrap: function(structure){
+      var func = isFunction(structure)
+      if (this[0] && !func)
+        var dom   = $(structure).get(0),
+            clone = dom.parentNode || this.length > 1
+
+      return this.each(function(index){
+        $(this).wrapAll(
+          func ? structure.call(this, index) :
+            clone ? dom.cloneNode(true) : dom
+        )
+      })
+    },
+    wrapAll: function(structure){
+      if (this[0]) {
+        $(this[0]).before(structure = $(structure))
+        var children
+        // drill down to the inmost element
+        while ((children = structure.children()).length) structure = children.first()
+        $(structure).append(this)
+      }
+      return this
+    },
+    wrapInner: function(structure){
+      var func = isFunction(structure)
+      return this.each(function(index){
+        var self = $(this), contents = self.contents(),
+            dom  = func ? structure.call(this, index) : structure
+        contents.length ? contents.wrapAll(dom) : self.append(dom)
+      })
+    },
+    unwrap: function(){
+      this.parent().each(function(){
+        $(this).replaceWith($(this).children())
+      })
+      return this
+    },
+    clone: function(){
+      return this.map(function(){ return this.cloneNode(true) })
+    },
+    hide: function(){
+      return this.css("display", "none")
+    },
+    toggle: function(setting){
+      return this.each(function(){
+        var el = $(this)
+        ;(setting === undefined ? el.css("display") == "none" : setting) ? el.show() : el.hide()
+      })
+    },
+    prev: function(selector){ return $(this.pluck('previousElementSibling')).filter(selector || '*') },
+    next: function(selector){ return $(this.pluck('nextElementSibling')).filter(selector || '*') },
+    html: function(html){
+      return 0 in arguments ?
+        this.each(function(idx){
+          var originHtml = this.innerHTML
+          $(this).empty().append( funcArg(this, html, idx, originHtml) )
+        }) :
+        (0 in this ? this[0].innerHTML : null)
+    },
+    text: function(text){
+      return 0 in arguments ?
+        this.each(function(idx){
+          var newText = funcArg(this, text, idx, this.textContent)
+          this.textContent = newText == null ? '' : ''+newText
+        }) :
+        (0 in this ? this.pluck('textContent').join("") : null)
+    },
+    attr: function(name, value){
+      var result
+      return (typeof name == 'string' && !(1 in arguments)) ?
+        (0 in this && this[0].nodeType == 1 && (result = this[0].getAttribute(name)) != null ? result : undefined) :
+        this.each(function(idx){
+          if (this.nodeType !== 1) return
+          if (isObject(name)) for (key in name) setAttribute(this, key, name[key])
+          else setAttribute(this, name, funcArg(this, value, idx, this.getAttribute(name)))
+        })
+    },
+    removeAttr: function(name){
+      return this.each(function(){ this.nodeType === 1 && name.split(' ').forEach(function(attribute){
+        setAttribute(this, attribute)
+      }, this)})
+    },
+    prop: function(name, value){
+      name = propMap[name] || name
+      return (1 in arguments) ?
+        this.each(function(idx){
+          this[name] = funcArg(this, value, idx, this[name])
+        }) :
+        (this[0] && this[0][name])
+    },
+    removeProp: function(name){
+      name = propMap[name] || name
+      return this.each(function(){ delete this[name] })
+    },
+    data: function(name, value){
+      var attrName = 'data-' + name.replace(capitalRE, '-$1').toLowerCase()
+
+      var data = (1 in arguments) ?
+        this.attr(attrName, value) :
+        this.attr(attrName)
+
+      return data !== null ? deserializeValue(data) : undefined
+    },
+    val: function(value){
+      if (0 in arguments) {
+        if (value == null) value = ""
+        return this.each(function(idx){
+          this.value = funcArg(this, value, idx, this.value)
+        })
+      } else {
+        return this[0] && (this[0].multiple ?
+           $(this[0]).find('option').filter(function(){ return this.selected }).pluck('value') :
+           this[0].value)
+      }
+    },
+    offset: function(coordinates){
+      if (coordinates) return this.each(function(index){
+        var $this = $(this),
+            coords = funcArg(this, coordinates, index, $this.offset()),
+            parentOffset = $this.offsetParent().offset(),
+            props = {
+              top:  coords.top  - parentOffset.top,
+              left: coords.left - parentOffset.left
+            }
+
+        if ($this.css('position') == 'static') props['position'] = 'relative'
+        $this.css(props)
+      })
+      if (!this.length) return null
+      if (document.documentElement !== this[0] && !$.contains(document.documentElement, this[0]))
+        return {top: 0, left: 0}
+      var obj = this[0].getBoundingClientRect()
+      return {
+        left: obj.left + window.pageXOffset,
+        top: obj.top + window.pageYOffset,
+        width: Math.round(obj.width),
+        height: Math.round(obj.height)
+      }
+    },
+    css: function(property, value){
+      if (arguments.length < 2) {
+        var element = this[0]
+        if (typeof property == 'string') {
+          if (!element) return
+          return element.style[camelize(property)] || getComputedStyle(element, '').getPropertyValue(property)
+        } else if (isArray(property)) {
+          if (!element) return
+          var props = {}
+          var computedStyle = getComputedStyle(element, '')
+          $.each(property, function(_, prop){
+            props[prop] = (element.style[camelize(prop)] || computedStyle.getPropertyValue(prop))
+          })
+          return props
+        }
+      }
+
+      var css = ''
+      if (type(property) == 'string') {
+        if (!value && value !== 0)
+          this.each(function(){ this.style.removeProperty(dasherize(property)) })
+        else
+          css = dasherize(property) + ":" + maybeAddPx(property, value)
+      } else {
+        for (key in property)
+          if (!property[key] && property[key] !== 0)
+            this.each(function(){ this.style.removeProperty(dasherize(key)) })
+          else
+            css += dasherize(key) + ':' + maybeAddPx(key, property[key]) + ';'
+      }
+
+      return this.each(function(){ this.style.cssText += ';' + css })
+    },
+    index: function(element){
+      return element ? this.indexOf($(element)[0]) : this.parent().children().indexOf(this[0])
+    },
+    hasClass: function(name){
+      if (!name) return false
+      return emptyArray.some.call(this, function(el){
+        return this.test(className(el))
+      }, classRE(name))
+    },
+    addClass: function(name){
+      if (!name) return this
+      return this.each(function(idx){
+        if (!('className' in this)) return
+        classList = []
+        var cls = className(this), newName = funcArg(this, name, idx, cls)
+        newName.split(/\s+/g).forEach(function(klass){
+          if (!$(this).hasClass(klass)) classList.push(klass)
+        }, this)
+        classList.length && className(this, cls + (cls ? " " : "") + classList.join(" "))
+      })
+    },
+    removeClass: function(name){
+      return this.each(function(idx){
+        if (!('className' in this)) return
+        if (name === undefined) return className(this, '')
+        classList = className(this)
+        funcArg(this, name, idx, classList).split(/\s+/g).forEach(function(klass){
+          classList = classList.replace(classRE(klass), " ")
+        })
+        className(this, classList.trim())
+      })
+    },
+    toggleClass: function(name, when){
+      if (!name) return this
+      return this.each(function(idx){
+        var $this = $(this), names = funcArg(this, name, idx, className(this))
+        names.split(/\s+/g).forEach(function(klass){
+          (when === undefined ? !$this.hasClass(klass) : when) ?
+            $this.addClass(klass) : $this.removeClass(klass)
+        })
+      })
+    },
+    scrollTop: function(value){
+      if (!this.length) return
+      var hasScrollTop = 'scrollTop' in this[0]
+      if (value === undefined) return hasScrollTop ? this[0].scrollTop : this[0].pageYOffset
+      return this.each(hasScrollTop ?
+        function(){ this.scrollTop = value } :
+        function(){ this.scrollTo(this.scrollX, value) })
+    },
+    scrollLeft: function(value){
+      if (!this.length) return
+      var hasScrollLeft = 'scrollLeft' in this[0]
+      if (value === undefined) return hasScrollLeft ? this[0].scrollLeft : this[0].pageXOffset
+      return this.each(hasScrollLeft ?
+        function(){ this.scrollLeft = value } :
+        function(){ this.scrollTo(value, this.scrollY) })
+    },
+    position: function() {
+      if (!this.length) return
+
+      var elem = this[0],
+        // Get *real* offsetParent
+        offsetParent = this.offsetParent(),
+        // Get correct offsets
+        offset       = this.offset(),
+        parentOffset = rootNodeRE.test(offsetParent[0].nodeName) ? { top: 0, left: 0 } : offsetParent.offset()
+
+      // Subtract element margins
+      // note: when an element has margin: auto the offsetLeft and marginLeft
+      // are the same in Safari causing offset.left to incorrectly be 0
+      offset.top  -= parseFloat( $(elem).css('margin-top') ) || 0
+      offset.left -= parseFloat( $(elem).css('margin-left') ) || 0
+
+      // Add offsetParent borders
+      parentOffset.top  += parseFloat( $(offsetParent[0]).css('border-top-width') ) || 0
+      parentOffset.left += parseFloat( $(offsetParent[0]).css('border-left-width') ) || 0
+
+      // Subtract the two offsets
+      return {
+        top:  offset.top  - parentOffset.top,
+        left: offset.left - parentOffset.left
+      }
+    },
+    offsetParent: function() {
+      return this.map(function(){
+        var parent = this.offsetParent || document.body
+        while (parent && !rootNodeRE.test(parent.nodeName) && $(parent).css("position") == "static")
+          parent = parent.offsetParent
+        return parent
+      })
+    }
+  }
+
+  // for now
+  $.fn.detach = $.fn.remove
+
+  // Generate the `width` and `height` functions
+  ;['width', 'height'].forEach(function(dimension){
+    var dimensionProperty =
+      dimension.replace(/./, function(m){ return m[0].toUpperCase() })
+
+    $.fn[dimension] = function(value){
+      var offset, el = this[0]
+      if (value === undefined) return isWindow(el) ? el['inner' + dimensionProperty] :
+        isDocument(el) ? el.documentElement['scroll' + dimensionProperty] :
+        (offset = this.offset()) && offset[dimension]
+      else return this.each(function(idx){
+        el = $(this)
+        el.css(dimension, funcArg(this, value, idx, el[dimension]()))
+      })
+    }
+  })
+
+  function traverseNode(node, fun) {
+    fun(node)
+    for (var i = 0, len = node.childNodes.length; i < len; i++)
+      traverseNode(node.childNodes[i], fun)
+  }
+
+  // Generate the `after`, `prepend`, `before`, `append`,
+  // `insertAfter`, `insertBefore`, `appendTo`, and `prependTo` methods.
+  adjacencyOperators.forEach(function(operator, operatorIndex) {
+    var inside = operatorIndex % 2 //=> prepend, append
+
+    $.fn[operator] = function(){
+      // arguments can be nodes, arrays of nodes, Zepto objects and HTML strings
+      var argType, nodes = $.map(arguments, function(arg) {
+            var arr = []
+            argType = type(arg)
+            if (argType == "array") {
+              arg.forEach(function(el) {
+                if (el.nodeType !== undefined) return arr.push(el)
+                else if ($.zepto.isZ(el)) return arr = arr.concat(el.get())
+                arr = arr.concat(zepto.fragment(el))
+              })
+              return arr
+            }
+            return argType == "object" || arg == null ?
+              arg : zepto.fragment(arg)
+          }),
+          parent, copyByClone = this.length > 1
+      if (nodes.length < 1) return this
+
+      return this.each(function(_, target){
+        parent = inside ? target : target.parentNode
+
+        // convert all methods to a "before" operation
+        target = operatorIndex == 0 ? target.nextSibling :
+                 operatorIndex == 1 ? target.firstChild :
+                 operatorIndex == 2 ? target :
+                 null
+
+        var parentInDocument = $.contains(document.documentElement, parent)
+
+        nodes.forEach(function(node){
+          if (copyByClone) node = node.cloneNode(true)
+          else if (!parent) return $(node).remove()
+
+          parent.insertBefore(node, target)
+          if (parentInDocument) traverseNode(node, function(el){
+            if (el.nodeName != null && el.nodeName.toUpperCase() === 'SCRIPT' &&
+               (!el.type || el.type === 'text/javascript') && !el.src){
+              var target = el.ownerDocument ? el.ownerDocument.defaultView : window
+              target['eval'].call(target, el.innerHTML)
+            }
+          })
+        })
+      })
+    }
+
+    // after    => insertAfter
+    // prepend  => prependTo
+    // before   => insertBefore
+    // append   => appendTo
+    $.fn[inside ? operator+'To' : 'insert'+(operatorIndex ? 'Before' : 'After')] = function(html){
+      $(html)[operator](this)
+      return this
+    }
+  })
+
+  zepto.Z.prototype = Z.prototype = $.fn
+
+  // Export internal API functions in the `$.zepto` namespace
+  zepto.uniq = uniq
+  zepto.deserializeValue = deserializeValue
+  $.zepto = zepto
+
+  return $
+})()
+
+window.Zepto = Zepto
+window.$ === undefined && (window.$ = Zepto)
+
+;(function($){
+  var _zid = 1, undefined,
+      slice = Array.prototype.slice,
+      isFunction = $.isFunction,
+      isString = function(obj){ return typeof obj == 'string' },
+      handlers = {},
+      specialEvents={},
+      focusinSupported = 'onfocusin' in window,
+      focus = { focus: 'focusin', blur: 'focusout' },
+      hover = { mouseenter: 'mouseover', mouseleave: 'mouseout' }
+
+  specialEvents.click = specialEvents.mousedown = specialEvents.mouseup = specialEvents.mousemove = 'MouseEvents'
+
+  function zid(element) {
+    return element._zid || (element._zid = _zid++)
+  }
+  function findHandlers(element, event, fn, selector) {
+    event = parse(event)
+    if (event.ns) var matcher = matcherFor(event.ns)
+    return (handlers[zid(element)] || []).filter(function(handler) {
+      return handler
+        && (!event.e  || handler.e == event.e)
+        && (!event.ns || matcher.test(handler.ns))
+        && (!fn       || zid(handler.fn) === zid(fn))
+        && (!selector || handler.sel == selector)
+    })
+  }
+  function parse(event) {
+    var parts = ('' + event).split('.')
+    return {e: parts[0], ns: parts.slice(1).sort().join(' ')}
+  }
+  function matcherFor(ns) {
+    return new RegExp('(?:^| )' + ns.replace(' ', ' .* ?') + '(?: |$)')
+  }
+
+  function eventCapture(handler, captureSetting) {
+    return handler.del &&
+      (!focusinSupported && (handler.e in focus)) ||
+      !!captureSetting
+  }
+
+  function realEvent(type) {
+    return hover[type] || (focusinSupported && focus[type]) || type
+  }
+
+  function add(element, events, fn, data, selector, delegator, capture){
+    var id = zid(element), set = (handlers[id] || (handlers[id] = []))
+    events.split(/\s/).forEach(function(event){
+      if (event == 'ready') return $(document).ready(fn)
+      var handler   = parse(event)
+      handler.fn    = fn
+      handler.sel   = selector
+      // emulate mouseenter, mouseleave
+      if (handler.e in hover) fn = function(e){
+        var related = e.relatedTarget
+        if (!related || (related !== this && !$.contains(this, related)))
+          return handler.fn.apply(this, arguments)
+      }
+      handler.del   = delegator
+      var callback  = delegator || fn
+      handler.proxy = function(e){
+        e = compatible(e)
+        if (e.isImmediatePropagationStopped()) return
+        e.data = data
+        var result = callback.apply(element, e._args == undefined ? [e] : [e].concat(e._args))
+        if (result === false) e.preventDefault(), e.stopPropagation()
+        return result
+      }
+      handler.i = set.length
+      set.push(handler)
+      if ('addEventListener' in element)
+        element.addEventListener(realEvent(handler.e), handler.proxy, eventCapture(handler, capture))
+    })
+  }
+  function remove(element, events, fn, selector, capture){
+    var id = zid(element)
+    ;(events || '').split(/\s/).forEach(function(event){
+      findHandlers(element, event, fn, selector).forEach(function(handler){
+        delete handlers[id][handler.i]
+      if ('removeEventListener' in element)
+        element.removeEventListener(realEvent(handler.e), handler.proxy, eventCapture(handler, capture))
+      })
+    })
+  }
+
+  $.event = { add: add, remove: remove }
+
+  $.proxy = function(fn, context) {
+    var args = (2 in arguments) && slice.call(arguments, 2)
+    if (isFunction(fn)) {
+      var proxyFn = function(){ return fn.apply(context, args ? args.concat(slice.call(arguments)) : arguments) }
+      proxyFn._zid = zid(fn)
+      return proxyFn
+    } else if (isString(context)) {
+      if (args) {
+        args.unshift(fn[context], fn)
+        return $.proxy.apply(null, args)
+      } else {
+        return $.proxy(fn[context], fn)
+      }
+    } else {
+      throw new TypeError("expected function")
+    }
+  }
+
+  $.fn.bind = function(event, data, callback){
+    return this.on(event, data, callback)
+  }
+  $.fn.unbind = function(event, callback){
+    return this.off(event, callback)
+  }
+  $.fn.one = function(event, selector, data, callback){
+    return this.on(event, selector, data, callback, 1)
+  }
+
+  var returnTrue = function(){return true},
+      returnFalse = function(){return false},
+      ignoreProperties = /^([A-Z]|returnValue$|layer[XY]$|webkitMovement[XY]$)/,
+      eventMethods = {
+        preventDefault: 'isDefaultPrevented',
+        stopImmediatePropagation: 'isImmediatePropagationStopped',
+        stopPropagation: 'isPropagationStopped'
+      }
+
+  function compatible(event, source) {
+    if (source || !event.isDefaultPrevented) {
+      source || (source = event)
+
+      $.each(eventMethods, function(name, predicate) {
+        var sourceMethod = source[name]
+        event[name] = function(){
+          this[predicate] = returnTrue
+          return sourceMethod && sourceMethod.apply(source, arguments)
+        }
+        event[predicate] = returnFalse
+      })
+
+      event.timeStamp || (event.timeStamp = Date.now())
+
+      if (source.defaultPrevented !== undefined ? source.defaultPrevented :
+          'returnValue' in source ? source.returnValue === false :
+          source.getPreventDefault && source.getPreventDefault())
+        event.isDefaultPrevented = returnTrue
+    }
+    return event
+  }
+
+  function createProxy(event) {
+    var key, proxy = { originalEvent: event }
+    for (key in event)
+      if (!ignoreProperties.test(key) && event[key] !== undefined) proxy[key] = event[key]
+
+    return compatible(proxy, event)
+  }
+
+  $.fn.delegate = function(selector, event, callback){
+    return this.on(event, selector, callback)
+  }
+  $.fn.undelegate = function(selector, event, callback){
+    return this.off(event, selector, callback)
+  }
+
+  $.fn.live = function(event, callback){
+    $(document.body).delegate(this.selector, event, callback)
+    return this
+  }
+  $.fn.die = function(event, callback){
+    $(document.body).undelegate(this.selector, event, callback)
+    return this
+  }
+
+  $.fn.on = function(event, selector, data, callback, one){
+    var autoRemove, delegator, $this = this
+    if (event && !isString(event)) {
+      $.each(event, function(type, fn){
+        $this.on(type, selector, data, fn, one)
+      })
+      return $this
+    }
+
+    if (!isString(selector) && !isFunction(callback) && callback !== false)
+      callback = data, data = selector, selector = undefined
+    if (callback === undefined || data === false)
+      callback = data, data = undefined
+
+    if (callback === false) callback = returnFalse
+
+    return $this.each(function(_, element){
+      if (one) autoRemove = function(e){
+        remove(element, e.type, callback)
+        return callback.apply(this, arguments)
+      }
+
+      if (selector) delegator = function(e){
+        var evt, match = $(e.target).closest(selector, element).get(0)
+        if (match && match !== element) {
+          evt = $.extend(createProxy(e), {currentTarget: match, liveFired: element})
+          return (autoRemove || callback).apply(match, [evt].concat(slice.call(arguments, 1)))
+        }
+      }
+
+      add(element, event, callback, data, selector, delegator || autoRemove)
+    })
+  }
+  $.fn.off = function(event, selector, callback){
+    var $this = this
+    if (event && !isString(event)) {
+      $.each(event, function(type, fn){
+        $this.off(type, selector, fn)
+      })
+      return $this
+    }
+
+    if (!isString(selector) && !isFunction(callback) && callback !== false)
+      callback = selector, selector = undefined
+
+    if (callback === false) callback = returnFalse
+
+    return $this.each(function(){
+      remove(this, event, callback, selector)
+    })
+  }
+
+  $.fn.trigger = function(event, args){
+    event = (isString(event) || $.isPlainObject(event)) ? $.Event(event) : compatible(event)
+    event._args = args
+    return this.each(function(){
+      // handle focus(), blur() by calling them directly
+      if (event.type in focus && typeof this[event.type] == "function") this[event.type]()
+      // items in the collection might not be DOM elements
+      else if ('dispatchEvent' in this) this.dispatchEvent(event)
+      else $(this).triggerHandler(event, args)
+    })
+  }
+
+  // triggers event handlers on current element just as if an event occurred,
+  // doesn't trigger an actual event, doesn't bubble
+  $.fn.triggerHandler = function(event, args){
+    var e, result
+    this.each(function(i, element){
+      e = createProxy(isString(event) ? $.Event(event) : event)
+      e._args = args
+      e.target = element
+      $.each(findHandlers(element, event.type || event), function(i, handler){
+        result = handler.proxy(e)
+        if (e.isImmediatePropagationStopped()) return false
+      })
+    })
+    return result
+  }
+
+  // shortcut methods for `.bind(event, fn)` for each event type
+  ;('focusin focusout focus blur load resize scroll unload click dblclick '+
+  'mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave '+
+  'change select keydown keypress keyup error').split(' ').forEach(function(event) {
+    $.fn[event] = function(callback) {
+      return (0 in arguments) ?
+        this.bind(event, callback) :
+        this.trigger(event)
+    }
+  })
+
+  $.Event = function(type, props) {
+    if (!isString(type)) props = type, type = props.type
+    var event = document.createEvent(specialEvents[type] || 'Events'), bubbles = true
+    if (props) for (var name in props) (name == 'bubbles') ? (bubbles = !!props[name]) : (event[name] = props[name])
+    event.initEvent(type, bubbles, true)
+    return compatible(event)
+  }
+
+})(Zepto)
+
+;(function($){
+  var jsonpID = +new Date(),
+      document = window.document,
+      key,
+      name,
+      rscript = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+      scriptTypeRE = /^(?:text|application)\/javascript/i,
+      xmlTypeRE = /^(?:text|application)\/xml/i,
+      jsonType = 'application/json',
+      htmlType = 'text/html',
+      blankRE = /^\s*$/,
+      originAnchor = document.createElement('a')
+
+  originAnchor.href = window.location.href
+
+  // trigger a custom event and return false if it was cancelled
+  function triggerAndReturn(context, eventName, data) {
+    var event = $.Event(eventName)
+    $(context).trigger(event, data)
+    return !event.isDefaultPrevented()
+  }
+
+  // trigger an Ajax "global" event
+  function triggerGlobal(settings, context, eventName, data) {
+    if (settings.global) return triggerAndReturn(context || document, eventName, data)
+  }
+
+  // Number of active Ajax requests
+  $.active = 0
+
+  function ajaxStart(settings) {
+    if (settings.global && $.active++ === 0) triggerGlobal(settings, null, 'ajaxStart')
+  }
+  function ajaxStop(settings) {
+    if (settings.global && !(--$.active)) triggerGlobal(settings, null, 'ajaxStop')
+  }
+
+  // triggers an extra global event "ajaxBeforeSend" that's like "ajaxSend" but cancelable
+  function ajaxBeforeSend(xhr, settings) {
+    var context = settings.context
+    if (settings.beforeSend.call(context, xhr, settings) === false ||
+        triggerGlobal(settings, context, 'ajaxBeforeSend', [xhr, settings]) === false)
+      return false
+
+    triggerGlobal(settings, context, 'ajaxSend', [xhr, settings])
+  }
+  function ajaxSuccess(data, xhr, settings, deferred) {
+    var context = settings.context, status = 'success'
+    settings.success.call(context, data, status, xhr)
+    if (deferred) deferred.resolveWith(context, [data, status, xhr])
+    triggerGlobal(settings, context, 'ajaxSuccess', [xhr, settings, data])
+    ajaxComplete(status, xhr, settings)
+  }
+  // type: "timeout", "error", "abort", "parsererror"
+  function ajaxError(error, type, xhr, settings, deferred) {
+    var context = settings.context
+    settings.error.call(context, xhr, type, error)
+    if (deferred) deferred.rejectWith(context, [xhr, type, error])
+    triggerGlobal(settings, context, 'ajaxError', [xhr, settings, error || type])
+    ajaxComplete(type, xhr, settings)
+  }
+  // status: "success", "notmodified", "error", "timeout", "abort", "parsererror"
+  function ajaxComplete(status, xhr, settings) {
+    var context = settings.context
+    settings.complete.call(context, xhr, status)
+    triggerGlobal(settings, context, 'ajaxComplete', [xhr, settings])
+    ajaxStop(settings)
+  }
+
+  function ajaxDataFilter(data, type, settings) {
+    if (settings.dataFilter == empty) return data
+    var context = settings.context
+    return settings.dataFilter.call(context, data, type)
+  }
+
+  // Empty function, used as default callback
+  function empty() {}
+
+  $.ajaxJSONP = function(options, deferred){
+    if (!('type' in options)) return $.ajax(options)
+
+    var _callbackName = options.jsonpCallback,
+      callbackName = ($.isFunction(_callbackName) ?
+        _callbackName() : _callbackName) || ('Zepto' + (jsonpID++)),
+      script = document.createElement('script'),
+      originalCallback = window[callbackName],
+      responseData,
+      abort = function(errorType) {
+        $(script).triggerHandler('error', errorType || 'abort')
+      },
+      xhr = { abort: abort }, abortTimeout
+
+    if (deferred) deferred.promise(xhr)
+
+    $(script).on('load error', function(e, errorType){
+      clearTimeout(abortTimeout)
+      $(script).off().remove()
+
+      if (e.type == 'error' || !responseData) {
+        ajaxError(null, errorType || 'error', xhr, options, deferred)
+      } else {
+        ajaxSuccess(responseData[0], xhr, options, deferred)
+      }
+
+      window[callbackName] = originalCallback
+      if (responseData && $.isFunction(originalCallback))
+        originalCallback(responseData[0])
+
+      originalCallback = responseData = undefined
+    })
+
+    if (ajaxBeforeSend(xhr, options) === false) {
+      abort('abort')
+      return xhr
+    }
+
+    window[callbackName] = function(){
+      responseData = arguments
+    }
+
+    script.src = options.url.replace(/\?(.+)=\?/, '?$1=' + callbackName)
+    document.head.appendChild(script)
+
+    if (options.timeout > 0) abortTimeout = setTimeout(function(){
+      abort('timeout')
+    }, options.timeout)
+
+    return xhr
+  }
+
+  $.ajaxSettings = {
+    // Default type of request
+    type: 'GET',
+    // Callback that is executed before request
+    beforeSend: empty,
+    // Callback that is executed if the request succeeds
+    success: empty,
+    // Callback that is executed the the server drops error
+    error: empty,
+    // Callback that is executed on request complete (both: error and success)
+    complete: empty,
+    // The context for the callbacks
+    context: null,
+    // Whether to trigger "global" Ajax events
+    global: true,
+    // Transport
+    xhr: function () {
+      return new window.XMLHttpRequest()
+    },
+    // MIME types mapping
+    // IIS returns Javascript as "application/x-javascript"
+    accepts: {
+      script: 'text/javascript, application/javascript, application/x-javascript',
+      json:   jsonType,
+      xml:    'application/xml, text/xml',
+      html:   htmlType,
+      text:   'text/plain'
+    },
+    // Whether the request is to another domain
+    crossDomain: false,
+    // Default timeout
+    timeout: 0,
+    // Whether data should be serialized to string
+    processData: true,
+    // Whether the browser should be allowed to cache GET responses
+    cache: true,
+    //Used to handle the raw response data of XMLHttpRequest.
+    //This is a pre-filtering function to sanitize the response.
+    //The sanitized response should be returned
+    dataFilter: empty
+  }
+
+  function mimeToDataType(mime) {
+    if (mime) mime = mime.split(';', 2)[0]
+    return mime && ( mime == htmlType ? 'html' :
+      mime == jsonType ? 'json' :
+      scriptTypeRE.test(mime) ? 'script' :
+      xmlTypeRE.test(mime) && 'xml' ) || 'text'
+  }
+
+  function appendQuery(url, query) {
+    if (query == '') return url
+    return (url + '&' + query).replace(/[&?]{1,2}/, '?')
+  }
+
+  // serialize payload and append it to the URL for GET requests
+  function serializeData(options) {
+    if (options.processData && options.data && $.type(options.data) != "string")
+      options.data = $.param(options.data, options.traditional)
+    if (options.data && (!options.type || options.type.toUpperCase() == 'GET' || 'jsonp' == options.dataType))
+      options.url = appendQuery(options.url, options.data), options.data = undefined
+  }
+
+  $.ajax = function(options){
+    var settings = $.extend({}, options || {}),
+        deferred = $.Deferred && $.Deferred(),
+        urlAnchor, hashIndex
+    for (key in $.ajaxSettings) if (settings[key] === undefined) settings[key] = $.ajaxSettings[key]
+
+    ajaxStart(settings)
+
+    if (!settings.crossDomain) {
+      urlAnchor = document.createElement('a')
+      urlAnchor.href = settings.url
+      // cleans up URL for .href (IE only), see https://github.com/madrobby/zepto/pull/1049
+      urlAnchor.href = urlAnchor.href
+      settings.crossDomain = (originAnchor.protocol + '//' + originAnchor.host) !== (urlAnchor.protocol + '//' + urlAnchor.host)
+    }
+
+    if (!settings.url) settings.url = window.location.toString()
+    if ((hashIndex = settings.url.indexOf('#')) > -1) settings.url = settings.url.slice(0, hashIndex)
+    serializeData(settings)
+
+    var dataType = settings.dataType, hasPlaceholder = /\?.+=\?/.test(settings.url)
+    if (hasPlaceholder) dataType = 'jsonp'
+
+    if (settings.cache === false || (
+         (!options || options.cache !== true) &&
+         ('script' == dataType || 'jsonp' == dataType)
+        ))
+      settings.url = appendQuery(settings.url, '_=' + Date.now())
+
+    if ('jsonp' == dataType) {
+      if (!hasPlaceholder)
+        settings.url = appendQuery(settings.url,
+          settings.jsonp ? (settings.jsonp + '=?') : settings.jsonp === false ? '' : 'callback=?')
+      return $.ajaxJSONP(settings, deferred)
+    }
+
+    var mime = settings.accepts[dataType],
+        headers = { },
+        setHeader = function(name, value) { headers[name.toLowerCase()] = [name, value] },
+        protocol = /^([\w-]+:)\/\//.test(settings.url) ? RegExp.$1 : window.location.protocol,
+        xhr = settings.xhr(),
+        nativeSetHeader = xhr.setRequestHeader,
+        abortTimeout
+
+    if (deferred) deferred.promise(xhr)
+
+    if (!settings.crossDomain) setHeader('X-Requested-With', 'XMLHttpRequest')
+    setHeader('Accept', mime || '*/*')
+    if (mime = settings.mimeType || mime) {
+      if (mime.indexOf(',') > -1) mime = mime.split(',', 2)[0]
+      xhr.overrideMimeType && xhr.overrideMimeType(mime)
+    }
+    if (settings.contentType || (settings.contentType !== false && settings.data && settings.type.toUpperCase() != 'GET'))
+      setHeader('Content-Type', settings.contentType || 'application/x-www-form-urlencoded')
+
+    if (settings.headers) for (name in settings.headers) setHeader(name, settings.headers[name])
+    xhr.setRequestHeader = setHeader
+
+    xhr.onreadystatechange = function(){
+      if (xhr.readyState == 4) {
+        xhr.onreadystatechange = empty
+        clearTimeout(abortTimeout)
+        var result, error = false
+        if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304 || (xhr.status == 0 && protocol == 'file:')) {
+          dataType = dataType || mimeToDataType(settings.mimeType || xhr.getResponseHeader('content-type'))
+
+          if (xhr.responseType == 'arraybuffer' || xhr.responseType == 'blob')
+            result = xhr.response
+          else {
+            result = xhr.responseText
+
+            try {
+              // http://perfectionkills.com/global-eval-what-are-the-options/
+              // sanitize response accordingly if data filter callback provided
+              result = ajaxDataFilter(result, dataType, settings)
+              if (dataType == 'script')    (1,eval)(result)
+              else if (dataType == 'xml')  result = xhr.responseXML
+              else if (dataType == 'json') result = blankRE.test(result) ? null : $.parseJSON(result)
+            } catch (e) { error = e }
+
+            if (error) return ajaxError(error, 'parsererror', xhr, settings, deferred)
+          }
+
+          ajaxSuccess(result, xhr, settings, deferred)
+        } else {
+          ajaxError(xhr.statusText || null, xhr.status ? 'error' : 'abort', xhr, settings, deferred)
+        }
+      }
+    }
+
+    if (ajaxBeforeSend(xhr, settings) === false) {
+      xhr.abort()
+      ajaxError(null, 'abort', xhr, settings, deferred)
+      return xhr
+    }
+
+    var async = 'async' in settings ? settings.async : true
+    xhr.open(settings.type, settings.url, async, settings.username, settings.password)
+
+    if (settings.xhrFields) for (name in settings.xhrFields) xhr[name] = settings.xhrFields[name]
+
+    for (name in headers) nativeSetHeader.apply(xhr, headers[name])
+
+    if (settings.timeout > 0) abortTimeout = setTimeout(function(){
+        xhr.onreadystatechange = empty
+        xhr.abort()
+        ajaxError(null, 'timeout', xhr, settings, deferred)
+      }, settings.timeout)
+
+    // avoid sending empty string (#319)
+    xhr.send(settings.data ? settings.data : null)
+    return xhr
+  }
+
+  // handle optional data/success arguments
+  function parseArguments(url, data, success, dataType) {
+    if ($.isFunction(data)) dataType = success, success = data, data = undefined
+    if (!$.isFunction(success)) dataType = success, success = undefined
+    return {
+      url: url
+    , data: data
+    , success: success
+    , dataType: dataType
+    }
+  }
+
+  $.get = function(/* url, data, success, dataType */){
+    return $.ajax(parseArguments.apply(null, arguments))
+  }
+
+  $.post = function(/* url, data, success, dataType */){
+    var options = parseArguments.apply(null, arguments)
+    options.type = 'POST'
+    return $.ajax(options)
+  }
+
+  $.getJSON = function(/* url, data, success */){
+    var options = parseArguments.apply(null, arguments)
+    options.dataType = 'json'
+    return $.ajax(options)
+  }
+
+  $.fn.load = function(url, data, success){
+    if (!this.length) return this
+    var self = this, parts = url.split(/\s/), selector,
+        options = parseArguments(url, data, success),
+        callback = options.success
+    if (parts.length > 1) options.url = parts[0], selector = parts[1]
+    options.success = function(response){
+      self.html(selector ?
+        $('<div>').html(response.replace(rscript, "")).find(selector)
+        : response)
+      callback && callback.apply(self, arguments)
+    }
+    $.ajax(options)
+    return this
+  }
+
+  var escape = encodeURIComponent
+
+  function serialize(params, obj, traditional, scope){
+    var type, array = $.isArray(obj), hash = $.isPlainObject(obj)
+    $.each(obj, function(key, value) {
+      type = $.type(value)
+      if (scope) key = traditional ? scope :
+        scope + '[' + (hash || type == 'object' || type == 'array' ? key : '') + ']'
+      // handle data in serializeArray() format
+      if (!scope && array) params.add(value.name, value.value)
+      // recurse into nested objects
+      else if (type == "array" || (!traditional && type == "object"))
+        serialize(params, value, traditional, key)
+      else params.add(key, value)
+    })
+  }
+
+  $.param = function(obj, traditional){
+    var params = []
+    params.add = function(key, value) {
+      if ($.isFunction(value)) value = value()
+      if (value == null) value = ""
+      this.push(escape(key) + '=' + escape(value))
+    }
+    serialize(params, obj, traditional)
+    return params.join('&').replace(/%20/g, '+')
+  }
+})(Zepto)
+
+;(function($){
+  $.fn.serializeArray = function() {
+    var name, type, result = [],
+      add = function(value) {
+        if (value.forEach) return value.forEach(add)
+        result.push({ name: name, value: value })
+      }
+    if (this[0]) $.each(this[0].elements, function(_, field){
+      type = field.type, name = field.name
+      if (name && field.nodeName.toLowerCase() != 'fieldset' &&
+        !field.disabled && type != 'submit' && type != 'reset' && type != 'button' && type != 'file' &&
+        ((type != 'radio' && type != 'checkbox') || field.checked))
+          add($(field).val())
+    })
+    return result
+  }
+
+  $.fn.serialize = function(){
+    var result = []
+    this.serializeArray().forEach(function(elm){
+      result.push(encodeURIComponent(elm.name) + '=' + encodeURIComponent(elm.value))
+    })
+    return result.join('&')
+  }
+
+  $.fn.submit = function(callback) {
+    if (0 in arguments) this.bind('submit', callback)
+    else if (this.length) {
+      var event = $.Event('submit')
+      this.eq(0).trigger(event)
+      if (!event.isDefaultPrevented()) this.get(0).submit()
+    }
+    return this
+  }
+
+})(Zepto)
+
+;(function(){
+  // getComputedStyle shouldn't freak out when called
+  // without a valid element as argument
+  try {
+    getComputedStyle(undefined)
+  } catch(e) {
+    var nativeGetComputedStyle = getComputedStyle
+    window.getComputedStyle = function(element, pseudoElement){
+      try {
+        return nativeGetComputedStyle(element, pseudoElement)
+      } catch(e) {
+        return null
+      }
+    }
+  }
+})()
+  return Zepto
+}))
+;
+
+/*
+ Highcharts JS v5.0.10 (2017-03-31)
+
+ (c) 2009-2016 Torstein Honsi
+
+ License: www.highcharts.com/license
+*/
+(function(L,a){"object"===typeof module&&module.exports?module.exports=L.document?a(L):a:L.Highcharts=a(L)})("undefined"!==typeof window?window:this,function(L){L=function(){var a=window,B=a.document,A=a.navigator&&a.navigator.userAgent||"",H=B&&B.createElementNS&&!!B.createElementNS("http://www.w3.org/2000/svg","svg").createSVGRect,G=/(edge|msie|trident)/i.test(A)&&!window.opera,r=!H,f=/Firefox/.test(A),l=f&&4>parseInt(A.split("Firefox/")[1],10);return a.Highcharts?a.Highcharts.error(16,!0):{product:"Highcharts",
+version:"5.0.10",deg2rad:2*Math.PI/360,doc:B,hasBidiBug:l,hasTouch:B&&void 0!==B.documentElement.ontouchstart,isMS:G,isWebKit:/AppleWebKit/.test(A),isFirefox:f,isTouchDevice:/(Mobile|Android|Windows Phone)/.test(A),SVG_NS:"http://www.w3.org/2000/svg",chartCount:0,seriesTypes:{},symbolSizes:{},svg:H,vml:r,win:a,charts:[],marginNames:["plotTop","marginRight","marginBottom","plotLeft"],noop:function(){}}}();(function(a){var B=[],A=a.charts,H=a.doc,G=a.win;a.error=function(r,f){r=a.isNumber(r)?"Highcharts error #"+
+r+": www.highcharts.com/errors/"+r:r;if(f)throw Error(r);G.console&&console.log(r)};a.Fx=function(a,f,l){this.options=f;this.elem=a;this.prop=l};a.Fx.prototype={dSetter:function(){var a=this.paths[0],f=this.paths[1],l=[],q=this.now,k=a.length,u;if(1===q)l=this.toD;else if(k===f.length&&1>q)for(;k--;)u=parseFloat(a[k]),l[k]=isNaN(u)?a[k]:q*parseFloat(f[k]-u)+u;else l=f;this.elem.attr("d",l,null,!0)},update:function(){var a=this.elem,f=this.prop,l=this.now,q=this.options.step;if(this[f+"Setter"])this[f+
+"Setter"]();else a.attr?a.element&&a.attr(f,l,null,!0):a.style[f]=l+this.unit;q&&q.call(a,l,this)},run:function(a,f,l){var r=this,k=function(a){return k.stopped?!1:r.step(a)},u;this.startTime=+new Date;this.start=a;this.end=f;this.unit=l;this.now=this.start;this.pos=0;k.elem=this.elem;k.prop=this.prop;k()&&1===B.push(k)&&(k.timerId=setInterval(function(){for(u=0;u<B.length;u++)B[u]()||B.splice(u--,1);B.length||clearInterval(k.timerId)},13))},step:function(a){var f=+new Date,r,q=this.options;r=this.elem;
+var k=q.complete,u=q.duration,d=q.curAnim,c;if(r.attr&&!r.element)r=!1;else if(a||f>=u+this.startTime){this.now=this.end;this.pos=1;this.update();a=d[this.prop]=!0;for(c in d)!0!==d[c]&&(a=!1);a&&k&&k.call(r);r=!1}else this.pos=q.easing((f-this.startTime)/u),this.now=this.start+(this.end-this.start)*this.pos,this.update(),r=!0;return r},initPath:function(r,f,l){function q(a){var b,e;for(t=a.length;t--;)b="M"===a[t]||"L"===a[t],e=/[a-zA-Z]/.test(a[t+3]),b&&e&&a.splice(t+1,0,a[t+1],a[t+2],a[t+1],a[t+
+2])}function k(a,e){for(;a.length<p;){a[0]=e[p-a.length];var h=a.slice(0,b);[].splice.apply(a,[0,0].concat(h));D&&(h=a.slice(a.length-b),[].splice.apply(a,[a.length,0].concat(h)),t--)}a[0]="M"}function u(a,e){for(var c=(p-a.length)/b;0<c&&c--;)h=a.slice().splice(a.length/w-b,b*w),h[0]=e[p-b-c*b],z&&(h[b-6]=h[b-2],h[b-5]=h[b-1]),[].splice.apply(a,[a.length/w,0].concat(h)),D&&c--}f=f||"";var d,c=r.startX,n=r.endX,z=-1<f.indexOf("C"),b=z?7:3,p,h,t;f=f.split(" ");l=l.slice();var D=r.isArea,w=D?2:1,e;
+z&&(q(f),q(l));if(c&&n){for(t=0;t<c.length;t++)if(c[t]===n[0]){d=t;break}else if(c[0]===n[n.length-c.length+t]){d=t;e=!0;break}void 0===d&&(f=[])}f.length&&a.isNumber(d)&&(p=l.length+d*w*b,e?(k(f,l),u(l,f)):(k(l,f),u(f,l)));return[f,l]}};a.extend=function(a,f){var r;a||(a={});for(r in f)a[r]=f[r];return a};a.merge=function(){var r,f=arguments,l,q={},k=function(u,d){var c,n;"object"!==typeof u&&(u={});for(n in d)d.hasOwnProperty(n)&&(c=d[n],a.isObject(c,!0)&&"renderTo"!==n&&"number"!==typeof c.nodeType?
+u[n]=k(u[n]||{},c):u[n]=d[n]);return u};!0===f[0]&&(q=f[1],f=Array.prototype.slice.call(f,2));l=f.length;for(r=0;r<l;r++)q=k(q,f[r]);return q};a.pInt=function(a,f){return parseInt(a,f||10)};a.isString=function(a){return"string"===typeof a};a.isArray=function(a){a=Object.prototype.toString.call(a);return"[object Array]"===a||"[object Array Iterator]"===a};a.isObject=function(r,f){return r&&"object"===typeof r&&(!f||!a.isArray(r))};a.isNumber=function(a){return"number"===typeof a&&!isNaN(a)};a.erase=
+function(a,f){for(var r=a.length;r--;)if(a[r]===f){a.splice(r,1);break}};a.defined=function(a){return void 0!==a&&null!==a};a.attr=function(r,f,l){var q,k;if(a.isString(f))a.defined(l)?r.setAttribute(f,l):r&&r.getAttribute&&(k=r.getAttribute(f));else if(a.defined(f)&&a.isObject(f))for(q in f)r.setAttribute(q,f[q]);return k};a.splat=function(r){return a.isArray(r)?r:[r]};a.syncTimeout=function(a,f,l){if(f)return setTimeout(a,f,l);a.call(0,l)};a.pick=function(){var a=arguments,f,l,q=a.length;for(f=
+0;f<q;f++)if(l=a[f],void 0!==l&&null!==l)return l};a.css=function(r,f){a.isMS&&!a.svg&&f&&void 0!==f.opacity&&(f.filter="alpha(opacity\x3d"+100*f.opacity+")");a.extend(r.style,f)};a.createElement=function(r,f,l,q,k){r=H.createElement(r);var u=a.css;f&&a.extend(r,f);k&&u(r,{padding:0,border:"none",margin:0});l&&u(r,l);q&&q.appendChild(r);return r};a.extendClass=function(r,f){var l=function(){};l.prototype=new r;a.extend(l.prototype,f);return l};a.pad=function(a,f,l){return Array((f||2)+1-String(a).length).join(l||
+0)+a};a.relativeLength=function(a,f){return/%$/.test(a)?f*parseFloat(a)/100:parseFloat(a)};a.wrap=function(a,f,l){var q=a[f];a[f]=function(){var a=Array.prototype.slice.call(arguments),u=arguments,d=this;d.proceed=function(){q.apply(d,arguments.length?arguments:u)};a.unshift(q);a=l.apply(this,a);d.proceed=null;return a}};a.getTZOffset=function(r){var f=a.Date;return 6E4*(f.hcGetTimezoneOffset&&f.hcGetTimezoneOffset(r)||f.hcTimezoneOffset||0)};a.dateFormat=function(r,f,l){if(!a.defined(f)||isNaN(f))return a.defaultOptions.lang.invalidDate||
+"";r=a.pick(r,"%Y-%m-%d %H:%M:%S");var q=a.Date,k=new q(f-a.getTZOffset(f)),u,d=k[q.hcGetHours](),c=k[q.hcGetDay](),n=k[q.hcGetDate](),z=k[q.hcGetMonth](),b=k[q.hcGetFullYear](),p=a.defaultOptions.lang,h=p.weekdays,t=p.shortWeekdays,D=a.pad,q=a.extend({a:t?t[c]:h[c].substr(0,3),A:h[c],d:D(n),e:D(n,2," "),w:c,b:p.shortMonths[z],B:p.months[z],m:D(z+1),y:b.toString().substr(2,2),Y:b,H:D(d),k:d,I:D(d%12||12),l:d%12||12,M:D(k[q.hcGetMinutes]()),p:12>d?"AM":"PM",P:12>d?"am":"pm",S:D(k.getSeconds()),L:D(Math.round(f%
+1E3),3)},a.dateFormats);for(u in q)for(;-1!==r.indexOf("%"+u);)r=r.replace("%"+u,"function"===typeof q[u]?q[u](f):q[u]);return l?r.substr(0,1).toUpperCase()+r.substr(1):r};a.formatSingle=function(r,f){var l=/\.([0-9])/,q=a.defaultOptions.lang;/f$/.test(r)?(l=(l=r.match(l))?l[1]:-1,null!==f&&(f=a.numberFormat(f,l,q.decimalPoint,-1<r.indexOf(",")?q.thousandsSep:""))):f=a.dateFormat(r,f);return f};a.format=function(r,f){for(var l="{",q=!1,k,u,d,c,n=[],z;r;){l=r.indexOf(l);if(-1===l)break;k=r.slice(0,
+l);if(q){k=k.split(":");u=k.shift().split(".");c=u.length;z=f;for(d=0;d<c;d++)z=z[u[d]];k.length&&(z=a.formatSingle(k.join(":"),z));n.push(z)}else n.push(k);r=r.slice(l+1);l=(q=!q)?"}":"{"}n.push(r);return n.join("")};a.getMagnitude=function(a){return Math.pow(10,Math.floor(Math.log(a)/Math.LN10))};a.normalizeTickInterval=function(r,f,l,q,k){var u,d=r;l=a.pick(l,1);u=r/l;f||(f=k?[1,1.2,1.5,2,2.5,3,4,5,6,8,10]:[1,2,2.5,5,10],!1===q&&(1===l?f=a.grep(f,function(a){return 0===a%1}):.1>=l&&(f=[1/l])));
+for(q=0;q<f.length&&!(d=f[q],k&&d*l>=r||!k&&u<=(f[q]+(f[q+1]||f[q]))/2);q++);return d=a.correctFloat(d*l,-Math.round(Math.log(.001)/Math.LN10))};a.stableSort=function(a,f){var l=a.length,q,k;for(k=0;k<l;k++)a[k].safeI=k;a.sort(function(a,d){q=f(a,d);return 0===q?a.safeI-d.safeI:q});for(k=0;k<l;k++)delete a[k].safeI};a.arrayMin=function(a){for(var f=a.length,l=a[0];f--;)a[f]<l&&(l=a[f]);return l};a.arrayMax=function(a){for(var f=a.length,l=a[0];f--;)a[f]>l&&(l=a[f]);return l};a.destroyObjectProperties=
+function(a,f){for(var l in a)a[l]&&a[l]!==f&&a[l].destroy&&a[l].destroy(),delete a[l]};a.discardElement=function(r){var f=a.garbageBin;f||(f=a.createElement("div"));r&&f.appendChild(r);f.innerHTML=""};a.correctFloat=function(a,f){return parseFloat(a.toPrecision(f||14))};a.setAnimation=function(r,f){f.renderer.globalAnimation=a.pick(r,f.options.chart.animation,!0)};a.animObject=function(r){return a.isObject(r)?a.merge(r):{duration:r?500:0}};a.timeUnits={millisecond:1,second:1E3,minute:6E4,hour:36E5,
+day:864E5,week:6048E5,month:24192E5,year:314496E5};a.numberFormat=function(r,f,l,q){r=+r||0;f=+f;var k=a.defaultOptions.lang,u=(r.toString().split(".")[1]||"").length,d,c;-1===f?f=Math.min(u,20):a.isNumber(f)||(f=2);c=(Math.abs(r)+Math.pow(10,-Math.max(f,u)-1)).toFixed(f);u=String(a.pInt(c));d=3<u.length?u.length%3:0;l=a.pick(l,k.decimalPoint);q=a.pick(q,k.thousandsSep);r=(0>r?"-":"")+(d?u.substr(0,d)+q:"");r+=u.substr(d).replace(/(\d{3})(?=\d)/g,"$1"+q);f&&(r+=l+c.slice(-f));return r};Math.easeInOutSine=
+function(a){return-.5*(Math.cos(Math.PI*a)-1)};a.getStyle=function(r,f){return"width"===f?Math.min(r.offsetWidth,r.scrollWidth)-a.getStyle(r,"padding-left")-a.getStyle(r,"padding-right"):"height"===f?Math.min(r.offsetHeight,r.scrollHeight)-a.getStyle(r,"padding-top")-a.getStyle(r,"padding-bottom"):(r=G.getComputedStyle(r,void 0))&&a.pInt(r.getPropertyValue(f))};a.inArray=function(a,f){return f.indexOf?f.indexOf(a):[].indexOf.call(f,a)};a.grep=function(a,f){return[].filter.call(a,f)};a.find=function(a,
+f){return[].find.call(a,f)};a.map=function(a,f){for(var l=[],q=0,k=a.length;q<k;q++)l[q]=f.call(a[q],a[q],q,a);return l};a.offset=function(a){var f=H.documentElement;a=a.getBoundingClientRect();return{top:a.top+(G.pageYOffset||f.scrollTop)-(f.clientTop||0),left:a.left+(G.pageXOffset||f.scrollLeft)-(f.clientLeft||0)}};a.stop=function(a,f){for(var l=B.length;l--;)B[l].elem!==a||f&&f!==B[l].prop||(B[l].stopped=!0)};a.each=function(a,f,l){return Array.prototype.forEach.call(a,f,l)};a.addEvent=function(r,
+f,l){function q(a){a.target=a.srcElement||G;l.call(r,a)}var k=r.hcEvents=r.hcEvents||{};r.addEventListener?r.addEventListener(f,l,!1):r.attachEvent&&(r.hcEventsIE||(r.hcEventsIE={}),r.hcEventsIE[l.toString()]=q,r.attachEvent("on"+f,q));k[f]||(k[f]=[]);k[f].push(l);return function(){a.removeEvent(r,f,l)}};a.removeEvent=function(r,f,l){function q(a,c){r.removeEventListener?r.removeEventListener(a,c,!1):r.attachEvent&&(c=r.hcEventsIE[c.toString()],r.detachEvent("on"+a,c))}function k(){var a,c;if(r.nodeName)for(c in f?
+(a={},a[f]=!0):a=d,a)if(d[c])for(a=d[c].length;a--;)q(c,d[c][a])}var u,d=r.hcEvents,c;d&&(f?(u=d[f]||[],l?(c=a.inArray(l,u),-1<c&&(u.splice(c,1),d[f]=u),q(f,l)):(k(),d[f]=[])):(k(),r.hcEvents={}))};a.fireEvent=function(r,f,l,q){var k;k=r.hcEvents;var u,d;l=l||{};if(H.createEvent&&(r.dispatchEvent||r.fireEvent))k=H.createEvent("Events"),k.initEvent(f,!0,!0),a.extend(k,l),r.dispatchEvent?r.dispatchEvent(k):r.fireEvent(f,k);else if(k)for(k=k[f]||[],u=k.length,l.target||a.extend(l,{preventDefault:function(){l.defaultPrevented=
+!0},target:r,type:f}),f=0;f<u;f++)(d=k[f])&&!1===d.call(r,l)&&l.preventDefault();q&&!l.defaultPrevented&&q(l)};a.animate=function(r,f,l){var q,k="",u,d,c;a.isObject(l)||(q=arguments,l={duration:q[2],easing:q[3],complete:q[4]});a.isNumber(l.duration)||(l.duration=400);l.easing="function"===typeof l.easing?l.easing:Math[l.easing]||Math.easeInOutSine;l.curAnim=a.merge(f);for(c in f)a.stop(r,c),d=new a.Fx(r,l,c),u=null,"d"===c?(d.paths=d.initPath(r,r.d,f.d),d.toD=f.d,q=0,u=1):r.attr?q=r.attr(c):(q=parseFloat(a.getStyle(r,
+c))||0,"opacity"!==c&&(k="px")),u||(u=f[c]),u&&u.match&&u.match("px")&&(u=u.replace(/px/g,"")),d.run(q,u,k)};a.seriesType=function(r,f,l,q,k){var u=a.getOptions(),d=a.seriesTypes;u.plotOptions[r]=a.merge(u.plotOptions[f],l);d[r]=a.extendClass(d[f]||function(){},q);d[r].prototype.type=r;k&&(d[r].prototype.pointClass=a.extendClass(a.Point,k));return d[r]};a.uniqueKey=function(){var a=Math.random().toString(36).substring(2,9),f=0;return function(){return"highcharts-"+a+"-"+f++}}();G.jQuery&&(G.jQuery.fn.highcharts=
+function(){var r=[].slice.call(arguments);if(this[0])return r[0]?(new (a[a.isString(r[0])?r.shift():"Chart"])(this[0],r[0],r[1]),this):A[a.attr(this[0],"data-highcharts-chart")]});H&&!H.defaultView&&(a.getStyle=function(r,f){var l={width:"clientWidth",height:"clientHeight"}[f];if(r.style[f])return a.pInt(r.style[f]);"opacity"===f&&(f="filter");if(l)return r.style.zoom=1,Math.max(r[l]-2*a.getStyle(r,"padding"),0);r=r.currentStyle[f.replace(/\-(\w)/g,function(a,k){return k.toUpperCase()})];"filter"===
+f&&(r=r.replace(/alpha\(opacity=([0-9]+)\)/,function(a,k){return k/100}));return""===r?1:a.pInt(r)});Array.prototype.forEach||(a.each=function(a,f,l){for(var q=0,k=a.length;q<k;q++)if(!1===f.call(l,a[q],q,a))return q});Array.prototype.indexOf||(a.inArray=function(a,f){var l,q=0;if(f)for(l=f.length;q<l;q++)if(f[q]===a)return q;return-1});Array.prototype.filter||(a.grep=function(a,f){for(var l=[],q=0,k=a.length;q<k;q++)f(a[q],q)&&l.push(a[q]);return l});Array.prototype.find||(a.find=function(a,f){var l,
+q=a.length;for(l=0;l<q;l++)if(f(a[l],l))return a[l]})})(L);(function(a){var B=a.each,A=a.isNumber,H=a.map,G=a.merge,r=a.pInt;a.Color=function(f){if(!(this instanceof a.Color))return new a.Color(f);this.init(f)};a.Color.prototype={parsers:[{regex:/rgba\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]?(?:\.[0-9]+)?)\s*\)/,parse:function(a){return[r(a[1]),r(a[2]),r(a[3]),parseFloat(a[4],10)]}},{regex:/rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)/,parse:function(a){return[r(a[1]),
+r(a[2]),r(a[3]),1]}}],names:{white:"#ffffff",black:"#000000"},init:function(f){var l,q,k,u;if((this.input=f=this.names[f&&f.toLowerCase?f.toLowerCase():""]||f)&&f.stops)this.stops=H(f.stops,function(d){return new a.Color(d[1])});else if(f&&"#"===f[0]&&(l=f.length,f=parseInt(f.substr(1),16),7===l?q=[(f&16711680)>>16,(f&65280)>>8,f&255,1]:4===l&&(q=[(f&3840)>>4|(f&3840)>>8,(f&240)>>4|f&240,(f&15)<<4|f&15,1])),!q)for(k=this.parsers.length;k--&&!q;)u=this.parsers[k],(l=u.regex.exec(f))&&(q=u.parse(l));
+this.rgba=q||[]},get:function(a){var f=this.input,q=this.rgba,k;this.stops?(k=G(f),k.stops=[].concat(k.stops),B(this.stops,function(u,d){k.stops[d]=[k.stops[d][0],u.get(a)]})):k=q&&A(q[0])?"rgb"===a||!a&&1===q[3]?"rgb("+q[0]+","+q[1]+","+q[2]+")":"a"===a?q[3]:"rgba("+q.join(",")+")":f;return k},brighten:function(a){var f,q=this.rgba;if(this.stops)B(this.stops,function(k){k.brighten(a)});else if(A(a)&&0!==a)for(f=0;3>f;f++)q[f]+=r(255*a),0>q[f]&&(q[f]=0),255<q[f]&&(q[f]=255);return this},setOpacity:function(a){this.rgba[3]=
+a;return this}};a.color=function(f){return new a.Color(f)}})(L);(function(a){var B,A,H=a.addEvent,G=a.animate,r=a.attr,f=a.charts,l=a.color,q=a.css,k=a.createElement,u=a.defined,d=a.deg2rad,c=a.destroyObjectProperties,n=a.doc,z=a.each,b=a.extend,p=a.erase,h=a.grep,t=a.hasTouch,D=a.inArray,w=a.isArray,e=a.isFirefox,x=a.isMS,C=a.isObject,E=a.isString,m=a.isWebKit,y=a.merge,I=a.noop,K=a.pick,J=a.pInt,g=a.removeEvent,F=a.stop,Q=a.svg,N=a.SVG_NS,P=a.symbolSizes,O=a.win;B=a.SVGElement=function(){return this};
+B.prototype={opacity:1,SVG_NS:N,textProps:"direction fontSize fontWeight fontFamily fontStyle color lineHeight width textAlign textDecoration textOverflow textOutline".split(" "),init:function(a,g){this.element="span"===g?k(g):n.createElementNS(this.SVG_NS,g);this.renderer=a},animate:function(v,g,b){g=a.animObject(K(g,this.renderer.globalAnimation,!0));0!==g.duration?(b&&(g.complete=b),G(this,v,g)):(this.attr(v,null,b),g.step&&g.step.call(this));return this},colorGradient:function(v,g,b){var e=this.renderer,
+h,c,m,M,F,x,d,C,t,p,n,k=[],R;v.radialGradient?c="radialGradient":v.linearGradient&&(c="linearGradient");if(c){m=v[c];F=e.gradients;d=v.stops;p=b.radialReference;w(m)&&(v[c]=m={x1:m[0],y1:m[1],x2:m[2],y2:m[3],gradientUnits:"userSpaceOnUse"});"radialGradient"===c&&p&&!u(m.gradientUnits)&&(M=m,m=y(m,e.getRadialAttr(p,M),{gradientUnits:"userSpaceOnUse"}));for(n in m)"id"!==n&&k.push(n,m[n]);for(n in d)k.push(d[n]);k=k.join(",");F[k]?p=F[k].attr("id"):(m.id=p=a.uniqueKey(),F[k]=x=e.createElement(c).attr(m).add(e.defs),
+x.radAttr=M,x.stops=[],z(d,function(v){0===v[1].indexOf("rgba")?(h=a.color(v[1]),C=h.get("rgb"),t=h.get("a")):(C=v[1],t=1);v=e.createElement("stop").attr({offset:v[0],"stop-color":C,"stop-opacity":t}).add(x);x.stops.push(v)}));R="url("+e.url+"#"+p+")";b.setAttribute(g,R);b.gradient=k;v.toString=function(){return R}}},applyTextOutline:function(v){var g=this.element,b,e,c,h,m;-1!==v.indexOf("contrast")&&(v=v.replace(/contrast/g,this.renderer.getContrast(g.style.fill)));v=v.split(" ");e=v[v.length-1];
+if((c=v[0])&&"none"!==c&&a.svg){this.fakeTS=!0;v=[].slice.call(g.getElementsByTagName("tspan"));this.ySetter=this.xSetter;c=c.replace(/(^[\d\.]+)(.*?)$/g,function(a,v,g){return 2*v+g});for(m=v.length;m--;)b=v[m],"highcharts-text-outline"===b.getAttribute("class")&&p(v,g.removeChild(b));h=g.firstChild;z(v,function(a,v){0===v&&(a.setAttribute("x",g.getAttribute("x")),v=g.getAttribute("y"),a.setAttribute("y",v||0),null===v&&g.setAttribute("y",0));a=a.cloneNode(1);r(a,{"class":"highcharts-text-outline",
+fill:e,stroke:e,"stroke-width":c,"stroke-linejoin":"round"});g.insertBefore(a,h)})}},attr:function(a,g,b,e){var v,c=this.element,h,m=this,M;"string"===typeof a&&void 0!==g&&(v=a,a={},a[v]=g);if("string"===typeof a)m=(this[a+"Getter"]||this._defaultGetter).call(this,a,c);else{for(v in a)g=a[v],M=!1,e||F(this,v),this.symbolName&&/^(x|y|width|height|r|start|end|innerR|anchorX|anchorY)$/.test(v)&&(h||(this.symbolAttr(a),h=!0),M=!0),!this.rotation||"x"!==v&&"y"!==v||(this.doTransform=!0),M||(M=this[v+
+"Setter"]||this._defaultSetter,M.call(this,g,v,c),this.shadows&&/^(width|height|visibility|x|y|d|transform|cx|cy|r)$/.test(v)&&this.updateShadows(v,g,M));this.doTransform&&(this.updateTransform(),this.doTransform=!1)}b&&b();return m},updateShadows:function(a,g,b){for(var v=this.shadows,e=v.length;e--;)b.call(v[e],"height"===a?Math.max(g-(v[e].cutHeight||0),0):"d"===a?this.d:g,a,v[e])},addClass:function(a,g){var v=this.attr("class")||"";-1===v.indexOf(a)&&(g||(a=(v+(v?" ":"")+a).replace("  "," ")),
+this.attr("class",a));return this},hasClass:function(a){return-1!==r(this.element,"class").indexOf(a)},removeClass:function(a){r(this.element,"class",(r(this.element,"class")||"").replace(a,""));return this},symbolAttr:function(a){var v=this;z("x y r start end width height innerR anchorX anchorY".split(" "),function(g){v[g]=K(a[g],v[g])});v.attr({d:v.renderer.symbols[v.symbolName](v.x,v.y,v.width,v.height,v)})},clip:function(a){return this.attr("clip-path",a?"url("+this.renderer.url+"#"+a.id+")":
+"none")},crisp:function(a,g){var v,b={},e;g=g||a.strokeWidth||0;e=Math.round(g)%2/2;a.x=Math.floor(a.x||this.x||0)+e;a.y=Math.floor(a.y||this.y||0)+e;a.width=Math.floor((a.width||this.width||0)-2*e);a.height=Math.floor((a.height||this.height||0)-2*e);u(a.strokeWidth)&&(a.strokeWidth=g);for(v in a)this[v]!==a[v]&&(this[v]=b[v]=a[v]);return b},css:function(a){var v=this.styles,g={},e=this.element,c,h="",m=!v,F=["textOutline","textOverflow","width"];a&&a.color&&(a.fill=a.color);if(v)for(c in a)a[c]!==
+v[c]&&(g[c]=a[c],m=!0);if(m){v&&(a=b(v,g));v=this.textWidth=a&&a.width&&"auto"!==a.width&&"text"===e.nodeName.toLowerCase()&&J(a.width);this.styles=a;v&&!Q&&this.renderer.forExport&&delete a.width;if(x&&!Q)q(this.element,a);else{v=function(a,v){return"-"+v.toLowerCase()};for(c in a)-1===D(c,F)&&(h+=c.replace(/([A-Z])/g,v)+":"+a[c]+";");h&&r(e,"style",h)}this.added&&("text"===this.element.nodeName&&this.renderer.buildText(this),a&&a.textOutline&&this.applyTextOutline(a.textOutline))}return this},strokeWidth:function(){return this["stroke-width"]||
+0},on:function(a,g){var v=this,e=v.element;t&&"click"===a?(e.ontouchstart=function(a){v.touchEventFired=Date.now();a.preventDefault();g.call(e,a)},e.onclick=function(a){(-1===O.navigator.userAgent.indexOf("Android")||1100<Date.now()-(v.touchEventFired||0))&&g.call(e,a)}):e["on"+a]=g;return this},setRadialReference:function(a){var v=this.renderer.gradients[this.element.gradient];this.element.radialReference=a;v&&v.radAttr&&v.animate(this.renderer.getRadialAttr(a,v.radAttr));return this},translate:function(a,
+g){return this.attr({translateX:a,translateY:g})},invert:function(a){this.inverted=a;this.updateTransform();return this},updateTransform:function(){var a=this.translateX||0,g=this.translateY||0,e=this.scaleX,b=this.scaleY,c=this.inverted,h=this.rotation,m=this.element;c&&(a+=this.width,g+=this.height);a=["translate("+a+","+g+")"];c?a.push("rotate(90) scale(-1,1)"):h&&a.push("rotate("+h+" "+(m.getAttribute("x")||0)+" "+(m.getAttribute("y")||0)+")");(u(e)||u(b))&&a.push("scale("+K(e,1)+" "+K(b,1)+")");
+a.length&&m.setAttribute("transform",a.join(" "))},toFront:function(){var a=this.element;a.parentNode.appendChild(a);return this},align:function(a,g,e){var v,b,c,h,m={};b=this.renderer;c=b.alignedObjects;var F,x;if(a){if(this.alignOptions=a,this.alignByTranslate=g,!e||E(e))this.alignTo=v=e||"renderer",p(c,this),c.push(this),e=null}else a=this.alignOptions,g=this.alignByTranslate,v=this.alignTo;e=K(e,b[v],b);v=a.align;b=a.verticalAlign;c=(e.x||0)+(a.x||0);h=(e.y||0)+(a.y||0);"right"===v?F=1:"center"===
+v&&(F=2);F&&(c+=(e.width-(a.width||0))/F);m[g?"translateX":"x"]=Math.round(c);"bottom"===b?x=1:"middle"===b&&(x=2);x&&(h+=(e.height-(a.height||0))/x);m[g?"translateY":"y"]=Math.round(h);this[this.placed?"animate":"attr"](m);this.placed=!0;this.alignAttr=m;return this},getBBox:function(a,g){var v,e=this.renderer,c,h=this.element,m=this.styles,F,x=this.textStr,y,M=e.cache,C=e.cacheKeys,t;g=K(g,this.rotation);c=g*d;F=m&&m.fontSize;void 0!==x&&(t=x.toString(),-1===t.indexOf("\x3c")&&(t=t.replace(/[0-9]/g,
+"0")),t+=["",g||0,F,m&&m.width,m&&m.textOverflow].join());t&&!a&&(v=M[t]);if(!v){if(h.namespaceURI===this.SVG_NS||e.forExport){try{(y=this.fakeTS&&function(a){z(h.querySelectorAll(".highcharts-text-outline"),function(v){v.style.display=a})})&&y("none"),v=h.getBBox?b({},h.getBBox()):{width:h.offsetWidth,height:h.offsetHeight},y&&y("")}catch(X){}if(!v||0>v.width)v={width:0,height:0}}else v=this.htmlGetBBox();e.isSVG&&(a=v.width,e=v.height,m&&"11px"===m.fontSize&&17===Math.round(e)&&(v.height=e=14),
+g&&(v.width=Math.abs(e*Math.sin(c))+Math.abs(a*Math.cos(c)),v.height=Math.abs(e*Math.cos(c))+Math.abs(a*Math.sin(c))));if(t&&0<v.height){for(;250<C.length;)delete M[C.shift()];M[t]||C.push(t);M[t]=v}}return v},show:function(a){return this.attr({visibility:a?"inherit":"visible"})},hide:function(){return this.attr({visibility:"hidden"})},fadeOut:function(a){var v=this;v.animate({opacity:0},{duration:a||150,complete:function(){v.attr({y:-9999})}})},add:function(a){var v=this.renderer,g=this.element,
+e;a&&(this.parentGroup=a);this.parentInverted=a&&a.inverted;void 0!==this.textStr&&v.buildText(this);this.added=!0;if(!a||a.handleZ||this.zIndex)e=this.zIndexSetter();e||(a?a.element:v.box).appendChild(g);if(this.onAdd)this.onAdd();return this},safeRemoveChild:function(a){var v=a.parentNode;v&&v.removeChild(a)},destroy:function(){var a=this,g=a.element||{},e=a.renderer.isSVG&&"SPAN"===g.nodeName&&a.parentGroup,b,c;g.onclick=g.onmouseout=g.onmouseover=g.onmousemove=g.point=null;F(a);a.clipPath&&(z(a.element.ownerSVGElement.querySelectorAll("[clip-path]"),
+function(v){-1<v.getAttribute("clip-path").indexOf(a.clipPath.element.id)&&v.removeAttribute("clip-path")}),a.clipPath=a.clipPath.destroy());if(a.stops){for(c=0;c<a.stops.length;c++)a.stops[c]=a.stops[c].destroy();a.stops=null}a.safeRemoveChild(g);for(a.destroyShadows();e&&e.div&&0===e.div.childNodes.length;)g=e.parentGroup,a.safeRemoveChild(e.div),delete e.div,e=g;a.alignTo&&p(a.renderer.alignedObjects,a);for(b in a)delete a[b];return null},shadow:function(a,g,e){var v=[],b,c,h=this.element,m,F,
+x,y;if(!a)this.destroyShadows();else if(!this.shadows){F=K(a.width,3);x=(a.opacity||.15)/F;y=this.parentInverted?"(-1,-1)":"("+K(a.offsetX,1)+", "+K(a.offsetY,1)+")";for(b=1;b<=F;b++)c=h.cloneNode(0),m=2*F+1-2*b,r(c,{isShadow:"true",stroke:a.color||"#000000","stroke-opacity":x*b,"stroke-width":m,transform:"translate"+y,fill:"none"}),e&&(r(c,"height",Math.max(r(c,"height")-m,0)),c.cutHeight=m),g?g.element.appendChild(c):h.parentNode.insertBefore(c,h),v.push(c);this.shadows=v}return this},destroyShadows:function(){z(this.shadows||
+[],function(a){this.safeRemoveChild(a)},this);this.shadows=void 0},xGetter:function(a){"circle"===this.element.nodeName&&("x"===a?a="cx":"y"===a&&(a="cy"));return this._defaultGetter(a)},_defaultGetter:function(a){a=K(this[a],this.element?this.element.getAttribute(a):null,0);/^[\-0-9\.]+$/.test(a)&&(a=parseFloat(a));return a},dSetter:function(a,g,e){a&&a.join&&(a=a.join(" "));/(NaN| {2}|^$)/.test(a)&&(a="M 0 0");e.setAttribute(g,a);this[g]=a},dashstyleSetter:function(a){var v,g=this["stroke-width"];
+"inherit"===g&&(g=1);if(a=a&&a.toLowerCase()){a=a.replace("shortdashdotdot","3,1,1,1,1,1,").replace("shortdashdot","3,1,1,1").replace("shortdot","1,1,").replace("shortdash","3,1,").replace("longdash","8,3,").replace(/dot/g,"1,3,").replace("dash","4,3,").replace(/,$/,"").split(",");for(v=a.length;v--;)a[v]=J(a[v])*g;a=a.join(",").replace(/NaN/g,"none");this.element.setAttribute("stroke-dasharray",a)}},alignSetter:function(a){this.element.setAttribute("text-anchor",{left:"start",center:"middle",right:"end"}[a])},
+opacitySetter:function(a,g,e){this[g]=a;e.setAttribute(g,a)},titleSetter:function(a){var v=this.element.getElementsByTagName("title")[0];v||(v=n.createElementNS(this.SVG_NS,"title"),this.element.appendChild(v));v.firstChild&&v.removeChild(v.firstChild);v.appendChild(n.createTextNode(String(K(a),"").replace(/<[^>]*>/g,"")))},textSetter:function(a){a!==this.textStr&&(delete this.bBox,this.textStr=a,this.added&&this.renderer.buildText(this))},fillSetter:function(a,g,e){"string"===typeof a?e.setAttribute(g,
+a):a&&this.colorGradient(a,g,e)},visibilitySetter:function(a,g,e){"inherit"===a?e.removeAttribute(g):e.setAttribute(g,a)},zIndexSetter:function(a,g){var v=this.renderer,e=this.parentGroup,b=(e||v).element||v.box,c,h=this.element,m;c=this.added;var F;u(a)&&(h.zIndex=a,a=+a,this[g]===a&&(c=!1),this[g]=a);if(c){(a=this.zIndex)&&e&&(e.handleZ=!0);g=b.childNodes;for(F=0;F<g.length&&!m;F++)e=g[F],c=e.zIndex,e!==h&&(J(c)>a||!u(a)&&u(c)||0>a&&!u(c)&&b!==v.box)&&(b.insertBefore(h,e),m=!0);m||b.appendChild(h)}return m},
+_defaultSetter:function(a,g,e){e.setAttribute(g,a)}};B.prototype.yGetter=B.prototype.xGetter;B.prototype.translateXSetter=B.prototype.translateYSetter=B.prototype.rotationSetter=B.prototype.verticalAlignSetter=B.prototype.scaleXSetter=B.prototype.scaleYSetter=function(a,g){this[g]=a;this.doTransform=!0};B.prototype["stroke-widthSetter"]=B.prototype.strokeSetter=function(a,g,e){this[g]=a;this.stroke&&this["stroke-width"]?(B.prototype.fillSetter.call(this,this.stroke,"stroke",e),e.setAttribute("stroke-width",
+this["stroke-width"]),this.hasStroke=!0):"stroke-width"===g&&0===a&&this.hasStroke&&(e.removeAttribute("stroke"),this.hasStroke=!1)};A=a.SVGRenderer=function(){this.init.apply(this,arguments)};A.prototype={Element:B,SVG_NS:N,init:function(a,g,b,c,h,F){var v;c=this.createElement("svg").attr({version:"1.1","class":"highcharts-root"}).css(this.getStyle(c));v=c.element;a.appendChild(v);-1===a.innerHTML.indexOf("xmlns")&&r(v,"xmlns",this.SVG_NS);this.isSVG=!0;this.box=v;this.boxWrapper=c;this.alignedObjects=
+[];this.url=(e||m)&&n.getElementsByTagName("base").length?O.location.href.replace(/#.*?$/,"").replace(/<[^>]*>/g,"").replace(/([\('\)])/g,"\\$1").replace(/ /g,"%20"):"";this.createElement("desc").add().element.appendChild(n.createTextNode("Created with Highcharts 5.0.10"));this.defs=this.createElement("defs").add();this.allowHTML=F;this.forExport=h;this.gradients={};this.cache={};this.cacheKeys=[];this.imgCount=0;this.setSize(g,b,!1);var x;e&&a.getBoundingClientRect&&(g=function(){q(a,{left:0,top:0});
+x=a.getBoundingClientRect();q(a,{left:Math.ceil(x.left)-x.left+"px",top:Math.ceil(x.top)-x.top+"px"})},g(),this.unSubPixelFix=H(O,"resize",g))},getStyle:function(a){return this.style=b({fontFamily:'"Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif',fontSize:"12px"},a)},setStyle:function(a){this.boxWrapper.css(this.getStyle(a))},isHidden:function(){return!this.boxWrapper.getBBox().width},destroy:function(){var a=this.defs;this.box=null;this.boxWrapper=this.boxWrapper.destroy();c(this.gradients||
+{});this.gradients=null;a&&(this.defs=a.destroy());this.unSubPixelFix&&this.unSubPixelFix();return this.alignedObjects=null},createElement:function(a){var g=new this.Element;g.init(this,a);return g},draw:I,getRadialAttr:function(a,g){return{cx:a[0]-a[2]/2+g.cx*a[2],cy:a[1]-a[2]/2+g.cy*a[2],r:g.r*a[2]}},getSpanWidth:function(a,g){var v=a.getBBox(!0).width;!Q&&this.forExport&&(v=this.measureSpanWidth(g.firstChild.data,a.styles));return v},applyEllipsis:function(a,g,e,b){var v=this.getSpanWidth(a,g),
+c=v>b,v=e,h,m=0,F=e.length,x=function(a){g.removeChild(g.firstChild);a&&g.appendChild(n.createTextNode(a))};if(c){for(;m<=F;)h=Math.ceil((m+F)/2),v=e.substring(0,h)+"\u2026",x(v),v=this.getSpanWidth(a,g),m===F?m=F+1:v>b?F=h-1:m=h;0===F&&x("")}return c},buildText:function(a){var g=a.element,e=this,v=e.forExport,b=K(a.textStr,"").toString(),c=-1!==b.indexOf("\x3c"),m=g.childNodes,F,x,y,t,d=r(g,"x"),C=a.styles,p=a.textWidth,k=C&&C.lineHeight,w=C&&C.textOutline,u=C&&"ellipsis"===C.textOverflow,f=C&&"nowrap"===
+C.whiteSpace,E=C&&C.fontSize,D,I,l=m.length,C=p&&!a.added&&this.box,P=function(a){var v;v=/(px|em)$/.test(a&&a.style.fontSize)?a.style.fontSize:E||e.style.fontSize||12;return k?J(k):e.fontMetrics(v,a.getAttribute("style")?a:g).h};D=[b,u,f,k,w,E,p].join();if(D!==a.textCache){for(a.textCache=D;l--;)g.removeChild(m[l]);c||w||u||p||-1!==b.indexOf(" ")?(F=/<.*class="([^"]+)".*>/,x=/<.*style="([^"]+)".*>/,y=/<.*href="(http[^"]+)".*>/,C&&C.appendChild(g),b=c?b.replace(/<(b|strong)>/g,'\x3cspan style\x3d"font-weight:bold"\x3e').replace(/<(i|em)>/g,
+'\x3cspan style\x3d"font-style:italic"\x3e').replace(/<a/g,"\x3cspan").replace(/<\/(b|strong|i|em|a)>/g,"\x3c/span\x3e").split(/<br.*?>/g):[b],b=h(b,function(a){return""!==a}),z(b,function(b,c){var m,h=0;b=b.replace(/^\s+|\s+$/g,"").replace(/<span/g,"|||\x3cspan").replace(/<\/span>/g,"\x3c/span\x3e|||");m=b.split("|||");z(m,function(b){if(""!==b||1===m.length){var C={},k=n.createElementNS(e.SVG_NS,"tspan"),w,E;F.test(b)&&(w=b.match(F)[1],r(k,"class",w));x.test(b)&&(E=b.match(x)[1].replace(/(;| |^)color([ :])/,
+"$1fill$2"),r(k,"style",E));y.test(b)&&!v&&(r(k,"onclick",'location.href\x3d"'+b.match(y)[1]+'"'),q(k,{cursor:"pointer"}));b=(b.replace(/<(.|\n)*?>/g,"")||" ").replace(/&lt;/g,"\x3c").replace(/&gt;/g,"\x3e");if(" "!==b){k.appendChild(n.createTextNode(b));h?C.dx=0:c&&null!==d&&(C.x=d);r(k,C);g.appendChild(k);!h&&I&&(!Q&&v&&q(k,{display:"block"}),r(k,"dy",P(k)));if(p){C=b.replace(/([^\^])-/g,"$1- ").split(" ");w=1<m.length||c||1<C.length&&!f;var D=[],M,z=P(k),l=a.rotation;for(u&&(t=e.applyEllipsis(a,
+k,b,p));!u&&w&&(C.length||D.length);)a.rotation=0,M=e.getSpanWidth(a,k),b=M>p,void 0===t&&(t=b),b&&1!==C.length?(k.removeChild(k.firstChild),D.unshift(C.pop())):(C=D,D=[],C.length&&!f&&(k=n.createElementNS(N,"tspan"),r(k,{dy:z,x:d}),E&&r(k,"style",E),g.appendChild(k)),M>p&&(p=M)),C.length&&k.appendChild(n.createTextNode(C.join(" ").replace(/- /g,"-")));a.rotation=l}h++}}});I=I||g.childNodes.length}),t&&a.attr("title",a.textStr),C&&C.removeChild(g),w&&a.applyTextOutline&&a.applyTextOutline(w)):g.appendChild(n.createTextNode(b.replace(/&lt;/g,
+"\x3c").replace(/&gt;/g,"\x3e")))}},getContrast:function(a){a=l(a).rgba;return 510<a[0]+a[1]+a[2]?"#000000":"#FFFFFF"},button:function(a,g,e,c,m,h,F,C,t){var v=this.label(a,g,e,t,null,null,null,null,"button"),d=0;v.attr(y({padding:8,r:2},m));var p,n,k,w;m=y({fill:"#f7f7f7",stroke:"#cccccc","stroke-width":1,style:{color:"#333333",cursor:"pointer",fontWeight:"normal"}},m);p=m.style;delete m.style;h=y(m,{fill:"#e6e6e6"},h);n=h.style;delete h.style;F=y(m,{fill:"#e6ebf5",style:{color:"#000000",fontWeight:"bold"}},
+F);k=F.style;delete F.style;C=y(m,{style:{color:"#cccccc"}},C);w=C.style;delete C.style;H(v.element,x?"mouseover":"mouseenter",function(){3!==d&&v.setState(1)});H(v.element,x?"mouseout":"mouseleave",function(){3!==d&&v.setState(d)});v.setState=function(a){1!==a&&(v.state=d=a);v.removeClass(/highcharts-button-(normal|hover|pressed|disabled)/).addClass("highcharts-button-"+["normal","hover","pressed","disabled"][a||0]);v.attr([m,h,F,C][a||0]).css([p,n,k,w][a||0])};v.attr(m).css(b({cursor:"default"},
+p));return v.on("click",function(a){3!==d&&c.call(v,a)})},crispLine:function(a,g){a[1]===a[4]&&(a[1]=a[4]=Math.round(a[1])-g%2/2);a[2]===a[5]&&(a[2]=a[5]=Math.round(a[2])+g%2/2);return a},path:function(a){var g={fill:"none"};w(a)?g.d=a:C(a)&&b(g,a);return this.createElement("path").attr(g)},circle:function(a,g,e){a=C(a)?a:{x:a,y:g,r:e};g=this.createElement("circle");g.xSetter=g.ySetter=function(a,g,e){e.setAttribute("c"+g,a)};return g.attr(a)},arc:function(a,g,e,b,c,m){C(a)?(b=a,g=b.y,e=b.r,a=b.x):
+b={innerR:b,start:c,end:m};a=this.symbol("arc",a,g,e,e,b);a.r=e;return a},rect:function(a,g,e,b,c,m){c=C(a)?a.r:c;var v=this.createElement("rect");a=C(a)?a:void 0===a?{}:{x:a,y:g,width:Math.max(e,0),height:Math.max(b,0)};void 0!==m&&(a.strokeWidth=m,a=v.crisp(a));a.fill="none";c&&(a.r=c);v.rSetter=function(a,g,e){r(e,{rx:a,ry:a})};return v.attr(a)},setSize:function(a,g,e){var b=this.alignedObjects,v=b.length;this.width=a;this.height=g;for(this.boxWrapper.animate({width:a,height:g},{step:function(){this.attr({viewBox:"0 0 "+
+this.attr("width")+" "+this.attr("height")})},duration:K(e,!0)?void 0:0});v--;)b[v].align()},g:function(a){var g=this.createElement("g");return a?g.attr({"class":"highcharts-"+a}):g},image:function(a,g,e,c,m){var v={preserveAspectRatio:"none"};1<arguments.length&&b(v,{x:g,y:e,width:c,height:m});v=this.createElement("image").attr(v);v.element.setAttributeNS?v.element.setAttributeNS("http://www.w3.org/1999/xlink","href",a):v.element.setAttribute("hc-svg-href",a);return v},symbol:function(a,g,e,c,m,
+h){var v=this,F,x=this.symbols[a],y=u(g)&&x&&this.symbols[a](Math.round(g),Math.round(e),c,m,h),C=/^url\((.*?)\)$/,d,t;x?(F=this.path(y),F.attr("fill","none"),b(F,{symbolName:a,x:g,y:e,width:c,height:m}),h&&b(F,h)):C.test(a)&&(d=a.match(C)[1],F=this.image(d),F.imgwidth=K(P[d]&&P[d].width,h&&h.width),F.imgheight=K(P[d]&&P[d].height,h&&h.height),t=function(){F.attr({width:F.width,height:F.height})},z(["width","height"],function(a){F[a+"Setter"]=function(a,g){var e={},b=this["img"+g],v="width"===g?"translateX":
+"translateY";this[g]=a;u(b)&&(this.element&&this.element.setAttribute(g,b),this.alignByTranslate||(e[v]=((this[g]||0)-b)/2,this.attr(e)))}}),u(g)&&F.attr({x:g,y:e}),F.isImg=!0,u(F.imgwidth)&&u(F.imgheight)?t():(F.attr({width:0,height:0}),k("img",{onload:function(){var a=f[v.chartIndex];0===this.width&&(q(this,{position:"absolute",top:"-999em"}),n.body.appendChild(this));P[d]={width:this.width,height:this.height};F.imgwidth=this.width;F.imgheight=this.height;F.element&&t();this.parentNode&&this.parentNode.removeChild(this);
+v.imgCount--;if(!v.imgCount&&a&&a.onload)a.onload()},src:d}),this.imgCount++));return F},symbols:{circle:function(a,g,e,b){return this.arc(a+e/2,g+b/2,e/2,b/2,{start:0,end:2*Math.PI,open:!1})},square:function(a,g,e,b){return["M",a,g,"L",a+e,g,a+e,g+b,a,g+b,"Z"]},triangle:function(a,g,e,b){return["M",a+e/2,g,"L",a+e,g+b,a,g+b,"Z"]},"triangle-down":function(a,g,e,b){return["M",a,g,"L",a+e,g,a+e/2,g+b,"Z"]},diamond:function(a,g,e,b){return["M",a+e/2,g,"L",a+e,g+b/2,a+e/2,g+b,a,g+b/2,"Z"]},arc:function(a,
+g,e,b,c){var v=c.start,m=c.r||e,h=c.r||b||e,F=c.end-.001;e=c.innerR;b=c.open;var x=Math.cos(v),y=Math.sin(v),C=Math.cos(F),F=Math.sin(F);c=c.end-v<Math.PI?0:1;m=["M",a+m*x,g+h*y,"A",m,h,0,c,1,a+m*C,g+h*F];u(e)&&m.push(b?"M":"L",a+e*C,g+e*F,"A",e,e,0,c,0,a+e*x,g+e*y);m.push(b?"":"Z");return m},callout:function(a,g,e,b,c){var m=Math.min(c&&c.r||0,e,b),h=m+6,v=c&&c.anchorX;c=c&&c.anchorY;var F;F=["M",a+m,g,"L",a+e-m,g,"C",a+e,g,a+e,g,a+e,g+m,"L",a+e,g+b-m,"C",a+e,g+b,a+e,g+b,a+e-m,g+b,"L",a+m,g+b,"C",
+a,g+b,a,g+b,a,g+b-m,"L",a,g+m,"C",a,g,a,g,a+m,g];v&&v>e?c>g+h&&c<g+b-h?F.splice(13,3,"L",a+e,c-6,a+e+6,c,a+e,c+6,a+e,g+b-m):F.splice(13,3,"L",a+e,b/2,v,c,a+e,b/2,a+e,g+b-m):v&&0>v?c>g+h&&c<g+b-h?F.splice(33,3,"L",a,c+6,a-6,c,a,c-6,a,g+m):F.splice(33,3,"L",a,b/2,v,c,a,b/2,a,g+m):c&&c>b&&v>a+h&&v<a+e-h?F.splice(23,3,"L",v+6,g+b,v,g+b+6,v-6,g+b,a+m,g+b):c&&0>c&&v>a+h&&v<a+e-h&&F.splice(3,3,"L",v-6,g,v,g-6,v+6,g,e-m,g);return F}},clipRect:function(g,e,b,c){var m=a.uniqueKey(),h=this.createElement("clipPath").attr({id:m}).add(this.defs);
+g=this.rect(g,e,b,c,0).add(h);g.id=m;g.clipPath=h;g.count=0;return g},text:function(a,g,e,b){var c=!Q&&this.forExport,m={};if(b&&(this.allowHTML||!this.forExport))return this.html(a,g,e);m.x=Math.round(g||0);e&&(m.y=Math.round(e));if(a||0===a)m.text=a;a=this.createElement("text").attr(m);c&&a.css({position:"absolute"});b||(a.xSetter=function(a,g,e){var b=e.getElementsByTagName("tspan"),c,m=e.getAttribute(g),h;for(h=0;h<b.length;h++)c=b[h],c.getAttribute(g)===m&&c.setAttribute(g,a);e.setAttribute(g,
+a)});return a},fontMetrics:function(a,g){a=a||g&&g.style&&g.style.fontSize||this.style&&this.style.fontSize;a=/px/.test(a)?J(a):/em/.test(a)?parseFloat(a)*(g?this.fontMetrics(null,g.parentNode).f:16):12;g=24>a?a+3:Math.round(1.2*a);return{h:g,b:Math.round(.8*g),f:a}},rotCorr:function(a,g,e){var b=a;g&&e&&(b=Math.max(b*Math.cos(g*d),4));return{x:-a/3*Math.sin(g*d),y:b}},label:function(e,c,m,h,F,x,C,d,t){var v=this,p=v.g("button"!==t&&"label"),n=p.text=v.text("",0,0,C).attr({zIndex:1}),k,w,E=0,f=3,
+D=0,I,q,l,Q,N,K={},J,r,M=/^url\((.*?)\)$/.test(h),P=M,R,S,O,U;t&&p.addClass("highcharts-"+t);P=M;R=function(){return(J||0)%2/2};S=function(){var a=n.element.style,g={};w=(void 0===I||void 0===q||N)&&u(n.textStr)&&n.getBBox();p.width=(I||w.width||0)+2*f+D;p.height=(q||w.height||0)+2*f;r=f+v.fontMetrics(a&&a.fontSize,n).b;P&&(k||(p.box=k=v.symbols[h]||M?v.symbol(h):v.rect(),k.addClass(("button"===t?"":"highcharts-label-box")+(t?" highcharts-"+t+"-box":"")),k.add(p),a=R(),g.x=a,g.y=(d?-r:0)+a),g.width=
+Math.round(p.width),g.height=Math.round(p.height),k.attr(b(g,K)),K={})};O=function(){var a=D+f,g;g=d?0:r;u(I)&&w&&("center"===N||"right"===N)&&(a+={center:.5,right:1}[N]*(I-w.width));if(a!==n.x||g!==n.y)n.attr("x",a),void 0!==g&&n.attr("y",g);n.x=a;n.y=g};U=function(a,g){k?k.attr(a,g):K[a]=g};p.onAdd=function(){n.add(p);p.attr({text:e||0===e?e:"",x:c,y:m});k&&u(F)&&p.attr({anchorX:F,anchorY:x})};p.widthSetter=function(g){I=a.isNumber(g)?g:null};p.heightSetter=function(a){q=a};p["text-alignSetter"]=
+function(a){N=a};p.paddingSetter=function(a){u(a)&&a!==f&&(f=p.padding=a,O())};p.paddingLeftSetter=function(a){u(a)&&a!==D&&(D=a,O())};p.alignSetter=function(a){a={left:0,center:.5,right:1}[a];a!==E&&(E=a,w&&p.attr({x:l}))};p.textSetter=function(a){void 0!==a&&n.textSetter(a);S();O()};p["stroke-widthSetter"]=function(a,g){a&&(P=!0);J=this["stroke-width"]=a;U(g,a)};p.strokeSetter=p.fillSetter=p.rSetter=function(a,g){"fill"===g&&a&&(P=!0);U(g,a)};p.anchorXSetter=function(a,g){F=a;U(g,Math.round(a)-
+R()-l)};p.anchorYSetter=function(a,g){x=a;U(g,a-Q)};p.xSetter=function(a){p.x=a;E&&(a-=E*((I||w.width)+2*f));l=Math.round(a);p.attr("translateX",l)};p.ySetter=function(a){Q=p.y=Math.round(a);p.attr("translateY",Q)};var W=p.css;return b(p,{css:function(a){if(a){var g={};a=y(a);z(p.textProps,function(e){void 0!==a[e]&&(g[e]=a[e],delete a[e])});n.css(g)}return W.call(p,a)},getBBox:function(){return{width:w.width+2*f,height:w.height+2*f,x:w.x-f,y:w.y-f}},shadow:function(a){a&&(S(),k&&k.shadow(a));return p},
+destroy:function(){g(p.element,"mouseenter");g(p.element,"mouseleave");n&&(n=n.destroy());k&&(k=k.destroy());B.prototype.destroy.call(p);p=v=S=O=U=null}})}};a.Renderer=A})(L);(function(a){var B=a.attr,A=a.createElement,H=a.css,G=a.defined,r=a.each,f=a.extend,l=a.isFirefox,q=a.isMS,k=a.isWebKit,u=a.pInt,d=a.SVGRenderer,c=a.win,n=a.wrap;f(a.SVGElement.prototype,{htmlCss:function(a){var b=this.element;if(b=a&&"SPAN"===b.tagName&&a.width)delete a.width,this.textWidth=b,this.updateTransform();a&&"ellipsis"===
+a.textOverflow&&(a.whiteSpace="nowrap",a.overflow="hidden");this.styles=f(this.styles,a);H(this.element,a);return this},htmlGetBBox:function(){var a=this.element;"text"===a.nodeName&&(a.style.position="absolute");return{x:a.offsetLeft,y:a.offsetTop,width:a.offsetWidth,height:a.offsetHeight}},htmlUpdateTransform:function(){if(this.added){var a=this.renderer,b=this.element,c=this.translateX||0,h=this.translateY||0,d=this.x||0,n=this.y||0,w=this.textAlign||"left",e={left:0,center:.5,right:1}[w],x=this.styles;
+H(b,{marginLeft:c,marginTop:h});this.shadows&&r(this.shadows,function(a){H(a,{marginLeft:c+1,marginTop:h+1})});this.inverted&&r(b.childNodes,function(e){a.invertChild(e,b)});if("SPAN"===b.tagName){var C=this.rotation,f=u(this.textWidth),m=x&&x.whiteSpace,y=[C,w,b.innerHTML,this.textWidth,this.textAlign].join();y!==this.cTT&&(x=a.fontMetrics(b.style.fontSize).b,G(C)&&this.setSpanRotation(C,e,x),H(b,{width:"",whiteSpace:m||"nowrap"}),b.offsetWidth>f&&/[ \-]/.test(b.textContent||b.innerText)&&H(b,{width:f+
+"px",display:"block",whiteSpace:m||"normal"}),this.getSpanCorrection(b.offsetWidth,x,e,C,w));H(b,{left:d+(this.xCorr||0)+"px",top:n+(this.yCorr||0)+"px"});k&&(x=b.offsetHeight);this.cTT=y}}else this.alignOnAdd=!0},setSpanRotation:function(a,b,p){var h={},d=q?"-ms-transform":k?"-webkit-transform":l?"MozTransform":c.opera?"-o-transform":"";h[d]=h.transform="rotate("+a+"deg)";h[d+(l?"Origin":"-origin")]=h.transformOrigin=100*b+"% "+p+"px";H(this.element,h)},getSpanCorrection:function(a,b,c){this.xCorr=
+-a*c;this.yCorr=-b}});f(d.prototype,{html:function(a,b,c){var h=this.createElement("span"),d=h.element,p=h.renderer,k=p.isSVG,e=function(a,e){r(["opacity","visibility"],function(b){n(a,b+"Setter",function(a,b,c,h){a.call(this,b,c,h);e[c]=b})})};h.textSetter=function(a){a!==d.innerHTML&&delete this.bBox;d.innerHTML=this.textStr=a;h.htmlUpdateTransform()};k&&e(h,h.element.style);h.xSetter=h.ySetter=h.alignSetter=h.rotationSetter=function(a,e){"align"===e&&(e="textAlign");h[e]=a;h.htmlUpdateTransform()};
+h.attr({text:a,x:Math.round(b),y:Math.round(c)}).css({fontFamily:this.style.fontFamily,fontSize:this.style.fontSize,position:"absolute"});d.style.whiteSpace="nowrap";h.css=h.htmlCss;k&&(h.add=function(a){var b,c=p.box.parentNode,m=[];if(this.parentGroup=a){if(b=a.div,!b){for(;a;)m.push(a),a=a.parentGroup;r(m.reverse(),function(a){var x,d=B(a.element,"class");d&&(d={className:d});b=a.div=a.div||A("div",d,{position:"absolute",left:(a.translateX||0)+"px",top:(a.translateY||0)+"px",display:a.display,
+opacity:a.opacity,pointerEvents:a.styles&&a.styles.pointerEvents},b||c);x=b.style;f(a,{on:function(){h.on.apply({element:m[0].div},arguments);return a},translateXSetter:function(e,g){x.left=e+"px";a[g]=e;a.doTransform=!0},translateYSetter:function(e,g){x.top=e+"px";a[g]=e;a.doTransform=!0}});e(a,x)})}}else b=c;b.appendChild(d);h.added=!0;h.alignOnAdd&&h.htmlUpdateTransform();return h});return h}})})(L);(function(a){var B,A,H=a.createElement,G=a.css,r=a.defined,f=a.deg2rad,l=a.discardElement,q=a.doc,
+k=a.each,u=a.erase,d=a.extend;B=a.extendClass;var c=a.isArray,n=a.isNumber,z=a.isObject,b=a.merge;A=a.noop;var p=a.pick,h=a.pInt,t=a.SVGElement,D=a.SVGRenderer,w=a.win;a.svg||(A={docMode8:q&&8===q.documentMode,init:function(a,b){var e=["\x3c",b,' filled\x3d"f" stroked\x3d"f"'],c=["position: ","absolute",";"],m="div"===b;("shape"===b||m)&&c.push("left:0;top:0;width:1px;height:1px;");c.push("visibility: ",m?"hidden":"visible");e.push(' style\x3d"',c.join(""),'"/\x3e');b&&(e=m||"span"===b||"img"===b?
+e.join(""):a.prepVML(e),this.element=H(e));this.renderer=a},add:function(a){var e=this.renderer,b=this.element,c=e.box,m=a&&a.inverted,c=a?a.element||a:c;a&&(this.parentGroup=a);m&&e.invertChild(b,c);c.appendChild(b);this.added=!0;this.alignOnAdd&&!this.deferUpdateTransform&&this.updateTransform();if(this.onAdd)this.onAdd();this.className&&this.attr("class",this.className);return this},updateTransform:t.prototype.htmlUpdateTransform,setSpanRotation:function(){var a=this.rotation,b=Math.cos(a*f),c=
+Math.sin(a*f);G(this.element,{filter:a?["progid:DXImageTransform.Microsoft.Matrix(M11\x3d",b,", M12\x3d",-c,", M21\x3d",c,", M22\x3d",b,", sizingMethod\x3d'auto expand')"].join(""):"none"})},getSpanCorrection:function(a,b,c,h,m){var e=h?Math.cos(h*f):1,x=h?Math.sin(h*f):0,d=p(this.elemHeight,this.element.offsetHeight),t;this.xCorr=0>e&&-a;this.yCorr=0>x&&-d;t=0>e*x;this.xCorr+=x*b*(t?1-c:c);this.yCorr-=e*b*(h?t?c:1-c:1);m&&"left"!==m&&(this.xCorr-=a*c*(0>e?-1:1),h&&(this.yCorr-=d*c*(0>x?-1:1)),G(this.element,
+{textAlign:m}))},pathToVML:function(a){for(var e=a.length,b=[];e--;)n(a[e])?b[e]=Math.round(10*a[e])-5:"Z"===a[e]?b[e]="x":(b[e]=a[e],!a.isArc||"wa"!==a[e]&&"at"!==a[e]||(b[e+5]===b[e+7]&&(b[e+7]+=a[e+7]>a[e+5]?1:-1),b[e+6]===b[e+8]&&(b[e+8]+=a[e+8]>a[e+6]?1:-1)));return b.join(" ")||"x"},clip:function(a){var e=this,b;a?(b=a.members,u(b,e),b.push(e),e.destroyClip=function(){u(b,e)},a=a.getCSS(e)):(e.destroyClip&&e.destroyClip(),a={clip:e.docMode8?"inherit":"rect(auto)"});return e.css(a)},css:t.prototype.htmlCss,
+safeRemoveChild:function(a){a.parentNode&&l(a)},destroy:function(){this.destroyClip&&this.destroyClip();return t.prototype.destroy.apply(this)},on:function(a,b){this.element["on"+a]=function(){var a=w.event;a.target=a.srcElement;b(a)};return this},cutOffPath:function(a,b){var e;a=a.split(/[ ,]/);e=a.length;if(9===e||11===e)a[e-4]=a[e-2]=h(a[e-2])-10*b;return a.join(" ")},shadow:function(a,b,c){var e=[],m,d=this.element,t=this.renderer,x,n=d.style,g,F=d.path,k,C,w,f;F&&"string"!==typeof F.value&&(F=
+"x");C=F;if(a){w=p(a.width,3);f=(a.opacity||.15)/w;for(m=1;3>=m;m++)k=2*w+1-2*m,c&&(C=this.cutOffPath(F.value,k+.5)),g=['\x3cshape isShadow\x3d"true" strokeweight\x3d"',k,'" filled\x3d"false" path\x3d"',C,'" coordsize\x3d"10 10" style\x3d"',d.style.cssText,'" /\x3e'],x=H(t.prepVML(g),null,{left:h(n.left)+p(a.offsetX,1),top:h(n.top)+p(a.offsetY,1)}),c&&(x.cutOff=k+1),g=['\x3cstroke color\x3d"',a.color||"#000000",'" opacity\x3d"',f*m,'"/\x3e'],H(t.prepVML(g),null,null,x),b?b.element.appendChild(x):
+d.parentNode.insertBefore(x,d),e.push(x);this.shadows=e}return this},updateShadows:A,setAttr:function(a,b){this.docMode8?this.element[a]=b:this.element.setAttribute(a,b)},classSetter:function(a){(this.added?this.element:this).className=a},dashstyleSetter:function(a,b,c){(c.getElementsByTagName("stroke")[0]||H(this.renderer.prepVML(["\x3cstroke/\x3e"]),null,null,c))[b]=a||"solid";this[b]=a},dSetter:function(a,b,c){var e=this.shadows;a=a||[];this.d=a.join&&a.join(" ");c.path=a=this.pathToVML(a);if(e)for(c=
+e.length;c--;)e[c].path=e[c].cutOff?this.cutOffPath(a,e[c].cutOff):a;this.setAttr(b,a)},fillSetter:function(a,b,c){var e=c.nodeName;"SPAN"===e?c.style.color=a:"IMG"!==e&&(c.filled="none"!==a,this.setAttr("fillcolor",this.renderer.color(a,c,b,this)))},"fill-opacitySetter":function(a,b,c){H(this.renderer.prepVML(["\x3c",b.split("-")[0],' opacity\x3d"',a,'"/\x3e']),null,null,c)},opacitySetter:A,rotationSetter:function(a,b,c){c=c.style;this[b]=c[b]=a;c.left=-Math.round(Math.sin(a*f)+1)+"px";c.top=Math.round(Math.cos(a*
+f))+"px"},strokeSetter:function(a,b,c){this.setAttr("strokecolor",this.renderer.color(a,c,b,this))},"stroke-widthSetter":function(a,b,c){c.stroked=!!a;this[b]=a;n(a)&&(a+="px");this.setAttr("strokeweight",a)},titleSetter:function(a,b){this.setAttr(b,a)},visibilitySetter:function(a,b,c){"inherit"===a&&(a="visible");this.shadows&&k(this.shadows,function(e){e.style[b]=a});"DIV"===c.nodeName&&(a="hidden"===a?"-999em":0,this.docMode8||(c.style[b]=a?"visible":"hidden"),b="top");c.style[b]=a},xSetter:function(a,
+b,c){this[b]=a;"x"===b?b="left":"y"===b&&(b="top");this.updateClipping?(this[b]=a,this.updateClipping()):c.style[b]=a},zIndexSetter:function(a,b,c){c.style[b]=a}},A["stroke-opacitySetter"]=A["fill-opacitySetter"],a.VMLElement=A=B(t,A),A.prototype.ySetter=A.prototype.widthSetter=A.prototype.heightSetter=A.prototype.xSetter,A={Element:A,isIE8:-1<w.navigator.userAgent.indexOf("MSIE 8.0"),init:function(a,b,c){var e,m;this.alignedObjects=[];e=this.createElement("div").css({position:"relative"});m=e.element;
+a.appendChild(e.element);this.isVML=!0;this.box=m;this.boxWrapper=e;this.gradients={};this.cache={};this.cacheKeys=[];this.imgCount=0;this.setSize(b,c,!1);if(!q.namespaces.hcv){q.namespaces.add("hcv","urn:schemas-microsoft-com:vml");try{q.createStyleSheet().cssText="hcv\\:fill, hcv\\:path, hcv\\:shape, hcv\\:stroke{ behavior:url(#default#VML); display: inline-block; } "}catch(y){q.styleSheets[0].cssText+="hcv\\:fill, hcv\\:path, hcv\\:shape, hcv\\:stroke{ behavior:url(#default#VML); display: inline-block; } "}}},
+isHidden:function(){return!this.box.offsetWidth},clipRect:function(a,b,c,h){var e=this.createElement(),p=z(a);return d(e,{members:[],count:0,left:(p?a.x:a)+1,top:(p?a.y:b)+1,width:(p?a.width:c)-1,height:(p?a.height:h)-1,getCSS:function(a){var b=a.element,c=b.nodeName,g=a.inverted,e=this.top-("shape"===c?b.offsetTop:0),m=this.left,b=m+this.width,h=e+this.height,e={clip:"rect("+Math.round(g?m:e)+"px,"+Math.round(g?h:b)+"px,"+Math.round(g?b:h)+"px,"+Math.round(g?e:m)+"px)"};!g&&a.docMode8&&"DIV"===c&&
+d(e,{width:b+"px",height:h+"px"});return e},updateClipping:function(){k(e.members,function(a){a.element&&a.css(e.getCSS(a))})}})},color:function(b,c,h,d){var e=this,p,t=/^rgba/,n,x,g="none";b&&b.linearGradient?x="gradient":b&&b.radialGradient&&(x="pattern");if(x){var F,w,f=b.linearGradient||b.radialGradient,C,u,v,D,q,l="";b=b.stops;var z,E=[],r=function(){n=['\x3cfill colors\x3d"'+E.join(",")+'" opacity\x3d"',v,'" o:opacity2\x3d"',u,'" type\x3d"',x,'" ',l,'focus\x3d"100%" method\x3d"any" /\x3e'];
+H(e.prepVML(n),null,null,c)};C=b[0];z=b[b.length-1];0<C[0]&&b.unshift([0,C[1]]);1>z[0]&&b.push([1,z[1]]);k(b,function(g,b){t.test(g[1])?(p=a.color(g[1]),F=p.get("rgb"),w=p.get("a")):(F=g[1],w=1);E.push(100*g[0]+"% "+F);b?(v=w,D=F):(u=w,q=F)});if("fill"===h)if("gradient"===x)h=f.x1||f[0]||0,b=f.y1||f[1]||0,C=f.x2||f[2]||0,f=f.y2||f[3]||0,l='angle\x3d"'+(90-180*Math.atan((f-b)/(C-h))/Math.PI)+'"',r();else{var g=f.r,A=2*g,B=2*g,G=f.cx,V=f.cy,L=c.radialReference,T,g=function(){L&&(T=d.getBBox(),G+=(L[0]-
+T.x)/T.width-.5,V+=(L[1]-T.y)/T.height-.5,A*=L[2]/T.width,B*=L[2]/T.height);l='src\x3d"'+a.getOptions().global.VMLRadialGradientURL+'" size\x3d"'+A+","+B+'" origin\x3d"0.5,0.5" position\x3d"'+G+","+V+'" color2\x3d"'+q+'" ';r()};d.added?g():d.onAdd=g;g=D}else g=F}else t.test(b)&&"IMG"!==c.tagName?(p=a.color(b),d[h+"-opacitySetter"](p.get("a"),h,c),g=p.get("rgb")):(g=c.getElementsByTagName(h),g.length&&(g[0].opacity=1,g[0].type="solid"),g=b);return g},prepVML:function(a){var b=this.isIE8;a=a.join("");
+b?(a=a.replace("/\x3e",' xmlns\x3d"urn:schemas-microsoft-com:vml" /\x3e'),a=-1===a.indexOf('style\x3d"')?a.replace("/\x3e",' style\x3d"display:inline-block;behavior:url(#default#VML);" /\x3e'):a.replace('style\x3d"','style\x3d"display:inline-block;behavior:url(#default#VML);')):a=a.replace("\x3c","\x3chcv:");return a},text:D.prototype.html,path:function(a){var b={coordsize:"10 10"};c(a)?b.d=a:z(a)&&d(b,a);return this.createElement("shape").attr(b)},circle:function(a,b,c){var e=this.symbol("circle");
+z(a)&&(c=a.r,b=a.y,a=a.x);e.isCircle=!0;e.r=c;return e.attr({x:a,y:b})},g:function(a){var b;a&&(b={className:"highcharts-"+a,"class":"highcharts-"+a});return this.createElement("div").attr(b)},image:function(a,b,c,h,m){var e=this.createElement("img").attr({src:a});1<arguments.length&&e.attr({x:b,y:c,width:h,height:m});return e},createElement:function(a){return"rect"===a?this.symbol(a):D.prototype.createElement.call(this,a)},invertChild:function(a,b){var c=this;b=b.style;var e="IMG"===a.tagName&&a.style;
+G(a,{flip:"x",left:h(b.width)-(e?h(e.top):1),top:h(b.height)-(e?h(e.left):1),rotation:-90});k(a.childNodes,function(b){c.invertChild(b,a)})},symbols:{arc:function(a,b,c,h,m){var e=m.start,d=m.end,p=m.r||c||h;c=m.innerR;h=Math.cos(e);var t=Math.sin(e),g=Math.cos(d),F=Math.sin(d);if(0===d-e)return["x"];e=["wa",a-p,b-p,a+p,b+p,a+p*h,b+p*t,a+p*g,b+p*F];m.open&&!c&&e.push("e","M",a,b);e.push("at",a-c,b-c,a+c,b+c,a+c*g,b+c*F,a+c*h,b+c*t,"x","e");e.isArc=!0;return e},circle:function(a,b,c,h,m){m&&r(m.r)&&
+(c=h=2*m.r);m&&m.isCircle&&(a-=c/2,b-=h/2);return["wa",a,b,a+c,b+h,a+c,b+h/2,a+c,b+h/2,"e"]},rect:function(a,b,c,h,m){return D.prototype.symbols[r(m)&&m.r?"callout":"square"].call(0,a,b,c,h,m)}}},a.VMLRenderer=B=function(){this.init.apply(this,arguments)},B.prototype=b(D.prototype,A),a.Renderer=B);D.prototype.measureSpanWidth=function(a,b){var c=q.createElement("span");a=q.createTextNode(a);c.appendChild(a);G(c,b);this.box.appendChild(c);b=c.offsetWidth;l(c);return b}})(L);(function(a){function B(){var k=
+a.defaultOptions.global,f=q.moment;if(k.timezone){if(f)return function(a){return-f.tz(a,k.timezone).utcOffset()};a.error(25)}return k.useUTC&&k.getTimezoneOffset}function A(){var k=a.defaultOptions.global,f,d=k.useUTC,c=d?"getUTC":"get",n=d?"setUTC":"set";a.Date=f=k.Date||q.Date;f.hcTimezoneOffset=d&&k.timezoneOffset;f.hcGetTimezoneOffset=B();f.hcMakeTime=function(a,b,c,h,t,n){var p;d?(p=f.UTC.apply(0,arguments),p+=r(p)):p=(new f(a,b,l(c,1),l(h,0),l(t,0),l(n,0))).getTime();return p};G("Minutes Hours Day Date Month FullYear".split(" "),
+function(a){f["hcGet"+a]=c+a});G("Milliseconds Seconds Minutes Hours Date Month FullYear".split(" "),function(a){f["hcSet"+a]=n+a})}var H=a.color,G=a.each,r=a.getTZOffset,f=a.merge,l=a.pick,q=a.win;a.defaultOptions={colors:"#7cb5ec #434348 #90ed7d #f7a35c #8085e9 #f15c80 #e4d354 #2b908f #f45b5b #91e8e1".split(" "),symbols:["circle","diamond","square","triangle","triangle-down"],lang:{loading:"Loading...",months:"January February March April May June July August September October November December".split(" "),
+shortMonths:"Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" "),weekdays:"Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" "),decimalPoint:".",numericSymbols:"kMGTPE".split(""),resetZoom:"Reset zoom",resetZoomTitle:"Reset zoom level 1:1",thousandsSep:" "},global:{useUTC:!0,VMLRadialGradientURL:"http://code.highcharts.com/5.0.10/gfx/vml-radial-gradient.png"},chart:{borderRadius:0,defaultSeriesType:"line",ignoreHiddenSeries:!0,spacing:[10,10,15,10],resetZoomButton:{theme:{zIndex:20},
+position:{align:"right",x:-10,y:10}},width:null,height:null,borderColor:"#335cad",backgroundColor:"#ffffff",plotBorderColor:"#cccccc"},title:{text:"Chart title",align:"center",margin:15,widthAdjust:-44},subtitle:{text:"",align:"center",widthAdjust:-44},plotOptions:{},labels:{style:{position:"absolute",color:"#333333"}},legend:{enabled:!0,align:"center",layout:"horizontal",labelFormatter:function(){return this.name},borderColor:"#999999",borderRadius:0,navigation:{activeColor:"#003399",inactiveColor:"#cccccc"},
+itemStyle:{color:"#333333",fontSize:"12px",fontWeight:"bold"},itemHoverStyle:{color:"#000000"},itemHiddenStyle:{color:"#cccccc"},shadow:!1,itemCheckboxStyle:{position:"absolute",width:"13px",height:"13px"},squareSymbol:!0,symbolPadding:5,verticalAlign:"bottom",x:0,y:0,title:{style:{fontWeight:"bold"}}},loading:{labelStyle:{fontWeight:"bold",position:"relative",top:"45%"},style:{position:"absolute",backgroundColor:"#ffffff",opacity:.5,textAlign:"center"}},tooltip:{enabled:!0,animation:a.svg,borderRadius:3,
+dateTimeLabelFormats:{millisecond:"%A, %b %e, %H:%M:%S.%L",second:"%A, %b %e, %H:%M:%S",minute:"%A, %b %e, %H:%M",hour:"%A, %b %e, %H:%M",day:"%A, %b %e, %Y",week:"Week from %A, %b %e, %Y",month:"%B %Y",year:"%Y"},footerFormat:"",padding:8,snap:a.isTouchDevice?25:10,backgroundColor:H("#f7f7f7").setOpacity(.85).get(),borderWidth:1,headerFormat:'\x3cspan style\x3d"font-size: 10px"\x3e{point.key}\x3c/span\x3e\x3cbr/\x3e',pointFormat:'\x3cspan style\x3d"color:{point.color}"\x3e\u25cf\x3c/span\x3e {series.name}: \x3cb\x3e{point.y}\x3c/b\x3e\x3cbr/\x3e',
+shadow:!0,style:{color:"#333333",cursor:"default",fontSize:"12px",pointerEvents:"none",whiteSpace:"nowrap"}},credits:{enabled:!0,href:"http://www.highcharts.com",position:{align:"right",x:-10,verticalAlign:"bottom",y:-5},style:{cursor:"pointer",color:"#999999",fontSize:"9px"},text:"Highcharts.com"}};a.setOptions=function(k){a.defaultOptions=f(!0,a.defaultOptions,k);A();return a.defaultOptions};a.getOptions=function(){return a.defaultOptions};a.defaultPlotOptions=a.defaultOptions.plotOptions;A()})(L);
+(function(a){var B=a.arrayMax,A=a.arrayMin,H=a.defined,G=a.destroyObjectProperties,r=a.each,f=a.erase,l=a.merge,q=a.pick;a.PlotLineOrBand=function(a,f){this.axis=a;f&&(this.options=f,this.id=f.id)};a.PlotLineOrBand.prototype={render:function(){var a=this,f=a.axis,d=f.horiz,c=a.options,n=c.label,z=a.label,b=c.to,p=c.from,h=c.value,t=H(p)&&H(b),D=H(h),w=a.svgElem,e=!w,x=[],C,E=c.color,m=q(c.zIndex,0),y=c.events,x={"class":"highcharts-plot-"+(t?"band ":"line ")+(c.className||"")},I={},r=f.chart.renderer,
+J=t?"bands":"lines",g=f.log2lin;f.isLog&&(p=g(p),b=g(b),h=g(h));D?(x={stroke:E,"stroke-width":c.width},c.dashStyle&&(x.dashstyle=c.dashStyle)):t&&(E&&(x.fill=E),c.borderWidth&&(x.stroke=c.borderColor,x["stroke-width"]=c.borderWidth));I.zIndex=m;J+="-"+m;(E=f.plotLinesAndBandsGroups[J])||(f.plotLinesAndBandsGroups[J]=E=r.g("plot-"+J).attr(I).add());e&&(a.svgElem=w=r.path().attr(x).add(E));if(D)x=f.getPlotLinePath(h,w.strokeWidth());else if(t)x=f.getPlotBandPath(p,b,c);else return;if(e&&x&&x.length){if(w.attr({d:x}),
+y)for(C in c=function(g){w.on(g,function(b){y[g].apply(a,[b])})},y)c(C)}else w&&(x?(w.show(),w.animate({d:x})):(w.hide(),z&&(a.label=z=z.destroy())));n&&H(n.text)&&x&&x.length&&0<f.width&&0<f.height&&!x.flat?(n=l({align:d&&t&&"center",x:d?!t&&4:10,verticalAlign:!d&&t&&"middle",y:d?t?16:10:t?6:-4,rotation:d&&!t&&90},n),this.renderLabel(n,x,t,m)):z&&z.hide();return a},renderLabel:function(a,f,d,c){var n=this.label,k=this.axis.chart.renderer;n||(n={align:a.textAlign||a.align,rotation:a.rotation,"class":"highcharts-plot-"+
+(d?"band":"line")+"-label "+(a.className||"")},n.zIndex=c,this.label=n=k.text(a.text,0,0,a.useHTML).attr(n).add(),n.css(a.style));c=[f[1],f[4],d?f[6]:f[1]];f=[f[2],f[5],d?f[7]:f[2]];d=A(c);k=A(f);n.align(a,!1,{x:d,y:k,width:B(c)-d,height:B(f)-k});n.show()},destroy:function(){f(this.axis.plotLinesAndBands,this);delete this.axis;G(this)}};a.AxisPlotLineOrBandExtension={getPlotBandPath:function(a,f){var d=this.getPlotLinePath(f,null,null,!0),c=this.getPlotLinePath(a,null,null,!0),n=this.horiz,k=1;a=
+a<this.min&&f<this.min||a>this.max&&f>this.max;c&&d?(a&&(c.flat=c.toString()===d.toString(),k=0),c.push(n&&d[4]===c[4]?d[4]+k:d[4],n||d[5]!==c[5]?d[5]:d[5]+k,n&&d[1]===c[1]?d[1]+k:d[1],n||d[2]!==c[2]?d[2]:d[2]+k)):c=null;return c},addPlotBand:function(a){return this.addPlotBandOrLine(a,"plotBands")},addPlotLine:function(a){return this.addPlotBandOrLine(a,"plotLines")},addPlotBandOrLine:function(f,q){var d=(new a.PlotLineOrBand(this,f)).render(),c=this.userOptions;d&&(q&&(c[q]=c[q]||[],c[q].push(f)),
+this.plotLinesAndBands.push(d));return d},removePlotBandOrLine:function(a){for(var k=this.plotLinesAndBands,d=this.options,c=this.userOptions,n=k.length;n--;)k[n].id===a&&k[n].destroy();r([d.plotLines||[],c.plotLines||[],d.plotBands||[],c.plotBands||[]],function(c){for(n=c.length;n--;)c[n].id===a&&f(c,c[n])})}}})(L);(function(a){var B=a.correctFloat,A=a.defined,H=a.destroyObjectProperties,G=a.isNumber,r=a.merge,f=a.pick,l=a.deg2rad;a.Tick=function(a,f,l,d){this.axis=a;this.pos=f;this.type=l||"";this.isNew=
+!0;l||d||this.addLabel()};a.Tick.prototype={addLabel:function(){var a=this.axis,k=a.options,l=a.chart,d=a.categories,c=a.names,n=this.pos,z=k.labels,b=a.tickPositions,p=n===b[0],h=n===b[b.length-1],c=d?f(d[n],c[n],n):n,d=this.label,b=b.info,t;a.isDatetimeAxis&&b&&(t=k.dateTimeLabelFormats[b.higherRanks[n]||b.unitName]);this.isFirst=p;this.isLast=h;k=a.labelFormatter.call({axis:a,chart:l,isFirst:p,isLast:h,dateTimeLabelFormat:t,value:a.isLog?B(a.lin2log(c)):c});A(d)?d&&d.attr({text:k}):(this.labelLength=
+(this.label=d=A(k)&&z.enabled?l.renderer.text(k,0,0,z.useHTML).css(r(z.style)).add(a.labelGroup):null)&&d.getBBox().width,this.rotation=0)},getLabelSize:function(){return this.label?this.label.getBBox()[this.axis.horiz?"height":"width"]:0},handleOverflow:function(a){var k=this.axis,q=a.x,d=k.chart.chartWidth,c=k.chart.spacing,n=f(k.labelLeft,Math.min(k.pos,c[3])),c=f(k.labelRight,Math.max(k.pos+k.len,d-c[1])),z=this.label,b=this.rotation,p={left:0,center:.5,right:1}[k.labelAlign],h=z.getBBox().width,
+t=k.getSlotWidth(),D=t,w=1,e,x={};if(b)0>b&&q-p*h<n?e=Math.round(q/Math.cos(b*l)-n):0<b&&q+p*h>c&&(e=Math.round((d-q)/Math.cos(b*l)));else if(d=q+(1-p)*h,q-p*h<n?D=a.x+D*(1-p)-n:d>c&&(D=c-a.x+D*p,w=-1),D=Math.min(t,D),D<t&&"center"===k.labelAlign&&(a.x+=w*(t-D-p*(t-Math.min(h,D)))),h>D||k.autoRotation&&(z.styles||{}).width)e=D;e&&(x.width=e,(k.options.labels.style||{}).textOverflow||(x.textOverflow="ellipsis"),z.css(x))},getPosition:function(a,f,l,d){var c=this.axis,n=c.chart,k=d&&n.oldChartHeight||
+n.chartHeight;return{x:a?c.translate(f+l,null,null,d)+c.transB:c.left+c.offset+(c.opposite?(d&&n.oldChartWidth||n.chartWidth)-c.right-c.left:0),y:a?k-c.bottom+c.offset-(c.opposite?c.height:0):k-c.translate(f+l,null,null,d)-c.transB}},getLabelPosition:function(a,f,u,d,c,n,z,b){var p=this.axis,h=p.transA,t=p.reversed,k=p.staggerLines,w=p.tickRotCorr||{x:0,y:0},e=c.y;A(e)||(e=0===p.side?u.rotation?-8:-u.getBBox().height:2===p.side?w.y+8:Math.cos(u.rotation*l)*(w.y-u.getBBox(!1,0).height/2));a=a+c.x+
+w.x-(n&&d?n*h*(t?-1:1):0);f=f+e-(n&&!d?n*h*(t?1:-1):0);k&&(u=z/(b||1)%k,p.opposite&&(u=k-u-1),f+=p.labelOffset/k*u);return{x:a,y:Math.round(f)}},getMarkPath:function(a,f,l,d,c,n){return n.crispLine(["M",a,f,"L",a+(c?0:-l),f+(c?l:0)],d)},renderGridLine:function(a,f,l){var d=this.axis,c=d.options,n=this.gridLine,k={},b=this.pos,p=this.type,h=d.tickmarkOffset,t=d.chart.renderer,D=p?p+"Grid":"grid",w=c[D+"LineWidth"],e=c[D+"LineColor"],c=c[D+"LineDashStyle"];n||(k.stroke=e,k["stroke-width"]=w,c&&(k.dashstyle=
+c),p||(k.zIndex=1),a&&(k.opacity=0),this.gridLine=n=t.path().attr(k).addClass("highcharts-"+(p?p+"-":"")+"grid-line").add(d.gridGroup));if(!a&&n&&(a=d.getPlotLinePath(b+h,n.strokeWidth()*l,a,!0)))n[this.isNew?"attr":"animate"]({d:a,opacity:f})},renderMark:function(a,k,l){var d=this.axis,c=d.options,n=d.chart.renderer,q=this.type,b=q?q+"Tick":"tick",p=d.tickSize(b),h=this.mark,t=!h,D=a.x;a=a.y;var w=f(c[b+"Width"],!q&&d.isXAxis?1:0),c=c[b+"Color"];p&&(d.opposite&&(p[0]=-p[0]),t&&(this.mark=h=n.path().addClass("highcharts-"+
+(q?q+"-":"")+"tick").add(d.axisGroup),h.attr({stroke:c,"stroke-width":w})),h[t?"attr":"animate"]({d:this.getMarkPath(D,a,p[0],h.strokeWidth()*l,d.horiz,n),opacity:k}))},renderLabel:function(a,k,l,d){var c=this.axis,n=c.horiz,q=c.options,b=this.label,p=q.labels,h=p.step,t=c.tickmarkOffset,D=!0,w=a.x;a=a.y;b&&G(w)&&(b.xy=a=this.getLabelPosition(w,a,b,n,p,t,d,h),this.isFirst&&!this.isLast&&!f(q.showFirstLabel,1)||this.isLast&&!this.isFirst&&!f(q.showLastLabel,1)?D=!1:!n||c.isRadial||p.step||p.rotation||
+k||0===l||this.handleOverflow(a),h&&d%h&&(D=!1),D&&G(a.y)?(a.opacity=l,b[this.isNew?"attr":"animate"](a)):b.attr("y",-9999),this.isNew=!1)},render:function(a,k,l){var d=this.axis,c=d.horiz,n=this.getPosition(c,this.pos,d.tickmarkOffset,k),q=n.x,b=n.y,d=c&&q===d.pos+d.len||!c&&b===d.pos?-1:1;l=f(l,1);this.isActive=!0;this.renderGridLine(k,l,d);this.renderMark(n,l,d);this.renderLabel(n,k,l,a)},destroy:function(){H(this,this.axis)}}})(L);(function(a){var B=a.addEvent,A=a.animObject,H=a.arrayMax,G=a.arrayMin,
+r=a.AxisPlotLineOrBandExtension,f=a.color,l=a.correctFloat,q=a.defaultOptions,k=a.defined,u=a.deg2rad,d=a.destroyObjectProperties,c=a.each,n=a.extend,z=a.fireEvent,b=a.format,p=a.getMagnitude,h=a.grep,t=a.inArray,D=a.isArray,w=a.isNumber,e=a.isString,x=a.merge,C=a.normalizeTickInterval,E=a.pick,m=a.PlotLineOrBand,y=a.removeEvent,I=a.splat,K=a.syncTimeout,J=a.Tick;a.Axis=function(){this.init.apply(this,arguments)};a.Axis.prototype={defaultOptions:{dateTimeLabelFormats:{millisecond:"%H:%M:%S.%L",second:"%H:%M:%S",
+minute:"%H:%M",hour:"%H:%M",day:"%e. %b",week:"%e. %b",month:"%b '%y",year:"%Y"},endOnTick:!1,labels:{enabled:!0,style:{color:"#666666",cursor:"default",fontSize:"11px"},x:0},minPadding:.01,maxPadding:.01,minorTickLength:2,minorTickPosition:"outside",startOfWeek:1,startOnTick:!1,tickLength:10,tickmarkPlacement:"between",tickPixelInterval:100,tickPosition:"outside",title:{align:"middle",style:{color:"#666666"}},type:"linear",minorGridLineColor:"#f2f2f2",minorGridLineWidth:1,minorTickColor:"#999999",
+lineColor:"#ccd6eb",lineWidth:1,gridLineColor:"#e6e6e6",tickColor:"#ccd6eb"},defaultYAxisOptions:{endOnTick:!0,tickPixelInterval:72,showLastLabel:!0,labels:{x:-8},maxPadding:.05,minPadding:.05,startOnTick:!0,title:{rotation:270,text:"Values"},stackLabels:{enabled:!1,formatter:function(){return a.numberFormat(this.total,-1)},style:{fontSize:"11px",fontWeight:"bold",color:"#000000",textOutline:"1px contrast"}},gridLineWidth:1,lineWidth:0},defaultLeftAxisOptions:{labels:{x:-15},title:{rotation:270}},
+defaultRightAxisOptions:{labels:{x:15},title:{rotation:90}},defaultBottomAxisOptions:{labels:{autoRotation:[-45],x:0},title:{rotation:0}},defaultTopAxisOptions:{labels:{autoRotation:[-45],x:0},title:{rotation:0}},init:function(a,b){var g=b.isX;this.chart=a;this.horiz=a.inverted?!g:g;this.isXAxis=g;this.coll=this.coll||(g?"xAxis":"yAxis");this.opposite=b.opposite;this.side=b.side||(this.horiz?this.opposite?0:2:this.opposite?1:3);this.setOptions(b);var c=this.options,e=c.type;this.labelFormatter=c.labels.formatter||
+this.defaultLabelFormatter;this.userOptions=b;this.minPixelPadding=0;this.reversed=c.reversed;this.visible=!1!==c.visible;this.zoomEnabled=!1!==c.zoomEnabled;this.hasNames="category"===e||!0===c.categories;this.categories=c.categories||this.hasNames;this.names=this.names||[];this.plotLinesAndBandsGroups={};this.isLog="logarithmic"===e;this.isDatetimeAxis="datetime"===e;this.positiveValuesOnly=this.isLog&&!this.allowNegativeLog;this.isLinked=k(c.linkedTo);this.ticks={};this.labelEdge=[];this.minorTicks=
+{};this.plotLinesAndBands=[];this.alternateBands={};this.len=0;this.minRange=this.userMinRange=c.minRange||c.maxZoom;this.range=c.range;this.offset=c.offset||0;this.stacks={};this.oldStacks={};this.stacksTouched=0;this.min=this.max=null;this.crosshair=E(c.crosshair,I(a.options.tooltip.crosshairs)[g?0:1],!1);var h;b=this.options.events;-1===t(this,a.axes)&&(g?a.axes.splice(a.xAxis.length,0,this):a.axes.push(this),a[this.coll].push(this));this.series=this.series||[];a.inverted&&g&&void 0===this.reversed&&
+(this.reversed=!0);this.removePlotLine=this.removePlotBand=this.removePlotBandOrLine;for(h in b)B(this,h,b[h]);this.lin2log=c.linearToLogConverter||this.lin2log;this.isLog&&(this.val2lin=this.log2lin,this.lin2val=this.lin2log)},setOptions:function(a){this.options=x(this.defaultOptions,"yAxis"===this.coll&&this.defaultYAxisOptions,[this.defaultTopAxisOptions,this.defaultRightAxisOptions,this.defaultBottomAxisOptions,this.defaultLeftAxisOptions][this.side],x(q[this.coll],a))},defaultLabelFormatter:function(){var g=
+this.axis,c=this.value,e=g.categories,h=this.dateTimeLabelFormat,m=q.lang,d=m.numericSymbols,m=m.numericSymbolMagnitude||1E3,v=d&&d.length,p,t=g.options.labels.format,g=g.isLog?Math.abs(c):g.tickInterval;if(t)p=b(t,this);else if(e)p=c;else if(h)p=a.dateFormat(h,c);else if(v&&1E3<=g)for(;v--&&void 0===p;)e=Math.pow(m,v+1),g>=e&&0===10*c%e&&null!==d[v]&&0!==c&&(p=a.numberFormat(c/e,-1)+d[v]);void 0===p&&(p=1E4<=Math.abs(c)?a.numberFormat(c,-1):a.numberFormat(c,-1,void 0,""));return p},getSeriesExtremes:function(){var a=
+this,b=a.chart;a.hasVisibleSeries=!1;a.dataMin=a.dataMax=a.threshold=null;a.softThreshold=!a.isXAxis;a.buildStacks&&a.buildStacks();c(a.series,function(g){if(g.visible||!b.options.chart.ignoreHiddenSeries){var c=g.options,e=c.threshold,m;a.hasVisibleSeries=!0;a.positiveValuesOnly&&0>=e&&(e=null);if(a.isXAxis)c=g.xData,c.length&&(g=G(c),w(g)||g instanceof Date||(c=h(c,function(a){return w(a)}),g=G(c)),a.dataMin=Math.min(E(a.dataMin,c[0]),g),a.dataMax=Math.max(E(a.dataMax,c[0]),H(c)));else if(g.getExtremes(),
+m=g.dataMax,g=g.dataMin,k(g)&&k(m)&&(a.dataMin=Math.min(E(a.dataMin,g),g),a.dataMax=Math.max(E(a.dataMax,m),m)),k(e)&&(a.threshold=e),!c.softThreshold||a.positiveValuesOnly)a.softThreshold=!1}})},translate:function(a,b,c,e,h,m){var g=this.linkedParent||this,F=1,p=0,d=e?g.oldTransA:g.transA;e=e?g.oldMin:g.min;var t=g.minPixelPadding;h=(g.isOrdinal||g.isBroken||g.isLog&&h)&&g.lin2val;d||(d=g.transA);c&&(F*=-1,p=g.len);g.reversed&&(F*=-1,p-=F*(g.sector||g.len));b?(a=(a*F+p-t)/d+e,h&&(a=g.lin2val(a))):
+(h&&(a=g.val2lin(a)),a=F*(a-e)*d+p+F*t+(w(m)?d*m:0));return a},toPixels:function(a,b){return this.translate(a,!1,!this.horiz,null,!0)+(b?0:this.pos)},toValue:function(a,b){return this.translate(a-(b?0:this.pos),!0,!this.horiz,null,!0)},getPlotLinePath:function(a,b,c,e,h){var g=this.chart,m=this.left,F=this.top,p,d,t=c&&g.oldChartHeight||g.chartHeight,f=c&&g.oldChartWidth||g.chartWidth,n;p=this.transB;var y=function(a,b,g){if(a<b||a>g)e?a=Math.min(Math.max(b,a),g):n=!0;return a};h=E(h,this.translate(a,
+null,null,c));a=c=Math.round(h+p);p=d=Math.round(t-h-p);w(h)?this.horiz?(p=F,d=t-this.bottom,a=c=y(a,m,m+this.width)):(a=m,c=f-this.right,p=d=y(p,F,F+this.height)):n=!0;return n&&!e?null:g.renderer.crispLine(["M",a,p,"L",c,d],b||1)},getLinearTickPositions:function(a,b,c){var g,e=l(Math.floor(b/a)*a);c=l(Math.ceil(c/a)*a);var h=[];if(this.single)return[b];for(b=e;b<=c;){h.push(b);b=l(b+a);if(b===g)break;g=b}return h},getMinorTickPositions:function(){var a=this,b=a.options,e=a.tickPositions,h=a.minorTickInterval,
+m=[],p=a.pointRangePadding||0,v=a.min-p,p=a.max+p,d=p-v;if(d&&d/h<a.len/3)if(a.isLog)c(this.paddedTicks,function(b,g,c){g&&m.push.apply(m,a.getLogTickPositions(h,c[g-1],c[g],!0))});else if(a.isDatetimeAxis&&"auto"===b.minorTickInterval)m=m.concat(a.getTimeTicks(a.normalizeTimeTickInterval(h),v,p,b.startOfWeek));else for(b=v+(e[0]-v)%h;b<=p&&b!==m[0];b+=h)m.push(b);0!==m.length&&a.trimTicks(m);return m},adjustForMinRange:function(){var a=this.options,b=this.min,e=this.max,h,m=this.dataMax-this.dataMin>=
+this.minRange,p,v,d,t,f,n;this.isXAxis&&void 0===this.minRange&&!this.isLog&&(k(a.min)||k(a.max)?this.minRange=null:(c(this.series,function(a){t=a.xData;for(v=f=a.xIncrement?1:t.length-1;0<v;v--)if(d=t[v]-t[v-1],void 0===p||d<p)p=d}),this.minRange=Math.min(5*p,this.dataMax-this.dataMin)));e-b<this.minRange&&(n=this.minRange,h=(n-e+b)/2,h=[b-h,E(a.min,b-h)],m&&(h[2]=this.isLog?this.log2lin(this.dataMin):this.dataMin),b=H(h),e=[b+n,E(a.max,b+n)],m&&(e[2]=this.isLog?this.log2lin(this.dataMax):this.dataMax),
+e=G(e),e-b<n&&(h[0]=e-n,h[1]=E(a.min,e-n),b=H(h)));this.min=b;this.max=e},getClosest:function(){var a;this.categories?a=1:c(this.series,function(b){var g=b.closestPointRange,c=b.visible||!b.chart.options.chart.ignoreHiddenSeries;!b.noSharedTooltip&&k(g)&&c&&(a=k(a)?Math.min(a,g):g)});return a},nameToX:function(a){var b=D(this.categories),g=b?this.categories:this.names,c=a.options.x,e;a.series.requireSorting=!1;k(c)||(c=!1===this.options.uniqueNames?a.series.autoIncrement():t(a.name,g));-1===c?b||
+(e=g.length):e=c;void 0!==e&&(this.names[e]=a.name);return e},updateNames:function(){var a=this;0<this.names.length&&(this.names.length=0,this.minRange=void 0,c(this.series||[],function(b){b.xIncrement=null;if(!b.points||b.isDirtyData)b.processData(),b.generatePoints();c(b.points,function(g,c){var e;g.options&&(e=a.nameToX(g),void 0!==e&&e!==g.x&&(g.x=e,b.xData[c]=e))})}))},setAxisTranslation:function(a){var b=this,g=b.max-b.min,h=b.axisPointRange||0,m,p=0,v=0,d=b.linkedParent,t=!!b.categories,f=
+b.transA,n=b.isXAxis;if(n||t||h)m=b.getClosest(),d?(p=d.minPointOffset,v=d.pointRangePadding):c(b.series,function(a){var g=t?1:n?E(a.options.pointRange,m,0):b.axisPointRange||0;a=a.options.pointPlacement;h=Math.max(h,g);b.single||(p=Math.max(p,e(a)?0:g/2),v=Math.max(v,"on"===a?0:g))}),d=b.ordinalSlope&&m?b.ordinalSlope/m:1,b.minPointOffset=p*=d,b.pointRangePadding=v*=d,b.pointRange=Math.min(h,g),n&&(b.closestPointRange=m);a&&(b.oldTransA=f);b.translationSlope=b.transA=f=b.options.staticScale||b.len/
+(g+v||1);b.transB=b.horiz?b.left:b.bottom;b.minPixelPadding=f*p},minFromRange:function(){return this.max-this.range},setTickInterval:function(b){var g=this,e=g.chart,h=g.options,m=g.isLog,d=g.log2lin,v=g.isDatetimeAxis,t=g.isXAxis,f=g.isLinked,n=h.maxPadding,y=h.minPadding,x=h.tickInterval,D=h.tickPixelInterval,I=g.categories,q=g.threshold,u=g.softThreshold,r,K,J,A;v||I||f||this.getTickAmount();J=E(g.userMin,h.min);A=E(g.userMax,h.max);f?(g.linkedParent=e[g.coll][h.linkedTo],e=g.linkedParent.getExtremes(),
+g.min=E(e.min,e.dataMin),g.max=E(e.max,e.dataMax),h.type!==g.linkedParent.options.type&&a.error(11,1)):(!u&&k(q)&&(g.dataMin>=q?(r=q,y=0):g.dataMax<=q&&(K=q,n=0)),g.min=E(J,r,g.dataMin),g.max=E(A,K,g.dataMax));m&&(g.positiveValuesOnly&&!b&&0>=Math.min(g.min,E(g.dataMin,g.min))&&a.error(10,1),g.min=l(d(g.min),15),g.max=l(d(g.max),15));g.range&&k(g.max)&&(g.userMin=g.min=J=Math.max(g.min,g.minFromRange()),g.userMax=A=g.max,g.range=null);z(g,"foundExtremes");g.beforePadding&&g.beforePadding();g.adjustForMinRange();
+!(I||g.axisPointRange||g.usePercentage||f)&&k(g.min)&&k(g.max)&&(d=g.max-g.min)&&(!k(J)&&y&&(g.min-=d*y),!k(A)&&n&&(g.max+=d*n));w(h.softMin)&&(g.min=Math.min(g.min,h.softMin));w(h.softMax)&&(g.max=Math.max(g.max,h.softMax));w(h.floor)&&(g.min=Math.max(g.min,h.floor));w(h.ceiling)&&(g.max=Math.min(g.max,h.ceiling));u&&k(g.dataMin)&&(q=q||0,!k(J)&&g.min<q&&g.dataMin>=q?g.min=q:!k(A)&&g.max>q&&g.dataMax<=q&&(g.max=q));g.tickInterval=g.min===g.max||void 0===g.min||void 0===g.max?1:f&&!x&&D===g.linkedParent.options.tickPixelInterval?
+x=g.linkedParent.tickInterval:E(x,this.tickAmount?(g.max-g.min)/Math.max(this.tickAmount-1,1):void 0,I?1:(g.max-g.min)*D/Math.max(g.len,D));t&&!b&&c(g.series,function(a){a.processData(g.min!==g.oldMin||g.max!==g.oldMax)});g.setAxisTranslation(!0);g.beforeSetTickPositions&&g.beforeSetTickPositions();g.postProcessTickInterval&&(g.tickInterval=g.postProcessTickInterval(g.tickInterval));g.pointRange&&!x&&(g.tickInterval=Math.max(g.pointRange,g.tickInterval));b=E(h.minTickInterval,g.isDatetimeAxis&&g.closestPointRange);
+!x&&g.tickInterval<b&&(g.tickInterval=b);v||m||x||(g.tickInterval=C(g.tickInterval,null,p(g.tickInterval),E(h.allowDecimals,!(.5<g.tickInterval&&5>g.tickInterval&&1E3<g.max&&9999>g.max)),!!this.tickAmount));this.tickAmount||(g.tickInterval=g.unsquish());this.setTickPositions()},setTickPositions:function(){var a=this.options,b,c=a.tickPositions,e=a.tickPositioner,h=a.startOnTick,m=a.endOnTick;this.tickmarkOffset=this.categories&&"between"===a.tickmarkPlacement&&1===this.tickInterval?.5:0;this.minorTickInterval=
+"auto"===a.minorTickInterval&&this.tickInterval?this.tickInterval/5:a.minorTickInterval;this.single=this.min===this.max&&k(this.min)&&!this.tickAmount&&!1!==a.allowDecimals;this.tickPositions=b=c&&c.slice();!b&&(b=this.isDatetimeAxis?this.getTimeTicks(this.normalizeTimeTickInterval(this.tickInterval,a.units),this.min,this.max,a.startOfWeek,this.ordinalPositions,this.closestPointRange,!0):this.isLog?this.getLogTickPositions(this.tickInterval,this.min,this.max):this.getLinearTickPositions(this.tickInterval,
+this.min,this.max),b.length>this.len&&(b=[b[0],b.pop()]),this.tickPositions=b,e&&(e=e.apply(this,[this.min,this.max])))&&(this.tickPositions=b=e);this.paddedTicks=b.slice(0);this.trimTicks(b,h,m);this.isLinked||(this.single&&(this.min-=.5,this.max+=.5),c||e||this.adjustTickAmount())},trimTicks:function(a,b,c){var g=a[0],e=a[a.length-1],h=this.minPointOffset||0;if(!this.isLinked){if(b&&-Infinity!==g)this.min=g;else for(;this.min-h>a[0];)a.shift();if(c)this.max=e;else for(;this.max+h<a[a.length-1];)a.pop();
+0===a.length&&k(g)&&a.push((e+g)/2)}},alignToOthers:function(){var a={},b,e=this.options;!1===this.chart.options.chart.alignTicks||!1===e.alignTicks||this.isLog||c(this.chart[this.coll],function(g){var c=g.options,c=[g.horiz?c.left:c.top,c.width,c.height,c.pane].join();g.series.length&&(a[c]?b=!0:a[c]=1)});return b},getTickAmount:function(){var a=this.options,b=a.tickAmount,c=a.tickPixelInterval;!k(a.tickInterval)&&this.len<c&&!this.isRadial&&!this.isLog&&a.startOnTick&&a.endOnTick&&(b=2);!b&&this.alignToOthers()&&
+(b=Math.ceil(this.len/c)+1);4>b&&(this.finalTickAmt=b,b=5);this.tickAmount=b},adjustTickAmount:function(){var a=this.tickInterval,b=this.tickPositions,c=this.tickAmount,e=this.finalTickAmt,h=b&&b.length;if(h<c){for(;b.length<c;)b.push(l(b[b.length-1]+a));this.transA*=(h-1)/(c-1);this.max=b[b.length-1]}else h>c&&(this.tickInterval*=2,this.setTickPositions());if(k(e)){for(a=c=b.length;a--;)(3===e&&1===a%2||2>=e&&0<a&&a<c-1)&&b.splice(a,1);this.finalTickAmt=void 0}},setScale:function(){var a,b;this.oldMin=
+this.min;this.oldMax=this.max;this.oldAxisLength=this.len;this.setAxisSize();b=this.len!==this.oldAxisLength;c(this.series,function(b){if(b.isDirtyData||b.isDirty||b.xAxis.isDirty)a=!0});b||a||this.isLinked||this.forceRedraw||this.userMin!==this.oldUserMin||this.userMax!==this.oldUserMax||this.alignToOthers()?(this.resetStacks&&this.resetStacks(),this.forceRedraw=!1,this.getSeriesExtremes(),this.setTickInterval(),this.oldUserMin=this.userMin,this.oldUserMax=this.userMax,this.isDirty||(this.isDirty=
+b||this.min!==this.oldMin||this.max!==this.oldMax)):this.cleanStacks&&this.cleanStacks()},setExtremes:function(a,b,e,h,m){var g=this,p=g.chart;e=E(e,!0);c(g.series,function(a){delete a.kdTree});m=n(m,{min:a,max:b});z(g,"setExtremes",m,function(){g.userMin=a;g.userMax=b;g.eventArgs=m;e&&p.redraw(h)})},zoom:function(a,b){var g=this.dataMin,c=this.dataMax,e=this.options,h=Math.min(g,E(e.min,g)),e=Math.max(c,E(e.max,c));if(a!==this.min||b!==this.max)this.allowZoomOutside||(k(g)&&(a<h&&(a=h),a>e&&(a=e)),
+k(c)&&(b<h&&(b=h),b>e&&(b=e))),this.displayBtn=void 0!==a||void 0!==b,this.setExtremes(a,b,!1,void 0,{trigger:"zoom"});return!0},setAxisSize:function(){var a=this.chart,b=this.options,c=b.offsets||[0,0,0,0],e=this.horiz,h=E(b.width,a.plotWidth-c[3]+c[1]),m=E(b.height,a.plotHeight-c[0]+c[2]),p=E(b.top,a.plotTop+c[0]),b=E(b.left,a.plotLeft+c[3]),c=/%$/;c.test(m)&&(m=Math.round(parseFloat(m)/100*a.plotHeight));c.test(p)&&(p=Math.round(parseFloat(p)/100*a.plotHeight+a.plotTop));this.left=b;this.top=p;
+this.width=h;this.height=m;this.bottom=a.chartHeight-m-p;this.right=a.chartWidth-h-b;this.len=Math.max(e?h:m,0);this.pos=e?b:p},getExtremes:function(){var a=this.isLog,b=this.lin2log;return{min:a?l(b(this.min)):this.min,max:a?l(b(this.max)):this.max,dataMin:this.dataMin,dataMax:this.dataMax,userMin:this.userMin,userMax:this.userMax}},getThreshold:function(a){var b=this.isLog,g=this.lin2log,c=b?g(this.min):this.min,b=b?g(this.max):this.max;null===a?a=c:c>a?a=c:b<a&&(a=b);return this.translate(a,0,
+1,0,1)},autoLabelAlign:function(a){a=(E(a,0)-90*this.side+720)%360;return 15<a&&165>a?"right":195<a&&345>a?"left":"center"},tickSize:function(a){var b=this.options,g=b[a+"Length"],c=E(b[a+"Width"],"tick"===a&&this.isXAxis?1:0);if(c&&g)return"inside"===b[a+"Position"]&&(g=-g),[g,c]},labelMetrics:function(){return this.chart.renderer.fontMetrics(this.options.labels.style&&this.options.labels.style.fontSize,this.ticks[0]&&this.ticks[0].label)},unsquish:function(){var a=this.options.labels,b=this.horiz,
+e=this.tickInterval,h=e,m=this.len/(((this.categories?1:0)+this.max-this.min)/e),p,d=a.rotation,t=this.labelMetrics(),f,n=Number.MAX_VALUE,y,w=function(a){a/=m||1;a=1<a?Math.ceil(a):1;return a*e};b?(y=!a.staggerLines&&!a.step&&(k(d)?[d]:m<E(a.autoRotationLimit,80)&&a.autoRotation))&&c(y,function(a){var b;if(a===d||a&&-90<=a&&90>=a)f=w(Math.abs(t.h/Math.sin(u*a))),b=f+Math.abs(a/360),b<n&&(n=b,p=a,h=f)}):a.step||(h=w(t.h));this.autoRotation=y;this.labelRotation=E(p,d);return h},getSlotWidth:function(){var a=
+this.chart,b=this.horiz,c=this.options.labels,e=Math.max(this.tickPositions.length-(this.categories?0:1),1),h=a.margin[3];return b&&2>(c.step||0)&&!c.rotation&&(this.staggerLines||1)*this.len/e||!b&&(h&&h-a.spacing[3]||.33*a.chartWidth)},renderUnsquish:function(){var a=this.chart,b=a.renderer,h=this.tickPositions,m=this.ticks,p=this.options.labels,d=this.horiz,v=this.getSlotWidth(),t=Math.max(1,Math.round(v-2*(p.padding||5))),f={},n=this.labelMetrics(),y=p.style&&p.style.textOverflow,k,w=0,D,l;e(p.rotation)||
+(f.rotation=p.rotation||0);c(h,function(a){(a=m[a])&&a.labelLength>w&&(w=a.labelLength)});this.maxLabelLength=w;if(this.autoRotation)w>t&&w>n.h?f.rotation=this.labelRotation:this.labelRotation=0;else if(v&&(k={width:t+"px"},!y))for(k.textOverflow="clip",D=h.length;!d&&D--;)if(l=h[D],t=m[l].label)t.styles&&"ellipsis"===t.styles.textOverflow?t.css({textOverflow:"clip"}):m[l].labelLength>v&&t.css({width:v+"px"}),t.getBBox().height>this.len/h.length-(n.h-n.f)&&(t.specCss={textOverflow:"ellipsis"});f.rotation&&
+(k={width:(w>.5*a.chartHeight?.33*a.chartHeight:a.chartHeight)+"px"},y||(k.textOverflow="ellipsis"));if(this.labelAlign=p.align||this.autoLabelAlign(this.labelRotation))f.align=this.labelAlign;c(h,function(a){var b=(a=m[a])&&a.label;b&&(b.attr(f),k&&b.css(x(k,b.specCss)),delete b.specCss,a.rotation=f.rotation)});this.tickRotCorr=b.rotCorr(n.b,this.labelRotation||0,0!==this.side)},hasData:function(){return this.hasVisibleSeries||k(this.min)&&k(this.max)&&!!this.tickPositions},addTitle:function(a){var b=
+this.chart.renderer,c=this.horiz,g=this.opposite,e=this.options.title,h;this.axisTitle||((h=e.textAlign)||(h=(c?{low:"left",middle:"center",high:"right"}:{low:g?"right":"left",middle:"center",high:g?"left":"right"})[e.align]),this.axisTitle=b.text(e.text,0,0,e.useHTML).attr({zIndex:7,rotation:e.rotation||0,align:h}).addClass("highcharts-axis-title").css(e.style).add(this.axisGroup),this.axisTitle.isNew=!0);this.axisTitle[a?"show":"hide"](!0)},generateTick:function(a){var b=this.ticks;b[a]?b[a].addLabel():
+b[a]=new J(this,a)},getOffset:function(){var a=this,b=a.chart,e=b.renderer,h=a.options,m=a.tickPositions,p=a.ticks,d=a.horiz,t=a.side,f=b.inverted?[1,0,3,2][t]:t,n,y,w=0,x,D=0,l=h.title,C=h.labels,q=0,I=b.axisOffset,b=b.clipOffset,u=[-1,1,1,-1][t],z,r=h.className,K=a.axisParent,J=this.tickSize("tick");n=a.hasData();a.showAxis=y=n||E(h.showEmpty,!0);a.staggerLines=a.horiz&&C.staggerLines;a.axisGroup||(a.gridGroup=e.g("grid").attr({zIndex:h.gridZIndex||1}).addClass("highcharts-"+this.coll.toLowerCase()+
+"-grid "+(r||"")).add(K),a.axisGroup=e.g("axis").attr({zIndex:h.zIndex||2}).addClass("highcharts-"+this.coll.toLowerCase()+" "+(r||"")).add(K),a.labelGroup=e.g("axis-labels").attr({zIndex:C.zIndex||7}).addClass("highcharts-"+a.coll.toLowerCase()+"-labels "+(r||"")).add(K));if(n||a.isLinked)c(m,function(b,c){a.generateTick(b,c)}),a.renderUnsquish(),!1===C.reserveSpace||0!==t&&2!==t&&{1:"left",3:"right"}[t]!==a.labelAlign&&"center"!==a.labelAlign||c(m,function(a){q=Math.max(p[a].getLabelSize(),q)}),
+a.staggerLines&&(q*=a.staggerLines,a.labelOffset=q*(a.opposite?-1:1));else for(z in p)p[z].destroy(),delete p[z];l&&l.text&&!1!==l.enabled&&(a.addTitle(y),y&&(w=a.axisTitle.getBBox()[d?"height":"width"],x=l.offset,D=k(x)?0:E(l.margin,d?5:10)));a.renderLine();a.offset=u*E(h.offset,I[t]);a.tickRotCorr=a.tickRotCorr||{x:0,y:0};e=0===t?-a.labelMetrics().h:2===t?a.tickRotCorr.y:0;D=Math.abs(q)+D;q&&(D=D-e+u*(d?E(C.y,a.tickRotCorr.y+8*u):C.x));a.axisTitleMargin=E(x,D);I[t]=Math.max(I[t],a.axisTitleMargin+
+w+u*a.offset,D,n&&m.length&&J?J[0]+u*a.offset:0);h=h.offset?0:2*Math.floor(a.axisLine.strokeWidth()/2);b[f]=Math.max(b[f],h)},getLinePath:function(a){var b=this.chart,c=this.opposite,g=this.offset,e=this.horiz,h=this.left+(c?this.width:0)+g,g=b.chartHeight-this.bottom-(c?this.height:0)+g;c&&(a*=-1);return b.renderer.crispLine(["M",e?this.left:h,e?g:this.top,"L",e?b.chartWidth-this.right:h,e?g:b.chartHeight-this.bottom],a)},renderLine:function(){this.axisLine||(this.axisLine=this.chart.renderer.path().addClass("highcharts-axis-line").add(this.axisGroup),
+this.axisLine.attr({stroke:this.options.lineColor,"stroke-width":this.options.lineWidth,zIndex:7}))},getTitlePosition:function(){var a=this.horiz,b=this.left,c=this.top,e=this.len,h=this.options.title,m=a?b:c,p=this.opposite,d=this.offset,t=h.x||0,f=h.y||0,n=this.chart.renderer.fontMetrics(h.style&&h.style.fontSize,this.axisTitle).f,e={low:m+(a?0:e),middle:m+e/2,high:m+(a?e:0)}[h.align],b=(a?c+this.height:b)+(a?1:-1)*(p?-1:1)*this.axisTitleMargin+(2===this.side?n:0);return{x:a?e+t:b+(p?this.width:
+0)+d+t,y:a?b+f-(p?this.height:0)+d:e+f}},renderMinorTick:function(a){var b=this.chart.hasRendered&&w(this.oldMin),c=this.minorTicks;c[a]||(c[a]=new J(this,a,"minor"));b&&c[a].isNew&&c[a].render(null,!0);c[a].render(null,!1,1)},renderTick:function(a,b){var c=this.isLinked,g=this.ticks,e=this.chart.hasRendered&&w(this.oldMin);if(!c||a>=this.min&&a<=this.max)g[a]||(g[a]=new J(this,a)),e&&g[a].isNew&&g[a].render(b,!0,.1),g[a].render(b)},render:function(){var a=this,b=a.chart,e=a.options,h=a.isLog,p=a.lin2log,
+d=a.isLinked,t=a.tickPositions,f=a.axisTitle,n=a.ticks,y=a.minorTicks,k=a.alternateBands,w=e.stackLabels,x=e.alternateGridColor,D=a.tickmarkOffset,l=a.axisLine,C=a.showAxis,q=A(b.renderer.globalAnimation),I,E;a.labelEdge.length=0;a.overlap=!1;c([n,y,k],function(a){for(var b in a)a[b].isActive=!1});if(a.hasData()||d)a.minorTickInterval&&!a.categories&&c(a.getMinorTickPositions(),function(b){a.renderMinorTick(b)}),t.length&&(c(t,function(b,c){a.renderTick(b,c)}),D&&(0===a.min||a.single)&&(n[-1]||(n[-1]=
+new J(a,-1,null,!0)),n[-1].render(-1))),x&&c(t,function(c,e){E=void 0!==t[e+1]?t[e+1]+D:a.max-D;0===e%2&&c<a.max&&E<=a.max+(b.polar?-D:D)&&(k[c]||(k[c]=new m(a)),I=c+D,k[c].options={from:h?p(I):I,to:h?p(E):E,color:x},k[c].render(),k[c].isActive=!0)}),a._addedPlotLB||(c((e.plotLines||[]).concat(e.plotBands||[]),function(b){a.addPlotBandOrLine(b)}),a._addedPlotLB=!0);c([n,y,k],function(a){var c,e,g=[],h=q.duration;for(c in a)a[c].isActive||(a[c].render(c,!1,0),a[c].isActive=!1,g.push(c));K(function(){for(e=
+g.length;e--;)a[g[e]]&&!a[g[e]].isActive&&(a[g[e]].destroy(),delete a[g[e]])},a!==k&&b.hasRendered&&h?h:0)});l&&(l[l.isPlaced?"animate":"attr"]({d:this.getLinePath(l.strokeWidth())}),l.isPlaced=!0,l[C?"show":"hide"](!0));f&&C&&(f[f.isNew?"attr":"animate"](a.getTitlePosition()),f.isNew=!1);w&&w.enabled&&a.renderStackTotals();a.isDirty=!1},redraw:function(){this.visible&&(this.render(),c(this.plotLinesAndBands,function(a){a.render()}));c(this.series,function(a){a.isDirty=!0})},keepProps:"extKey hcEvents names series userMax userMin".split(" "),
+destroy:function(a){var b=this,e=b.stacks,g,h=b.plotLinesAndBands,m,p;a||y(b);for(g in e)d(e[g]),e[g]=null;c([b.ticks,b.minorTicks,b.alternateBands],function(a){d(a)});if(h)for(a=h.length;a--;)h[a].destroy();c("stackTotalGroup axisLine axisTitle axisGroup gridGroup labelGroup cross".split(" "),function(a){b[a]&&(b[a]=b[a].destroy())});for(m in b.plotLinesAndBandsGroups)b.plotLinesAndBandsGroups[m]=b.plotLinesAndBandsGroups[m].destroy();for(p in b)b.hasOwnProperty(p)&&-1===t(p,b.keepProps)&&delete b[p]},
+drawCrosshair:function(a,b){var c,e=this.crosshair,g=E(e.snap,!0),h,m=this.cross;a||(a=this.cross&&this.cross.e);this.crosshair&&!1!==(k(b)||!g)?(g?k(b)&&(h=this.isXAxis?b.plotX:this.len-b.plotY):h=a&&(this.horiz?a.chartX-this.pos:this.len-a.chartY+this.pos),k(h)&&(c=this.getPlotLinePath(b&&(this.isXAxis?b.x:E(b.stackY,b.y)),null,null,null,h)||null),k(c)?(b=this.categories&&!this.isRadial,m||(this.cross=m=this.chart.renderer.path().addClass("highcharts-crosshair highcharts-crosshair-"+(b?"category ":
+"thin ")+e.className).attr({zIndex:E(e.zIndex,2)}).add(),m.attr({stroke:e.color||(b?f("#ccd6eb").setOpacity(.25).get():"#cccccc"),"stroke-width":E(e.width,1)}),e.dashStyle&&m.attr({dashstyle:e.dashStyle})),m.show().attr({d:c}),b&&!e.width&&m.attr({"stroke-width":this.transA}),this.cross.e=a):this.hideCrosshair()):this.hideCrosshair()},hideCrosshair:function(){this.cross&&this.cross.hide()}};n(a.Axis.prototype,r)})(L);(function(a){var B=a.Axis,A=a.Date,H=a.dateFormat,G=a.defaultOptions,r=a.defined,
+f=a.each,l=a.extend,q=a.getMagnitude,k=a.getTZOffset,u=a.normalizeTickInterval,d=a.pick,c=a.timeUnits;B.prototype.getTimeTicks=function(a,q,b,p){var h=[],t={},n=G.global.useUTC,w,e=new A(q-Math.abs(k(q))),x=A.hcMakeTime,C=a.unitRange,E=a.count,m;if(r(q)){e[A.hcSetMilliseconds](C>=c.second?0:E*Math.floor(e.getMilliseconds()/E));if(C>=c.second)e[A.hcSetSeconds](C>=c.minute?0:E*Math.floor(e.getSeconds()/E));if(C>=c.minute)e[A.hcSetMinutes](C>=c.hour?0:E*Math.floor(e[A.hcGetMinutes]()/E));if(C>=c.hour)e[A.hcSetHours](C>=
+c.day?0:E*Math.floor(e[A.hcGetHours]()/E));if(C>=c.day)e[A.hcSetDate](C>=c.month?1:E*Math.floor(e[A.hcGetDate]()/E));C>=c.month&&(e[A.hcSetMonth](C>=c.year?0:E*Math.floor(e[A.hcGetMonth]()/E)),w=e[A.hcGetFullYear]());if(C>=c.year)e[A.hcSetFullYear](w-w%E);if(C===c.week)e[A.hcSetDate](e[A.hcGetDate]()-e[A.hcGetDay]()+d(p,1));w=e[A.hcGetFullYear]();p=e[A.hcGetMonth]();var y=e[A.hcGetDate](),I=e[A.hcGetHours]();if(A.hcTimezoneOffset||A.hcGetTimezoneOffset)m=(!n||!!A.hcGetTimezoneOffset)&&(b-q>4*c.month||
+k(q)!==k(b)),e=e.getTime(),e=new A(e+k(e));n=e.getTime();for(q=1;n<b;)h.push(n),n=C===c.year?x(w+q*E,0):C===c.month?x(w,p+q*E):!m||C!==c.day&&C!==c.week?m&&C===c.hour?x(w,p,y,I+q*E):n+C*E:x(w,p,y+q*E*(C===c.day?1:7)),q++;h.push(n);C<=c.hour&&1E4>h.length&&f(h,function(a){0===a%18E5&&"000000000"===H("%H%M%S%L",a)&&(t[a]="day")})}h.info=l(a,{higherRanks:t,totalRange:C*E});return h};B.prototype.normalizeTimeTickInterval=function(a,d){var b=d||[["millisecond",[1,2,5,10,20,25,50,100,200,500]],["second",
+[1,2,5,10,15,30]],["minute",[1,2,5,10,15,30]],["hour",[1,2,3,4,6,8,12]],["day",[1,2]],["week",[1,2]],["month",[1,2,3,4,6]],["year",null]];d=b[b.length-1];var p=c[d[0]],h=d[1],t;for(t=0;t<b.length&&!(d=b[t],p=c[d[0]],h=d[1],b[t+1]&&a<=(p*h[h.length-1]+c[b[t+1][0]])/2);t++);p===c.year&&a<5*p&&(h=[1,2,5]);a=u(a/p,h,"year"===d[0]?Math.max(q(a/p),1):1);return{unitRange:p,count:a,unitName:d[0]}}})(L);(function(a){var B=a.Axis,A=a.getMagnitude,H=a.map,G=a.normalizeTickInterval,r=a.pick;B.prototype.getLogTickPositions=
+function(a,l,q,k){var f=this.options,d=this.len,c=this.lin2log,n=this.log2lin,z=[];k||(this._minorAutoInterval=null);if(.5<=a)a=Math.round(a),z=this.getLinearTickPositions(a,l,q);else if(.08<=a)for(var d=Math.floor(l),b,p,h,t,D,f=.3<a?[1,2,4]:.15<a?[1,2,4,6,8]:[1,2,3,4,5,6,7,8,9];d<q+1&&!D;d++)for(p=f.length,b=0;b<p&&!D;b++)h=n(c(d)*f[b]),h>l&&(!k||t<=q)&&void 0!==t&&z.push(t),t>q&&(D=!0),t=h;else l=c(l),q=c(q),a=f[k?"minorTickInterval":"tickInterval"],a=r("auto"===a?null:a,this._minorAutoInterval,
+f.tickPixelInterval/(k?5:1)*(q-l)/((k?d/this.tickPositions.length:d)||1)),a=G(a,null,A(a)),z=H(this.getLinearTickPositions(a,l,q),n),k||(this._minorAutoInterval=a/5);k||(this.tickInterval=a);return z};B.prototype.log2lin=function(a){return Math.log(a)/Math.LN10};B.prototype.lin2log=function(a){return Math.pow(10,a)}})(L);(function(a){var B=a.dateFormat,A=a.each,H=a.extend,G=a.format,r=a.isNumber,f=a.map,l=a.merge,q=a.pick,k=a.splat,u=a.syncTimeout,d=a.timeUnits;a.Tooltip=function(){this.init.apply(this,
+arguments)};a.Tooltip.prototype={init:function(a,d){this.chart=a;this.options=d;this.crosshairs=[];this.now={x:0,y:0};this.isHidden=!0;this.split=d.split&&!a.inverted;this.shared=d.shared||this.split},cleanSplit:function(a){A(this.chart.series,function(c){var d=c&&c.tt;d&&(!d.isActive||a?c.tt=d.destroy():d.isActive=!1)})},getLabel:function(){var a=this.chart.renderer,d=this.options;this.label||(this.split?this.label=a.g("tooltip"):(this.label=a.label("",0,0,d.shape||"callout",null,null,d.useHTML,
+null,"tooltip").attr({padding:d.padding,r:d.borderRadius}),this.label.attr({fill:d.backgroundColor,"stroke-width":d.borderWidth}).css(d.style).shadow(d.shadow)),this.label.attr({zIndex:8}).add());return this.label},update:function(a){this.destroy();this.init(this.chart,l(!0,this.options,a))},destroy:function(){this.label&&(this.label=this.label.destroy());this.split&&this.tt&&(this.cleanSplit(this.chart,!0),this.tt=this.tt.destroy());clearTimeout(this.hideTimer);clearTimeout(this.tooltipTimeout)},
+move:function(a,d,f,b){var c=this,h=c.now,t=!1!==c.options.animation&&!c.isHidden&&(1<Math.abs(a-h.x)||1<Math.abs(d-h.y)),n=c.followPointer||1<c.len;H(h,{x:t?(2*h.x+a)/3:a,y:t?(h.y+d)/2:d,anchorX:n?void 0:t?(2*h.anchorX+f)/3:f,anchorY:n?void 0:t?(h.anchorY+b)/2:b});c.getLabel().attr(h);t&&(clearTimeout(this.tooltipTimeout),this.tooltipTimeout=setTimeout(function(){c&&c.move(a,d,f,b)},32))},hide:function(a){var c=this;clearTimeout(this.hideTimer);a=q(a,this.options.hideDelay,500);this.isHidden||(this.hideTimer=
+u(function(){c.getLabel()[a?"fadeOut":"hide"]();c.isHidden=!0},a))},getAnchor:function(a,d){var c,b=this.chart,p=b.inverted,h=b.plotTop,t=b.plotLeft,n=0,w=0,e,x;a=k(a);c=a[0].tooltipPos;this.followPointer&&d&&(void 0===d.chartX&&(d=b.pointer.normalize(d)),c=[d.chartX-b.plotLeft,d.chartY-h]);c||(A(a,function(a){e=a.series.yAxis;x=a.series.xAxis;n+=a.plotX+(!p&&x?x.left-t:0);w+=(a.plotLow?(a.plotLow+a.plotHigh)/2:a.plotY)+(!p&&e?e.top-h:0)}),n/=a.length,w/=a.length,c=[p?b.plotWidth-w:n,this.shared&&
+!p&&1<a.length&&d?d.chartY-h:p?b.plotHeight-n:w]);return f(c,Math.round)},getPosition:function(a,d,f){var b=this.chart,c=this.distance,h={},t=f.h||0,n,k=["y",b.chartHeight,d,f.plotY+b.plotTop,b.plotTop,b.plotTop+b.plotHeight],e=["x",b.chartWidth,a,f.plotX+b.plotLeft,b.plotLeft,b.plotLeft+b.plotWidth],x=!this.followPointer&&q(f.ttBelow,!b.inverted===!!f.negative),l=function(a,b,e,g,m,d){var p=e<g-c,f=g+c+e<b,n=g-c-e;g+=c;if(x&&f)h[a]=g;else if(!x&&p)h[a]=n;else if(p)h[a]=Math.min(d-e,0>n-t?n:n-t);
+else if(f)h[a]=Math.max(m,g+t+e>b?g:g+t);else return!1},E=function(a,b,e,g){var m;g<c||g>b-c?m=!1:h[a]=g<e/2?1:g>b-e/2?b-e-2:g-e/2;return m},m=function(a){var b=k;k=e;e=b;n=a},y=function(){!1!==l.apply(0,k)?!1!==E.apply(0,e)||n||(m(!0),y()):n?h.x=h.y=0:(m(!0),y())};(b.inverted||1<this.len)&&m();y();return h},defaultFormatter:function(a){var c=this.points||k(this),d;d=[a.tooltipFooterHeaderFormatter(c[0])];d=d.concat(a.bodyFormatter(c));d.push(a.tooltipFooterHeaderFormatter(c[0],!0));return d},refresh:function(a,
+d){var c,b=this.options,p,h=a,t,f={},n=[];c=b.formatter||this.defaultFormatter;var f=this.shared,e;clearTimeout(this.hideTimer);this.followPointer=k(h)[0].series.tooltipOptions.followPointer;t=this.getAnchor(h,d);d=t[0];p=t[1];!f||h.series&&h.series.noSharedTooltip?f=h.getLabelConfig():(A(h,function(a){a.setState("hover");n.push(a.getLabelConfig())}),f={x:h[0].category,y:h[0].y},f.points=n,h=h[0]);this.len=n.length;f=c.call(f,this);e=h.series;this.distance=q(e.tooltipOptions.distance,16);!1===f?this.hide():
+(c=this.getLabel(),this.isHidden&&c.attr({opacity:1}).show(),this.split?this.renderSplit(f,a):(c.attr({text:f&&f.join?f.join(""):f}),c.removeClass(/highcharts-color-[\d]+/g).addClass("highcharts-color-"+q(h.colorIndex,e.colorIndex)),c.attr({stroke:b.borderColor||h.color||e.color||"#666666"}),this.updatePosition({plotX:d,plotY:p,negative:h.negative,ttBelow:h.ttBelow,h:t[2]||0})),this.isHidden=!1)},renderSplit:function(c,d){var f=this,b=[],p=this.chart,h=p.renderer,t=!0,n=this.options,k,e=this.getLabel();
+A(c.slice(0,d.length+1),function(a,c){c=d[c-1]||{isHeader:!0,plotX:d[0].plotX};var w=c.series||f,m=w.tt,y=c.series||{},x="highcharts-color-"+q(c.colorIndex,y.colorIndex,"none");m||(w.tt=m=h.label(null,null,null,"callout").addClass("highcharts-tooltip-box "+x).attr({padding:n.padding,r:n.borderRadius,fill:n.backgroundColor,stroke:c.color||y.color||"#333333","stroke-width":n.borderWidth}).add(e));m.isActive=!0;m.attr({text:a});m.css(n.style);a=m.getBBox();y=a.width+m.strokeWidth();c.isHeader?(k=a.height,
+y=Math.max(0,Math.min(c.plotX+p.plotLeft-y/2,p.chartWidth-y))):y=c.plotX+p.plotLeft-q(n.distance,16)-y;0>y&&(t=!1);a=(c.series&&c.series.yAxis&&c.series.yAxis.pos)+(c.plotY||0);a-=p.plotTop;b.push({target:c.isHeader?p.plotHeight+k:a,rank:c.isHeader?1:0,size:w.tt.getBBox().height+1,point:c,x:y,tt:m})});this.cleanSplit();a.distribute(b,p.plotHeight+k);A(b,function(a){var b=a.point,c=b.series;a.tt.attr({visibility:void 0===a.pos?"hidden":"inherit",x:t||b.isHeader?a.x:b.plotX+p.plotLeft+q(n.distance,
+16),y:a.pos+p.plotTop,anchorX:b.isHeader?b.plotX+p.plotLeft:b.plotX+c.xAxis.pos,anchorY:b.isHeader?a.pos+p.plotTop-15:b.plotY+c.yAxis.pos})})},updatePosition:function(a){var c=this.chart,d=this.getLabel(),d=(this.options.positioner||this.getPosition).call(this,d.width,d.height,a);this.move(Math.round(d.x),Math.round(d.y||0),a.plotX+c.plotLeft,a.plotY+c.plotTop)},getDateFormat:function(a,f,k,b){var c=B("%m-%d %H:%M:%S.%L",f),h,t,n={millisecond:15,second:12,minute:9,hour:6,day:3},w="millisecond";for(t in d){if(a===
+d.week&&+B("%w",f)===k&&"00:00:00.000"===c.substr(6)){t="week";break}if(d[t]>a){t=w;break}if(n[t]&&c.substr(n[t])!=="01-01 00:00:00.000".substr(n[t]))break;"week"!==t&&(w=t)}t&&(h=b[t]);return h},getXDateFormat:function(a,d,f){d=d.dateTimeLabelFormats;var b=f&&f.closestPointRange;return(b?this.getDateFormat(b,a.x,f.options.startOfWeek,d):d.day)||d.year},tooltipFooterHeaderFormatter:function(a,d){var c=d?"footer":"header";d=a.series;var b=d.tooltipOptions,p=b.xDateFormat,h=d.xAxis,t=h&&"datetime"===
+h.options.type&&r(a.key),c=b[c+"Format"];t&&!p&&(p=this.getXDateFormat(a,b,h));t&&p&&(c=c.replace("{point.key}","{point.key:"+p+"}"));return G(c,{point:a,series:d})},bodyFormatter:function(a){return f(a,function(a){var c=a.series.tooltipOptions;return(c.pointFormatter||a.point.tooltipFormatter).call(a.point,c.pointFormat)})}}})(L);(function(a){var B=a.addEvent,A=a.attr,H=a.charts,G=a.color,r=a.css,f=a.defined,l=a.doc,q=a.each,k=a.extend,u=a.fireEvent,d=a.offset,c=a.pick,n=a.removeEvent,z=a.splat,
+b=a.Tooltip,p=a.win;a.Pointer=function(a,b){this.init(a,b)};a.Pointer.prototype={init:function(a,d){this.options=d;this.chart=a;this.runChartClick=d.chart.events&&!!d.chart.events.click;this.pinchDown=[];this.lastValidTouch={};b&&d.tooltip.enabled&&(a.tooltip=new b(a,d.tooltip),this.followTouchMove=c(d.tooltip.followTouchMove,!0));this.setDOMEvents()},zoomOption:function(a){var b=this.chart,h=b.options.chart,d=h.zoomType||"",b=b.inverted;/touch/.test(a.type)&&(d=c(h.pinchType,d));this.zoomX=a=/x/.test(d);
+this.zoomY=d=/y/.test(d);this.zoomHor=a&&!b||d&&b;this.zoomVert=d&&!b||a&&b;this.hasZoom=a||d},normalize:function(a,b){var c,h;a=a||p.event;a.target||(a.target=a.srcElement);h=a.touches?a.touches.length?a.touches.item(0):a.changedTouches[0]:a;b||(this.chartPosition=b=d(this.chart.container));void 0===h.pageX?(c=Math.max(a.x,a.clientX-b.left),b=a.y):(c=h.pageX-b.left,b=h.pageY-b.top);return k(a,{chartX:Math.round(c),chartY:Math.round(b)})},getCoordinates:function(a){var b={xAxis:[],yAxis:[]};q(this.chart.axes,
+function(c){b[c.isXAxis?"xAxis":"yAxis"].push({axis:c,value:c.toValue(a[c.horiz?"chartX":"chartY"])})});return b},getKDPoints:function(a,b,d){var h=[],e,p,f;q(a,function(a){e=a.noSharedTooltip&&b;p=!b&&a.directTouch;a.visible&&!p&&c(a.options.enableMouseTracking,!0)&&(f=a.searchPoint(d,!e&&0>a.options.findNearestPointBy.indexOf("y")))&&f.series&&h.push(f)});h.sort(function(a,c){var e=a.distX-c.distX,h=a.dist-c.dist,m=(c.series.group&&c.series.group.zIndex)-(a.series.group&&a.series.group.zIndex);
+return 0!==e&&b?e:0!==h?h:0!==m?m:a.series.index>c.series.index?-1:1});if(b&&h[0]&&!h[0].series.noSharedTooltip)for(a=h.length;a--;)(h[a].x!==h[0].x||h[a].series.noSharedTooltip)&&h.splice(a,1);return h},getPointFromEvent:function(a){a=a.target;for(var b;a&&!b;)b=a.point,a=a.parentNode;return b},getHoverData:function(b,d,p,f,e,n){var h=b,t=d,m;f?e?(m=[],q(p,function(a){var b=a.noSharedTooltip&&e,d=!e&&a.directTouch;a.visible&&!b&&!d&&c(a.options.enableMouseTracking,!0)&&(a=a.searchKDTree({clientX:h.clientX,
+plotY:h.plotY},!b&&1===a.kdDimensions))&&a.series&&m.push(a)}),0===m.length&&(m=[h])):m=[h]:t&&!t.stickyTracking?(e||(p=[t]),m=this.getKDPoints(p,e,n),h=a.find(m,function(a){return a.series===t})):(b=a.grep(p,function(a){return a.stickyTracking}),m=this.getKDPoints(b,e,n),t=(h=m[0])&&h.series,e&&(m=this.getKDPoints(p,e,n)));m.sort(function(a,b){return a.series.index-b.series.index});return{hoverPoint:h,hoverSeries:t,hoverPoints:m}},runPointActions:function(b,d){var h=this.chart,p=h.tooltip,e=p?p.shared:
+!1,f=d||h.hoverPoint,t=f&&f.series||h.hoverSeries;d=this.getHoverData(f,t,h.series,!!d||!e&&t&&t.directTouch,e,b);var n,m,f=d.hoverPoint;n=(t=d.hoverSeries)&&t.tooltipOptions.followPointer;m=(e=e&&f&&!f.series.noSharedTooltip)?d.hoverPoints:f?[f]:[];if(f&&(f!==h.hoverPoint||p&&p.isHidden)){q(h.hoverPoints||[],function(b){-1===a.inArray(b,m)&&b.setState()});q(m||[],function(a){a.setState("hover")});if(h.hoverSeries!==t)t.onMouseOver();t&&!t.directTouch&&(h.hoverPoint&&h.hoverPoint.firePointEvent("mouseOut"),
+f.firePointEvent("mouseOver"));h.hoverPoints=m;h.hoverPoint=f;p&&p.refresh(e?m:f,b)}else n&&p&&!p.isHidden&&(f=p.getAnchor([{}],b),p.updatePosition({plotX:f[0],plotY:f[1]}));this.unDocMouseMove||(this.unDocMouseMove=B(l,"mousemove",function(b){var c=H[a.hoverChartIndex];if(c)c.pointer.onDocumentMouseMove(b)}));q(h.axes,function(a){c(a.crosshair.snap,!0)?q(m,function(c){c.series[a.coll]===a&&a.drawCrosshair(b,c)}):a.drawCrosshair(b)})},reset:function(a,b){var c=this.chart,h=c.hoverSeries,e=c.hoverPoint,
+d=c.hoverPoints,p=c.tooltip,f=p&&p.shared?d:e;a&&f&&q(z(f),function(b){b.series.isCartesian&&void 0===b.plotX&&(a=!1)});if(a)p&&f&&(p.refresh(f),e&&(e.setState(e.state,!0),q(c.axes,function(a){a.crosshair&&a.drawCrosshair(null,e)})));else{if(e)e.onMouseOut();d&&q(d,function(a){a.setState()});if(h)h.onMouseOut();p&&p.hide(b);this.unDocMouseMove&&(this.unDocMouseMove=this.unDocMouseMove());q(c.axes,function(a){a.hideCrosshair()});this.hoverX=c.hoverPoints=c.hoverPoint=null}},scaleGroups:function(a,
+b){var c=this.chart,h;q(c.series,function(e){h=a||e.getPlotBox();e.xAxis&&e.xAxis.zoomEnabled&&e.group&&(e.group.attr(h),e.markerGroup&&(e.markerGroup.attr(h),e.markerGroup.clip(b?c.clipRect:null)),e.dataLabelsGroup&&e.dataLabelsGroup.attr(h))});c.clipRect.attr(b||c.clipBox)},dragStart:function(a){var b=this.chart;b.mouseIsDown=a.type;b.cancelClick=!1;b.mouseDownX=this.mouseDownX=a.chartX;b.mouseDownY=this.mouseDownY=a.chartY},drag:function(a){var b=this.chart,c=b.options.chart,h=a.chartX,e=a.chartY,
+d=this.zoomHor,p=this.zoomVert,f=b.plotLeft,m=b.plotTop,n=b.plotWidth,k=b.plotHeight,l,q=this.selectionMarker,g=this.mouseDownX,u=this.mouseDownY,r=c.panKey&&a[c.panKey+"Key"];q&&q.touch||(h<f?h=f:h>f+n&&(h=f+n),e<m?e=m:e>m+k&&(e=m+k),this.hasDragged=Math.sqrt(Math.pow(g-h,2)+Math.pow(u-e,2)),10<this.hasDragged&&(l=b.isInsidePlot(g-f,u-m),b.hasCartesianSeries&&(this.zoomX||this.zoomY)&&l&&!r&&!q&&(this.selectionMarker=q=b.renderer.rect(f,m,d?1:n,p?1:k,0).attr({fill:c.selectionMarkerFill||G("#335cad").setOpacity(.25).get(),
+"class":"highcharts-selection-marker",zIndex:7}).add()),q&&d&&(h-=g,q.attr({width:Math.abs(h),x:(0<h?0:h)+g})),q&&p&&(h=e-u,q.attr({height:Math.abs(h),y:(0<h?0:h)+u})),l&&!q&&c.panning&&b.pan(a,c.panning)))},drop:function(a){var b=this,c=this.chart,h=this.hasPinched;if(this.selectionMarker){var e={originalEvent:a,xAxis:[],yAxis:[]},d=this.selectionMarker,p=d.attr?d.attr("x"):d.x,n=d.attr?d.attr("y"):d.y,m=d.attr?d.attr("width"):d.width,y=d.attr?d.attr("height"):d.height,l;if(this.hasDragged||h)q(c.axes,
+function(c){if(c.zoomEnabled&&f(c.min)&&(h||b[{xAxis:"zoomX",yAxis:"zoomY"}[c.coll]])){var d=c.horiz,g="touchend"===a.type?c.minPixelPadding:0,t=c.toValue((d?p:n)+g),d=c.toValue((d?p+m:n+y)-g);e[c.coll].push({axis:c,min:Math.min(t,d),max:Math.max(t,d)});l=!0}}),l&&u(c,"selection",e,function(a){c.zoom(k(a,h?{animation:!1}:null))});this.selectionMarker=this.selectionMarker.destroy();h&&this.scaleGroups()}c&&(r(c.container,{cursor:c._cursor}),c.cancelClick=10<this.hasDragged,c.mouseIsDown=this.hasDragged=
+this.hasPinched=!1,this.pinchDown=[])},onContainerMouseDown:function(a){a=this.normalize(a);this.zoomOption(a);a.preventDefault&&a.preventDefault();this.dragStart(a)},onDocumentMouseUp:function(b){H[a.hoverChartIndex]&&H[a.hoverChartIndex].pointer.drop(b)},onDocumentMouseMove:function(a){var b=this.chart,c=this.chartPosition;a=this.normalize(a,c);!c||this.inClass(a.target,"highcharts-tracker")||b.isInsidePlot(a.chartX-b.plotLeft,a.chartY-b.plotTop)||this.reset()},onContainerMouseLeave:function(b){var c=
+H[a.hoverChartIndex];c&&(b.relatedTarget||b.toElement)&&(c.pointer.reset(),c.pointer.chartPosition=null)},onContainerMouseMove:function(b){var c=this.chart;f(a.hoverChartIndex)&&H[a.hoverChartIndex]&&H[a.hoverChartIndex].mouseIsDown||(a.hoverChartIndex=c.index);b=this.normalize(b);b.returnValue=!1;"mousedown"===c.mouseIsDown&&this.drag(b);!this.inClass(b.target,"highcharts-tracker")&&!c.isInsidePlot(b.chartX-c.plotLeft,b.chartY-c.plotTop)||c.openMenu||this.runPointActions(b)},inClass:function(a,b){for(var c;a;){if(c=
+A(a,"class")){if(-1!==c.indexOf(b))return!0;if(-1!==c.indexOf("highcharts-container"))return!1}a=a.parentNode}},onTrackerMouseOut:function(a){var b=this.chart.hoverSeries;a=a.relatedTarget||a.toElement;if(!(!b||!a||b.stickyTracking||this.inClass(a,"highcharts-tooltip")||this.inClass(a,"highcharts-series-"+b.index)&&this.inClass(a,"highcharts-tracker")))b.onMouseOut()},onContainerClick:function(a){var b=this.chart,c=b.hoverPoint,h=b.plotLeft,e=b.plotTop;a=this.normalize(a);b.cancelClick||(c&&this.inClass(a.target,
+"highcharts-tracker")?(u(c.series,"click",k(a,{point:c})),b.hoverPoint&&c.firePointEvent("click",a)):(k(a,this.getCoordinates(a)),b.isInsidePlot(a.chartX-h,a.chartY-e)&&u(b,"click",a)))},setDOMEvents:function(){var b=this,c=b.chart.container;c.onmousedown=function(a){b.onContainerMouseDown(a)};c.onmousemove=function(a){b.onContainerMouseMove(a)};c.onclick=function(a){b.onContainerClick(a)};B(c,"mouseleave",b.onContainerMouseLeave);1===a.chartCount&&B(l,"mouseup",b.onDocumentMouseUp);a.hasTouch&&(c.ontouchstart=
+function(a){b.onContainerTouchStart(a)},c.ontouchmove=function(a){b.onContainerTouchMove(a)},1===a.chartCount&&B(l,"touchend",b.onDocumentTouchEnd))},destroy:function(){var b;this.unDocMouseMove&&this.unDocMouseMove();n(this.chart.container,"mouseleave",this.onContainerMouseLeave);a.chartCount||(n(l,"mouseup",this.onDocumentMouseUp),n(l,"touchend",this.onDocumentTouchEnd));clearInterval(this.tooltipTimeout);for(b in this)this[b]=null}}})(L);(function(a){var B=a.charts,A=a.each,H=a.extend,G=a.map,
+r=a.noop,f=a.pick;H(a.Pointer.prototype,{pinchTranslate:function(a,f,k,u,d,c){this.zoomHor&&this.pinchTranslateDirection(!0,a,f,k,u,d,c);this.zoomVert&&this.pinchTranslateDirection(!1,a,f,k,u,d,c)},pinchTranslateDirection:function(a,f,k,u,d,c,n,r){var b=this.chart,p=a?"x":"y",h=a?"X":"Y",t="chart"+h,l=a?"width":"height",w=b["plot"+(a?"Left":"Top")],e,q,C=r||1,E=b.inverted,m=b.bounds[a?"h":"v"],y=1===f.length,I=f[0][t],K=k[0][t],J=!y&&f[1][t],g=!y&&k[1][t],z;k=function(){!y&&20<Math.abs(I-J)&&(C=r||
+Math.abs(K-g)/Math.abs(I-J));q=(w-K)/C+I;e=b["plot"+(a?"Width":"Height")]/C};k();f=q;f<m.min?(f=m.min,z=!0):f+e>m.max&&(f=m.max-e,z=!0);z?(K-=.8*(K-n[p][0]),y||(g-=.8*(g-n[p][1])),k()):n[p]=[K,g];E||(c[p]=q-w,c[l]=e);c=E?1/C:C;d[l]=e;d[p]=f;u[E?a?"scaleY":"scaleX":"scale"+h]=C;u["translate"+h]=c*w+(K-c*I)},pinch:function(a){var l=this,k=l.chart,u=l.pinchDown,d=a.touches,c=d.length,n=l.lastValidTouch,z=l.hasZoom,b=l.selectionMarker,p={},h=1===c&&(l.inClass(a.target,"highcharts-tracker")&&k.runTrackerClick||
+l.runChartClick),t={};1<c&&(l.initiated=!0);z&&l.initiated&&!h&&a.preventDefault();G(d,function(a){return l.normalize(a)});"touchstart"===a.type?(A(d,function(a,b){u[b]={chartX:a.chartX,chartY:a.chartY}}),n.x=[u[0].chartX,u[1]&&u[1].chartX],n.y=[u[0].chartY,u[1]&&u[1].chartY],A(k.axes,function(a){if(a.zoomEnabled){var b=k.bounds[a.horiz?"h":"v"],c=a.minPixelPadding,h=a.toPixels(f(a.options.min,a.dataMin)),d=a.toPixels(f(a.options.max,a.dataMax)),p=Math.max(h,d);b.min=Math.min(a.pos,Math.min(h,d)-
+c);b.max=Math.max(a.pos+a.len,p+c)}}),l.res=!0):l.followTouchMove&&1===c?this.runPointActions(l.normalize(a)):u.length&&(b||(l.selectionMarker=b=H({destroy:r,touch:!0},k.plotBox)),l.pinchTranslate(u,d,p,b,t,n),l.hasPinched=z,l.scaleGroups(p,t),l.res&&(l.res=!1,this.reset(!1,0)))},touch:function(l,q){var k=this.chart,u,d;if(k.index!==a.hoverChartIndex)this.onContainerMouseLeave({relatedTarget:!0});a.hoverChartIndex=k.index;1===l.touches.length?(l=this.normalize(l),(d=k.isInsidePlot(l.chartX-k.plotLeft,
+l.chartY-k.plotTop))&&!k.openMenu?(q&&this.runPointActions(l),"touchmove"===l.type&&(q=this.pinchDown,u=q[0]?4<=Math.sqrt(Math.pow(q[0].chartX-l.chartX,2)+Math.pow(q[0].chartY-l.chartY,2)):!1),f(u,!0)&&this.pinch(l)):q&&this.reset()):2===l.touches.length&&this.pinch(l)},onContainerTouchStart:function(a){this.zoomOption(a);this.touch(a,!0)},onContainerTouchMove:function(a){this.touch(a)},onDocumentTouchEnd:function(f){B[a.hoverChartIndex]&&B[a.hoverChartIndex].pointer.drop(f)}})})(L);(function(a){var B=
+a.addEvent,A=a.charts,H=a.css,G=a.doc,r=a.extend,f=a.noop,l=a.Pointer,q=a.removeEvent,k=a.win,u=a.wrap;if(k.PointerEvent||k.MSPointerEvent){var d={},c=!!k.PointerEvent,n=function(){var a,c=[];c.item=function(a){return this[a]};for(a in d)d.hasOwnProperty(a)&&c.push({pageX:d[a].pageX,pageY:d[a].pageY,target:d[a].target});return c},z=function(b,c,h,d){"touch"!==b.pointerType&&b.pointerType!==b.MSPOINTER_TYPE_TOUCH||!A[a.hoverChartIndex]||(d(b),d=A[a.hoverChartIndex].pointer,d[c]({type:h,target:b.currentTarget,
+preventDefault:f,touches:n()}))};r(l.prototype,{onContainerPointerDown:function(a){z(a,"onContainerTouchStart","touchstart",function(a){d[a.pointerId]={pageX:a.pageX,pageY:a.pageY,target:a.currentTarget}})},onContainerPointerMove:function(a){z(a,"onContainerTouchMove","touchmove",function(a){d[a.pointerId]={pageX:a.pageX,pageY:a.pageY};d[a.pointerId].target||(d[a.pointerId].target=a.currentTarget)})},onDocumentPointerUp:function(a){z(a,"onDocumentTouchEnd","touchend",function(a){delete d[a.pointerId]})},
+batchMSEvents:function(a){a(this.chart.container,c?"pointerdown":"MSPointerDown",this.onContainerPointerDown);a(this.chart.container,c?"pointermove":"MSPointerMove",this.onContainerPointerMove);a(G,c?"pointerup":"MSPointerUp",this.onDocumentPointerUp)}});u(l.prototype,"init",function(a,c,h){a.call(this,c,h);this.hasZoom&&H(c.container,{"-ms-touch-action":"none","touch-action":"none"})});u(l.prototype,"setDOMEvents",function(a){a.apply(this);(this.hasZoom||this.followTouchMove)&&this.batchMSEvents(B)});
+u(l.prototype,"destroy",function(a){this.batchMSEvents(q);a.call(this)})}})(L);(function(a){var B,A=a.addEvent,H=a.css,G=a.discardElement,r=a.defined,f=a.each,l=a.isFirefox,q=a.marginNames,k=a.merge,u=a.pick,d=a.setAnimation,c=a.stableSort,n=a.win,z=a.wrap;B=a.Legend=function(a,c){this.init(a,c)};B.prototype={init:function(a,c){this.chart=a;this.setOptions(c);c.enabled&&(this.render(),A(this.chart,"endResize",function(){this.legend.positionCheckboxes()}))},setOptions:function(a){var b=u(a.padding,
+8);this.options=a;this.itemStyle=a.itemStyle;this.itemHiddenStyle=k(this.itemStyle,a.itemHiddenStyle);this.itemMarginTop=a.itemMarginTop||0;this.padding=b;this.initialItemY=b-5;this.itemHeight=this.maxItemWidth=0;this.symbolWidth=u(a.symbolWidth,16);this.pages=[]},update:function(a,c){var b=this.chart;this.setOptions(k(!0,this.options,a));this.destroy();b.isDirtyLegend=b.isDirtyBox=!0;u(c,!0)&&b.redraw()},colorizeItem:function(a,c){a.legendGroup[c?"removeClass":"addClass"]("highcharts-legend-item-hidden");
+var b=this.options,d=a.legendItem,f=a.legendLine,p=a.legendSymbol,e=this.itemHiddenStyle.color,b=c?b.itemStyle.color:e,n=c?a.color||e:e,k=a.options&&a.options.marker,l={fill:n},m;d&&d.css({fill:b,color:b});f&&f.attr({stroke:n});if(p){if(k&&p.isMarker&&(l=a.pointAttribs(),!c))for(m in l)l[m]=e;p.attr(l)}},positionItem:function(a){var b=this.options,c=b.symbolPadding,b=!b.rtl,d=a._legendItemPos,f=d[0],d=d[1],n=a.checkbox;(a=a.legendGroup)&&a.element&&a.translate(b?f:this.legendWidth-f-2*c-4,d);n&&(n.x=
+f,n.y=d)},destroyItem:function(a){var b=a.checkbox;f(["legendItem","legendLine","legendSymbol","legendGroup"],function(b){a[b]&&(a[b]=a[b].destroy())});b&&G(a.checkbox)},destroy:function(){function a(a){this[a]&&(this[a]=this[a].destroy())}f(this.getAllItems(),function(b){f(["legendItem","legendGroup"],a,b)});f("clipRect up down pager nav box title group".split(" "),a,this);this.display=null},positionCheckboxes:function(a){var b=this.group&&this.group.alignAttr,c,d=this.clipHeight||this.legendHeight,
+n=this.titleHeight;b&&(c=b.translateY,f(this.allItems,function(h){var e=h.checkbox,f;e&&(f=c+n+e.y+(a||0)+3,H(e,{left:b.translateX+h.checkboxOffset+e.x-20+"px",top:f+"px",display:f>c-6&&f<c+d-6?"":"none"}))}))},renderTitle:function(){var a=this.padding,c=this.options.title,h=0;c.text&&(this.title||(this.title=this.chart.renderer.label(c.text,a-3,a-4,null,null,null,null,null,"legend-title").attr({zIndex:1}).css(c.style).add(this.group)),a=this.title.getBBox(),h=a.height,this.offsetWidth=a.width,this.contentGroup.attr({translateY:h}));
+this.titleHeight=h},setText:function(b){var c=this.options;b.legendItem.attr({text:c.labelFormat?a.format(c.labelFormat,b):c.labelFormatter.call(b)})},renderItem:function(a){var b=this.chart,c=b.renderer,d=this.options,f="horizontal"===d.layout,n=this.symbolWidth,e=d.symbolPadding,l=this.itemStyle,q=this.itemHiddenStyle,r=this.padding,m=f?u(d.itemDistance,20):0,y=!d.rtl,I=d.width,K=d.itemMarginBottom||0,J=this.itemMarginTop,g=a.legendItem,z=!a.series,Q=!z&&a.series.drawLegendSymbol?a.series:a,A=Q.options,
+A=this.createCheckboxForItem&&A&&A.showCheckbox,B=d.useHTML,H=a.options.className;g||(a.legendGroup=c.g("legend-item").addClass("highcharts-"+Q.type+"-series highcharts-color-"+a.colorIndex+(H?" "+H:"")+(z?" highcharts-series-"+a.index:"")).attr({zIndex:1}).add(this.scrollGroup),a.legendItem=g=c.text("",y?n+e:-e,this.baseline||0,B).css(k(a.visible?l:q)).attr({align:y?"left":"right",zIndex:2}).add(a.legendGroup),this.baseline||(l=l.fontSize,this.fontMetrics=c.fontMetrics(l,g),this.baseline=this.fontMetrics.f+
+3+J,g.attr("y",this.baseline)),this.symbolHeight=d.symbolHeight||this.fontMetrics.f,Q.drawLegendSymbol(this,a),this.setItemEvents&&this.setItemEvents(a,g,B),A&&this.createCheckboxForItem(a));this.colorizeItem(a,a.visible);this.setText(a);c=g.getBBox();n=a.checkboxOffset=d.itemWidth||a.legendItemWidth||n+e+c.width+m+(A?20:0);this.itemHeight=e=Math.round(a.legendItemHeight||c.height||this.symbolHeight);f&&this.itemX-r+n>(I||b.spacingBox.width-2*r-d.x)&&(this.itemX=r,this.itemY+=J+this.lastLineHeight+
+K,this.lastLineHeight=0);this.maxItemWidth=Math.max(this.maxItemWidth,n);this.lastItemY=J+this.itemY+K;this.lastLineHeight=Math.max(e,this.lastLineHeight);a._legendItemPos=[this.itemX,this.itemY];f?this.itemX+=n:(this.itemY+=J+e+K,this.lastLineHeight=e);this.offsetWidth=I||Math.max((f?this.itemX-r-m:n)+r,this.offsetWidth)},getAllItems:function(){var a=[];f(this.chart.series,function(b){var c=b&&b.options;b&&u(c.showInLegend,r(c.linkedTo)?!1:void 0,!0)&&(a=a.concat(b.legendItems||("point"===c.legendType?
+b.data:b)))});return a},adjustMargins:function(a,c){var b=this.chart,d=this.options,p=d.align.charAt(0)+d.verticalAlign.charAt(0)+d.layout.charAt(0);d.floating||f([/(lth|ct|rth)/,/(rtv|rm|rbv)/,/(rbh|cb|lbh)/,/(lbv|lm|ltv)/],function(h,e){h.test(p)&&!r(a[e])&&(b[q[e]]=Math.max(b[q[e]],b.legend[(e+1)%2?"legendHeight":"legendWidth"]+[1,-1,-1,1][e]*d[e%2?"x":"y"]+u(d.margin,12)+c[e]))})},render:function(){var a=this,d=a.chart,h=d.renderer,n=a.group,l,q,e,x,u=a.box,r=a.options,m=a.padding;a.itemX=m;a.itemY=
+a.initialItemY;a.offsetWidth=0;a.lastItemY=0;n||(a.group=n=h.g("legend").attr({zIndex:7}).add(),a.contentGroup=h.g().attr({zIndex:1}).add(n),a.scrollGroup=h.g().add(a.contentGroup));a.renderTitle();l=a.getAllItems();c(l,function(a,b){return(a.options&&a.options.legendIndex||0)-(b.options&&b.options.legendIndex||0)});r.reversed&&l.reverse();a.allItems=l;a.display=q=!!l.length;a.lastLineHeight=0;f(l,function(b){a.renderItem(b)});e=(r.width||a.offsetWidth)+m;x=a.lastItemY+a.lastLineHeight+a.titleHeight;
+x=a.handleOverflow(x);x+=m;u||(a.box=u=h.rect().addClass("highcharts-legend-box").attr({r:r.borderRadius}).add(n),u.isNew=!0);u.attr({stroke:r.borderColor,"stroke-width":r.borderWidth||0,fill:r.backgroundColor||"none"}).shadow(r.shadow);0<e&&0<x&&(u[u.isNew?"attr":"animate"](u.crisp({x:0,y:0,width:e,height:x},u.strokeWidth())),u.isNew=!1);u[q?"show":"hide"]();a.legendWidth=e;a.legendHeight=x;f(l,function(b){a.positionItem(b)});q&&n.align(k(r,{width:e,height:x}),!0,"spacingBox");d.isResizing||this.positionCheckboxes()},
+handleOverflow:function(a){var b=this,c=this.chart,d=c.renderer,n=this.options,k=n.y,e=this.padding,c=c.spacingBox.height+("top"===n.verticalAlign?-k:k)-e,k=n.maxHeight,l,q=this.clipRect,r=n.navigation,m=u(r.animation,!0),y=r.arrowSize||12,I=this.nav,K=this.pages,J,g=this.allItems,z=function(a){a?q.attr({height:a}):q&&(b.clipRect=q.destroy(),b.contentGroup.clip());b.contentGroup.div&&(b.contentGroup.div.style.clip=a?"rect("+e+"px,9999px,"+(e+a)+"px,0)":"auto")};"horizontal"!==n.layout||"middle"===
+n.verticalAlign||n.floating||(c/=2);k&&(c=Math.min(c,k));K.length=0;a>c&&!1!==r.enabled?(this.clipHeight=l=Math.max(c-20-this.titleHeight-e,0),this.currentPage=u(this.currentPage,1),this.fullHeight=a,f(g,function(a,b){var c=a._legendItemPos[1];a=Math.round(a.legendItem.getBBox().height);var e=K.length;if(!e||c-K[e-1]>l&&(J||c)!==K[e-1])K.push(J||c),e++;b===g.length-1&&c+a-K[e-1]>l&&K.push(c);c!==J&&(J=c)}),q||(q=b.clipRect=d.clipRect(0,e,9999,0),b.contentGroup.clip(q)),z(l),I||(this.nav=I=d.g().attr({zIndex:1}).add(this.group),
+this.up=d.symbol("triangle",0,0,y,y).on("click",function(){b.scroll(-1,m)}).add(I),this.pager=d.text("",15,10).addClass("highcharts-legend-navigation").css(r.style).add(I),this.down=d.symbol("triangle-down",0,0,y,y).on("click",function(){b.scroll(1,m)}).add(I)),b.scroll(0),a=c):I&&(z(),this.nav=I.destroy(),this.scrollGroup.attr({translateY:1}),this.clipHeight=0);return a},scroll:function(a,c){var b=this.pages,f=b.length;a=this.currentPage+a;var p=this.clipHeight,n=this.options.navigation,e=this.pager,
+k=this.padding;a>f&&(a=f);0<a&&(void 0!==c&&d(c,this.chart),this.nav.attr({translateX:k,translateY:p+this.padding+7+this.titleHeight,visibility:"visible"}),this.up.attr({"class":1===a?"highcharts-legend-nav-inactive":"highcharts-legend-nav-active"}),e.attr({text:a+"/"+f}),this.down.attr({x:18+this.pager.getBBox().width,"class":a===f?"highcharts-legend-nav-inactive":"highcharts-legend-nav-active"}),this.up.attr({fill:1===a?n.inactiveColor:n.activeColor}).css({cursor:1===a?"default":"pointer"}),this.down.attr({fill:a===
+f?n.inactiveColor:n.activeColor}).css({cursor:a===f?"default":"pointer"}),c=-b[a-1]+this.initialItemY,this.scrollGroup.animate({translateY:c}),this.currentPage=a,this.positionCheckboxes(c))}};a.LegendSymbolMixin={drawRectangle:function(a,c){var b=a.symbolHeight,d=a.options.squareSymbol;c.legendSymbol=this.chart.renderer.rect(d?(a.symbolWidth-b)/2:0,a.baseline-b+1,d?b:a.symbolWidth,b,u(a.options.symbolRadius,b/2)).addClass("highcharts-point").attr({zIndex:3}).add(c.legendGroup)},drawLineMarker:function(a){var b=
+this.options,c=b.marker,d=a.symbolWidth,f=a.symbolHeight,n=f/2,e=this.chart.renderer,l=this.legendGroup;a=a.baseline-Math.round(.3*a.fontMetrics.b);var q;q={"stroke-width":b.lineWidth||0};b.dashStyle&&(q.dashstyle=b.dashStyle);this.legendLine=e.path(["M",0,a,"L",d,a]).addClass("highcharts-graph").attr(q).add(l);c&&!1!==c.enabled&&(b=Math.min(u(c.radius,n),n),0===this.symbol.indexOf("url")&&(c=k(c,{width:f,height:f}),b=0),this.legendSymbol=c=e.symbol(this.symbol,d/2-b,a-b,2*b,2*b,c).addClass("highcharts-point").add(l),
+c.isMarker=!0)}};(/Trident\/7\.0/.test(n.navigator.userAgent)||l)&&z(B.prototype,"positionItem",function(a,c){var b=this,d=function(){c._legendItemPos&&a.call(b,c)};d();setTimeout(d)})})(L);(function(a){var B=a.addEvent,A=a.animate,H=a.animObject,G=a.attr,r=a.doc,f=a.Axis,l=a.createElement,q=a.defaultOptions,k=a.discardElement,u=a.charts,d=a.css,c=a.defined,n=a.each,z=a.extend,b=a.find,p=a.fireEvent,h=a.getStyle,t=a.grep,D=a.isNumber,w=a.isObject,e=a.isString,x=a.Legend,C=a.marginNames,E=a.merge,
+m=a.Pointer,y=a.pick,I=a.pInt,K=a.removeEvent,J=a.seriesTypes,g=a.splat,F=a.svg,Q=a.syncTimeout,N=a.win,P=a.Renderer,O=a.Chart=function(){this.getArgs.apply(this,arguments)};a.chart=function(a,b,c){return new O(a,b,c)};O.prototype={callbacks:[],getArgs:function(){var a=[].slice.call(arguments);if(e(a[0])||a[0].nodeName)this.renderTo=a.shift();this.init(a[0],a[1])},init:function(b,c){var e,g=b.series;b.series=null;e=E(q,b);e.series=b.series=g;this.userOptions=b;b=e.chart;g=b.events;this.margin=[];
+this.spacing=[];this.bounds={h:{},v:{}};this.callback=c;this.isResizing=0;this.options=e;this.axes=[];this.series=[];this.hasCartesianSeries=b.showAxes;var d;this.index=u.length;u.push(this);a.chartCount++;if(g)for(d in g)B(this,d,g[d]);this.xAxis=[];this.yAxis=[];this.pointCount=this.colorCounter=this.symbolCounter=0;this.firstRender()},initSeries:function(b){var c=this.options.chart;(c=J[b.type||c.type||c.defaultSeriesType])||a.error(17,!0);c=new c;c.init(this,b);return c},orderSeries:function(a){var b=
+this.series;for(a=a||0;a<b.length;a++)b[a]&&(b[a].index=a,b[a].name=b[a].name||"Series "+(b[a].index+1))},isInsidePlot:function(a,b,c){var e=c?b:a;a=c?a:b;return 0<=e&&e<=this.plotWidth&&0<=a&&a<=this.plotHeight},redraw:function(b){var c=this.axes,e=this.series,g=this.pointer,d=this.legend,m=this.isDirtyLegend,h,f,v=this.hasCartesianSeries,k=this.isDirtyBox,y,l=this.renderer,t=l.isHidden(),q=[];this.setResponsive&&this.setResponsive(!1);a.setAnimation(b,this);t&&this.cloneRenderTo();this.layOutTitles();
+for(b=e.length;b--;)if(y=e[b],y.options.stacking&&(h=!0,y.isDirty)){f=!0;break}if(f)for(b=e.length;b--;)y=e[b],y.options.stacking&&(y.isDirty=!0);n(e,function(a){a.isDirty&&"point"===a.options.legendType&&(a.updateTotals&&a.updateTotals(),m=!0);a.isDirtyData&&p(a,"updatedData")});m&&d.options.enabled&&(d.render(),this.isDirtyLegend=!1);h&&this.getStacks();v&&n(c,function(a){a.updateNames();a.setScale()});this.getMargins();v&&(n(c,function(a){a.isDirty&&(k=!0)}),n(c,function(a){var b=a.min+","+a.max;
+a.extKey!==b&&(a.extKey=b,q.push(function(){p(a,"afterSetExtremes",z(a.eventArgs,a.getExtremes()));delete a.eventArgs}));(k||h)&&a.redraw()}));k&&this.drawChartBox();p(this,"predraw");n(e,function(a){(k||a.isDirty)&&a.visible&&a.redraw();a.isDirtyData=!1});g&&g.reset(!0);l.draw();p(this,"redraw");p(this,"render");t&&this.cloneRenderTo(!0);n(q,function(a){a.call()})},get:function(a){function c(b){return b.id===a||b.options&&b.options.id===a}var e,g=this.series,d;e=b(this.axes,c)||b(this.series,c);
+for(d=0;!e&&d<g.length;d++)e=b(g[d].points||[],c);return e},getAxes:function(){var a=this,b=this.options,c=b.xAxis=g(b.xAxis||{}),b=b.yAxis=g(b.yAxis||{});n(c,function(a,b){a.index=b;a.isX=!0});n(b,function(a,b){a.index=b});c=c.concat(b);n(c,function(b){new f(a,b)})},getSelectedPoints:function(){var a=[];n(this.series,function(b){a=a.concat(t(b.points||[],function(a){return a.selected}))});return a},getSelectedSeries:function(){return t(this.series,function(a){return a.selected})},setTitle:function(a,
+b,c){var e=this,g=e.options,d;d=g.title=E({style:{color:"#333333",fontSize:g.isStock?"16px":"18px"}},g.title,a);g=g.subtitle=E({style:{color:"#666666"}},g.subtitle,b);n([["title",a,d],["subtitle",b,g]],function(a,b){var c=a[0],g=e[c],d=a[1];a=a[2];g&&d&&(e[c]=g=g.destroy());a&&a.text&&!g&&(e[c]=e.renderer.text(a.text,0,0,a.useHTML).attr({align:a.align,"class":"highcharts-"+c,zIndex:a.zIndex||4}).add(),e[c].update=function(a){e.setTitle(!b&&a,b&&a)},e[c].css(a.style))});e.layOutTitles(c)},layOutTitles:function(a){var b=
+0,c,e=this.renderer,g=this.spacingBox;n(["title","subtitle"],function(a){var c=this[a],d=this.options[a],m;c&&(m=d.style.fontSize,m=e.fontMetrics(m,c).b,c.css({width:(d.width||g.width+d.widthAdjust)+"px"}).align(z({y:b+m+("title"===a?-3:2)},d),!1,"spacingBox"),d.floating||d.verticalAlign||(b=Math.ceil(b+c.getBBox(d.useHTML).height)))},this);c=this.titleOffset!==b;this.titleOffset=b;!this.isDirtyBox&&c&&(this.isDirtyBox=c,this.hasRendered&&y(a,!0)&&this.isDirtyBox&&this.redraw())},getChartSize:function(){var b=
+this.options.chart,e=b.width,b=b.height,g=this.renderToClone||this.renderTo;c(e)||(this.containerWidth=h(g,"width"));c(b)||(this.containerHeight=h(g,"height"));this.chartWidth=Math.max(0,e||this.containerWidth||600);this.chartHeight=Math.max(0,a.relativeLength(b,this.chartWidth)||this.containerHeight||400)},cloneRenderTo:function(a){var b=this.renderToClone,c=this.container;if(a){if(b){for(;b.childNodes.length;)this.renderTo.appendChild(b.firstChild);k(b);delete this.renderToClone}}else c&&c.parentNode===
+this.renderTo&&this.renderTo.removeChild(c),this.renderToClone=b=this.renderTo.cloneNode(0),d(b,{position:"absolute",top:"-9999px",display:"block"}),b.style.setProperty&&b.style.setProperty("display","block","important"),r.body.appendChild(b),c&&b.appendChild(c)},setClassName:function(a){this.container.className="highcharts-container "+(a||"")},getContainer:function(){var b,c=this.options,g=c.chart,d,m;b=this.renderTo;var h=a.uniqueKey(),f;b||(this.renderTo=b=g.renderTo);e(b)&&(this.renderTo=b=r.getElementById(b));
+b||a.error(13,!0);d=I(G(b,"data-highcharts-chart"));D(d)&&u[d]&&u[d].hasRendered&&u[d].destroy();G(b,"data-highcharts-chart",this.index);b.innerHTML="";g.skipClone||b.offsetWidth||this.cloneRenderTo();this.getChartSize();d=this.chartWidth;m=this.chartHeight;f=z({position:"relative",overflow:"hidden",width:d+"px",height:m+"px",textAlign:"left",lineHeight:"normal",zIndex:0,"-webkit-tap-highlight-color":"rgba(0,0,0,0)"},g.style);this.container=b=l("div",{id:h},f,this.renderToClone||b);this._cursor=b.style.cursor;
+this.renderer=new (a[g.renderer]||P)(b,d,m,null,g.forExport,c.exporting&&c.exporting.allowHTML);this.setClassName(g.className);this.renderer.setStyle(g.style);this.renderer.chartIndex=this.index},getMargins:function(a){var b=this.spacing,e=this.margin,g=this.titleOffset;this.resetMargins();g&&!c(e[0])&&(this.plotTop=Math.max(this.plotTop,g+this.options.title.margin+b[0]));this.legend.display&&this.legend.adjustMargins(e,b);this.extraMargin&&(this[this.extraMargin.type]=(this[this.extraMargin.type]||
+0)+this.extraMargin.value);this.extraTopMargin&&(this.plotTop+=this.extraTopMargin);a||this.getAxisMargins()},getAxisMargins:function(){var a=this,b=a.axisOffset=[0,0,0,0],e=a.margin;a.hasCartesianSeries&&n(a.axes,function(a){a.visible&&a.getOffset()});n(C,function(g,d){c(e[d])||(a[g]+=b[d])});a.setChartSize()},reflow:function(a){var b=this,e=b.options.chart,g=b.renderTo,d=c(e.width),m=e.width||h(g,"width"),e=e.height||h(g,"height"),g=a?a.target:N;if(!d&&!b.isPrinting&&m&&e&&(g===N||g===r)){if(m!==
+b.containerWidth||e!==b.containerHeight)clearTimeout(b.reflowTimeout),b.reflowTimeout=Q(function(){b.container&&b.setSize(void 0,void 0,!1)},a?100:0);b.containerWidth=m;b.containerHeight=e}},initReflow:function(){var a=this,b;b=B(N,"resize",function(b){a.reflow(b)});B(a,"destroy",b)},setSize:function(b,c,e){var g=this,m=g.renderer;g.isResizing+=1;a.setAnimation(e,g);g.oldChartHeight=g.chartHeight;g.oldChartWidth=g.chartWidth;void 0!==b&&(g.options.chart.width=b);void 0!==c&&(g.options.chart.height=
+c);g.getChartSize();b=m.globalAnimation;(b?A:d)(g.container,{width:g.chartWidth+"px",height:g.chartHeight+"px"},b);g.setChartSize(!0);m.setSize(g.chartWidth,g.chartHeight,e);n(g.axes,function(a){a.isDirty=!0;a.setScale()});g.isDirtyLegend=!0;g.isDirtyBox=!0;g.layOutTitles();g.getMargins();g.redraw(e);g.oldChartHeight=null;p(g,"resize");Q(function(){g&&p(g,"endResize",null,function(){--g.isResizing})},H(b).duration)},setChartSize:function(a){var b=this.inverted,c=this.renderer,e=this.chartWidth,g=
+this.chartHeight,d=this.options.chart,m=this.spacing,h=this.clipOffset,f,p,k,y;this.plotLeft=f=Math.round(this.plotLeft);this.plotTop=p=Math.round(this.plotTop);this.plotWidth=k=Math.max(0,Math.round(e-f-this.marginRight));this.plotHeight=y=Math.max(0,Math.round(g-p-this.marginBottom));this.plotSizeX=b?y:k;this.plotSizeY=b?k:y;this.plotBorderWidth=d.plotBorderWidth||0;this.spacingBox=c.spacingBox={x:m[3],y:m[0],width:e-m[3]-m[1],height:g-m[0]-m[2]};this.plotBox=c.plotBox={x:f,y:p,width:k,height:y};
+e=2*Math.floor(this.plotBorderWidth/2);b=Math.ceil(Math.max(e,h[3])/2);c=Math.ceil(Math.max(e,h[0])/2);this.clipBox={x:b,y:c,width:Math.floor(this.plotSizeX-Math.max(e,h[1])/2-b),height:Math.max(0,Math.floor(this.plotSizeY-Math.max(e,h[2])/2-c))};a||n(this.axes,function(a){a.setAxisSize();a.setAxisTranslation()})},resetMargins:function(){var a=this,b=a.options.chart;n(["margin","spacing"],function(c){var e=b[c],g=w(e)?e:[e,e,e,e];n(["Top","Right","Bottom","Left"],function(e,d){a[c][d]=y(b[c+e],g[d])})});
+n(C,function(b,c){a[b]=y(a.margin[c],a.spacing[c])});a.axisOffset=[0,0,0,0];a.clipOffset=[0,0,0,0]},drawChartBox:function(){var a=this.options.chart,b=this.renderer,c=this.chartWidth,e=this.chartHeight,g=this.chartBackground,d=this.plotBackground,m=this.plotBorder,h,f=this.plotBGImage,n=a.backgroundColor,p=a.plotBackgroundColor,k=a.plotBackgroundImage,y,l=this.plotLeft,t=this.plotTop,q=this.plotWidth,u=this.plotHeight,x=this.plotBox,r=this.clipRect,w=this.clipBox,I="animate";g||(this.chartBackground=
+g=b.rect().addClass("highcharts-background").add(),I="attr");h=a.borderWidth||0;y=h+(a.shadow?8:0);n={fill:n||"none"};if(h||g["stroke-width"])n.stroke=a.borderColor,n["stroke-width"]=h;g.attr(n).shadow(a.shadow);g[I]({x:y/2,y:y/2,width:c-y-h%2,height:e-y-h%2,r:a.borderRadius});I="animate";d||(I="attr",this.plotBackground=d=b.rect().addClass("highcharts-plot-background").add());d[I](x);d.attr({fill:p||"none"}).shadow(a.plotShadow);k&&(f?f.animate(x):this.plotBGImage=b.image(k,l,t,q,u).add());r?r.animate({width:w.width,
+height:w.height}):this.clipRect=b.clipRect(w);I="animate";m||(I="attr",this.plotBorder=m=b.rect().addClass("highcharts-plot-border").attr({zIndex:1}).add());m.attr({stroke:a.plotBorderColor,"stroke-width":a.plotBorderWidth||0,fill:"none"});m[I](m.crisp({x:l,y:t,width:q,height:u},-m.strokeWidth()));this.isDirtyBox=!1},propFromSeries:function(){var a=this,b=a.options.chart,c,e=a.options.series,g,d;n(["inverted","angular","polar"],function(m){c=J[b.type||b.defaultSeriesType];d=b[m]||c&&c.prototype[m];
+for(g=e&&e.length;!d&&g--;)(c=J[e[g].type])&&c.prototype[m]&&(d=!0);a[m]=d})},linkSeries:function(){var a=this,b=a.series;n(b,function(a){a.linkedSeries.length=0});n(b,function(b){var c=b.options.linkedTo;e(c)&&(c=":previous"===c?a.series[b.index-1]:a.get(c))&&c.linkedParent!==b&&(c.linkedSeries.push(b),b.linkedParent=c,b.visible=y(b.options.visible,c.options.visible,b.visible))})},renderSeries:function(){n(this.series,function(a){a.translate();a.render()})},renderLabels:function(){var a=this,b=a.options.labels;
+b.items&&n(b.items,function(c){var e=z(b.style,c.style),g=I(e.left)+a.plotLeft,d=I(e.top)+a.plotTop+12;delete e.left;delete e.top;a.renderer.text(c.html,g,d).attr({zIndex:2}).css(e).add()})},render:function(){var a=this.axes,b=this.renderer,c=this.options,e,g,d;this.setTitle();this.legend=new x(this,c.legend);this.getStacks&&this.getStacks();this.getMargins(!0);this.setChartSize();c=this.plotWidth;e=this.plotHeight-=21;n(a,function(a){a.setScale()});this.getAxisMargins();g=1.1<c/this.plotWidth;d=
+1.05<e/this.plotHeight;if(g||d)n(a,function(a){(a.horiz&&g||!a.horiz&&d)&&a.setTickInterval(!0)}),this.getMargins();this.drawChartBox();this.hasCartesianSeries&&n(a,function(a){a.visible&&a.render()});this.seriesGroup||(this.seriesGroup=b.g("series-group").attr({zIndex:3}).add());this.renderSeries();this.renderLabels();this.addCredits();this.setResponsive&&this.setResponsive();this.hasRendered=!0},addCredits:function(a){var b=this;a=E(!0,this.options.credits,a);a.enabled&&!this.credits&&(this.credits=
+this.renderer.text(a.text+(this.mapCredits||""),0,0).addClass("highcharts-credits").on("click",function(){a.href&&(N.location.href=a.href)}).attr({align:a.position.align,zIndex:8}).css(a.style).add().align(a.position),this.credits.update=function(a){b.credits=b.credits.destroy();b.addCredits(a)})},destroy:function(){var b=this,c=b.axes,e=b.series,g=b.container,d,m=g&&g.parentNode;p(b,"destroy");u[b.index]=void 0;a.chartCount--;b.renderTo.removeAttribute("data-highcharts-chart");K(b);for(d=c.length;d--;)c[d]=
+c[d].destroy();this.scroller&&this.scroller.destroy&&this.scroller.destroy();for(d=e.length;d--;)e[d]=e[d].destroy();n("title subtitle chartBackground plotBackground plotBGImage plotBorder seriesGroup clipRect credits pointer rangeSelector legend resetZoomButton tooltip renderer".split(" "),function(a){var c=b[a];c&&c.destroy&&(b[a]=c.destroy())});g&&(g.innerHTML="",K(g),m&&k(g));for(d in b)delete b[d]},isReadyToRender:function(){var a=this;return F||N!=N.top||"complete"===r.readyState?!0:(r.attachEvent("onreadystatechange",
+function(){r.detachEvent("onreadystatechange",a.firstRender);"complete"===r.readyState&&a.firstRender()}),!1)},firstRender:function(){var a=this,b=a.options;if(a.isReadyToRender()){a.getContainer();p(a,"init");a.resetMargins();a.setChartSize();a.propFromSeries();a.getAxes();n(b.series||[],function(b){a.initSeries(b)});a.linkSeries();p(a,"beforeRender");m&&(a.pointer=new m(a,b));a.render();if(!a.renderer.imgCount&&a.onload)a.onload();a.cloneRenderTo(!0)}},onload:function(){n([this.callback].concat(this.callbacks),
+function(a){a&&void 0!==this.index&&a.apply(this,[this])},this);p(this,"load");p(this,"render");c(this.index)&&!1!==this.options.chart.reflow&&this.initReflow();this.onload=null}}})(L);(function(a){var B,A=a.each,H=a.extend,G=a.erase,r=a.fireEvent,f=a.format,l=a.isArray,q=a.isNumber,k=a.pick,u=a.removeEvent;B=a.Point=function(){};B.prototype={init:function(a,c,f){this.series=a;this.color=a.color;this.applyOptions(c,f);a.options.colorByPoint?(c=a.options.colors||a.chart.options.colors,this.color=this.color||
+c[a.colorCounter],c=c.length,f=a.colorCounter,a.colorCounter++,a.colorCounter===c&&(a.colorCounter=0)):f=a.colorIndex;this.colorIndex=k(this.colorIndex,f);a.chart.pointCount++;return this},applyOptions:function(a,c){var d=this.series,f=d.options.pointValKey||d.pointValKey;a=B.prototype.optionsToObject.call(this,a);H(this,a);this.options=this.options?H(this.options,a):a;a.group&&delete this.group;f&&(this.y=this[f]);this.isNull=k(this.isValid&&!this.isValid(),null===this.x||!q(this.y,!0));this.selected&&
+(this.state="select");"name"in this&&void 0===c&&d.xAxis&&d.xAxis.hasNames&&(this.x=d.xAxis.nameToX(this));void 0===this.x&&d&&(this.x=void 0===c?d.autoIncrement(this):c);return this},optionsToObject:function(a){var c={},d=this.series,f=d.options.keys,b=f||d.pointArrayMap||["y"],p=b.length,h=0,k=0;if(q(a)||null===a)c[b[0]]=a;else if(l(a))for(!f&&a.length>p&&(d=typeof a[0],"string"===d?c.name=a[0]:"number"===d&&(c.x=a[0]),h++);k<p;)f&&void 0===a[h]||(c[b[k]]=a[h]),h++,k++;else"object"===typeof a&&
+(c=a,a.dataLabels&&(d._hasPointLabels=!0),a.marker&&(d._hasPointMarkers=!0));return c},getClassName:function(){return"highcharts-point"+(this.selected?" highcharts-point-select":"")+(this.negative?" highcharts-negative":"")+(this.isNull?" highcharts-null-point":"")+(void 0!==this.colorIndex?" highcharts-color-"+this.colorIndex:"")+(this.options.className?" "+this.options.className:"")+(this.zone&&this.zone.className?" "+this.zone.className.replace("highcharts-negative",""):"")},getZone:function(){var a=
+this.series,c=a.zones,a=a.zoneAxis||"y",f=0,k;for(k=c[f];this[a]>=k.value;)k=c[++f];k&&k.color&&!this.options.color&&(this.color=k.color);return k},destroy:function(){var a=this.series.chart,c=a.hoverPoints,f;a.pointCount--;c&&(this.setState(),G(c,this),c.length||(a.hoverPoints=null));if(this===a.hoverPoint)this.onMouseOut();if(this.graphic||this.dataLabel)u(this),this.destroyElements();this.legendItem&&a.legend.destroyItem(this);for(f in this)this[f]=null},destroyElements:function(){for(var a=["graphic",
+"dataLabel","dataLabelUpper","connector","shadowGroup"],c,f=6;f--;)c=a[f],this[c]&&(this[c]=this[c].destroy())},getLabelConfig:function(){return{x:this.category,y:this.y,color:this.color,colorIndex:this.colorIndex,key:this.name||this.category,series:this.series,point:this,percentage:this.percentage,total:this.total||this.stackTotal}},tooltipFormatter:function(a){var c=this.series,d=c.tooltipOptions,l=k(d.valueDecimals,""),b=d.valuePrefix||"",p=d.valueSuffix||"";A(c.pointArrayMap||["y"],function(c){c=
+"{point."+c;if(b||p)a=a.replace(c+"}",b+c+"}"+p);a=a.replace(c+"}",c+":,."+l+"f}")});return f(a,{point:this,series:this.series})},firePointEvent:function(a,c,f){var d=this,b=this.series.options;(b.point.events[a]||d.options&&d.options.events&&d.options.events[a])&&this.importEvents();"click"===a&&b.allowPointSelect&&(f=function(a){d.select&&d.select(null,a.ctrlKey||a.metaKey||a.shiftKey)});r(this,a,c,f)},visible:!0}})(L);(function(a){var B=a.addEvent,A=a.animObject,H=a.arrayMax,G=a.arrayMin,r=a.correctFloat,
+f=a.Date,l=a.defaultOptions,q=a.defaultPlotOptions,k=a.defined,u=a.each,d=a.erase,c=a.extend,n=a.fireEvent,z=a.grep,b=a.isArray,p=a.isNumber,h=a.isString,t=a.merge,D=a.pick,w=a.removeEvent,e=a.splat,x=a.SVGElement,C=a.syncTimeout,E=a.win;a.Series=a.seriesType("line",null,{lineWidth:2,allowPointSelect:!1,showCheckbox:!1,animation:{duration:1E3},events:{},marker:{lineWidth:0,lineColor:"#ffffff",radius:4,states:{hover:{animation:{duration:50},enabled:!0,radiusPlus:2,lineWidthPlus:1},select:{fillColor:"#cccccc",
+lineColor:"#000000",lineWidth:2}}},point:{events:{}},dataLabels:{align:"center",formatter:function(){return null===this.y?"":a.numberFormat(this.y,-1)},style:{fontSize:"11px",fontWeight:"bold",color:"contrast",textOutline:"1px contrast"},verticalAlign:"bottom",x:0,y:0,padding:5},cropThreshold:300,pointRange:0,softThreshold:!0,states:{hover:{animation:{duration:50},lineWidthPlus:1,marker:{},halo:{size:10,opacity:.25}},select:{marker:{}}},stickyTracking:!0,turboThreshold:1E3,findNearestPointBy:"x"},
+{isCartesian:!0,pointClass:a.Point,sorted:!0,requireSorting:!0,directTouch:!1,axisTypes:["xAxis","yAxis"],colorCounter:0,parallelArrays:["x","y"],coll:"series",init:function(a,b){var e=this,d,m,g=a.series,h;e.chart=a;e.options=b=e.setOptions(b);e.linkedSeries=[];e.bindAxes();c(e,{name:b.name,state:"",visible:!1!==b.visible,selected:!0===b.selected});m=b.events;for(d in m)B(e,d,m[d]);if(m&&m.click||b.point&&b.point.events&&b.point.events.click||b.allowPointSelect)a.runTrackerClick=!0;e.getColor();
+e.getSymbol();u(e.parallelArrays,function(a){e[a+"Data"]=[]});e.setData(b.data,!1);e.isCartesian&&(a.hasCartesianSeries=!0);g.length&&(h=g[g.length-1]);e._i=D(h&&h._i,-1)+1;a.orderSeries(this.insert(g))},insert:function(a){var b=this.options.index,c;if(p(b)){for(c=a.length;c--;)if(b>=D(a[c].options.index,a[c]._i)){a.splice(c+1,0,this);break}-1===c&&a.unshift(this);c+=1}else a.push(this);return D(c,a.length-1)},bindAxes:function(){var b=this,c=b.options,e=b.chart,d;u(b.axisTypes||[],function(m){u(e[m],
+function(a){d=a.options;if(c[m]===d.index||void 0!==c[m]&&c[m]===d.id||void 0===c[m]&&0===d.index)b.insert(a.series),b[m]=a,a.isDirty=!0});b[m]||b.optionalAxis===m||a.error(18,!0)})},updateParallelArrays:function(a,b){var c=a.series,e=arguments,d=p(b)?function(e){var g="y"===e&&c.toYData?c.toYData(a):a[e];c[e+"Data"][b]=g}:function(a){Array.prototype[b].apply(c[a+"Data"],Array.prototype.slice.call(e,2))};u(c.parallelArrays,d)},autoIncrement:function(){var a=this.options,b=this.xIncrement,c,e=a.pointIntervalUnit,
+b=D(b,a.pointStart,0);this.pointInterval=c=D(this.pointInterval,a.pointInterval,1);e&&(a=new f(b),"day"===e?a=+a[f.hcSetDate](a[f.hcGetDate]()+c):"month"===e?a=+a[f.hcSetMonth](a[f.hcGetMonth]()+c):"year"===e&&(a=+a[f.hcSetFullYear](a[f.hcGetFullYear]()+c)),c=a-b);this.xIncrement=b+c;return b},setOptions:function(a){var b=this.chart,c=b.options.plotOptions,b=b.userOptions||{},e=b.plotOptions||{},d=c[this.type];this.userOptions=a;c=t(d,c.series,a);this.tooltipOptions=t(l.tooltip,l.plotOptions[this.type].tooltip,
+b.tooltip,e.series&&e.series.tooltip,e[this.type]&&e[this.type].tooltip,a.tooltip);this.stickyTracking=D(a.stickyTracking,e[this.type]&&e[this.type].stickyTracking,e.series&&e.series.stickyTracking,this.tooltipOptions.shared&&!this.noSharedTooltip?!0:c.stickyTracking);null===d.marker&&delete c.marker;this.zoneAxis=c.zoneAxis;a=this.zones=(c.zones||[]).slice();!c.negativeColor&&!c.negativeFillColor||c.zones||a.push({value:c[this.zoneAxis+"Threshold"]||c.threshold||0,className:"highcharts-negative",
+color:c.negativeColor,fillColor:c.negativeFillColor});a.length&&k(a[a.length-1].value)&&a.push({color:this.color,fillColor:this.fillColor});return c},getCyclic:function(a,b,c){var e,d=this.chart,g=this.userOptions,m=a+"Index",h=a+"Counter",f=c?c.length:D(d.options.chart[a+"Count"],d[a+"Count"]);b||(e=D(g[m],g["_"+m]),k(e)||(d.series.length||(d[h]=0),g["_"+m]=e=d[h]%f,d[h]+=1),c&&(b=c[e]));void 0!==e&&(this[m]=e);this[a]=b},getColor:function(){this.options.colorByPoint?this.options.color=null:this.getCyclic("color",
+this.options.color||q[this.type].color,this.chart.options.colors)},getSymbol:function(){this.getCyclic("symbol",this.options.marker.symbol,this.chart.options.symbols)},drawLegendSymbol:a.LegendSymbolMixin.drawLineMarker,setData:function(c,e,d,f){var m=this,g=m.points,k=g&&g.length||0,n,l=m.options,y=m.chart,t=null,q=m.xAxis,x=l.turboThreshold,r=this.xData,w=this.yData,C=(n=m.pointArrayMap)&&n.length;c=c||[];n=c.length;e=D(e,!0);if(!1!==f&&n&&k===n&&!m.cropped&&!m.hasGroupedData&&m.visible)u(c,function(a,
+b){g[b].update&&a!==l.data[b]&&g[b].update(a,!1,null,!1)});else{m.xIncrement=null;m.colorCounter=0;u(this.parallelArrays,function(a){m[a+"Data"].length=0});if(x&&n>x){for(d=0;null===t&&d<n;)t=c[d],d++;if(p(t))for(d=0;d<n;d++)r[d]=this.autoIncrement(),w[d]=c[d];else if(b(t))if(C)for(d=0;d<n;d++)t=c[d],r[d]=t[0],w[d]=t.slice(1,C+1);else for(d=0;d<n;d++)t=c[d],r[d]=t[0],w[d]=t[1];else a.error(12)}else for(d=0;d<n;d++)void 0!==c[d]&&(t={series:m},m.pointClass.prototype.applyOptions.apply(t,[c[d]]),m.updateParallelArrays(t,
+d));h(w[0])&&a.error(14,!0);m.data=[];m.options.data=m.userOptions.data=c;for(d=k;d--;)g[d]&&g[d].destroy&&g[d].destroy();q&&(q.minRange=q.userMinRange);m.isDirty=y.isDirtyBox=!0;m.isDirtyData=!!g;d=!1}"point"===l.legendType&&(this.processData(),this.generatePoints());e&&y.redraw(d)},processData:function(b){var c=this.xData,e=this.yData,d=c.length,m;m=0;var g,h,f=this.xAxis,p,k=this.options;p=k.cropThreshold;var n=this.getExtremesFromAll||k.getExtremesFromAll,l=this.isCartesian,k=f&&f.val2lin,t=f&&
+f.isLog,q,x;if(l&&!this.isDirty&&!f.isDirty&&!this.yAxis.isDirty&&!b)return!1;f&&(b=f.getExtremes(),q=b.min,x=b.max);if(l&&this.sorted&&!n&&(!p||d>p||this.forceCrop))if(c[d-1]<q||c[0]>x)c=[],e=[];else if(c[0]<q||c[d-1]>x)m=this.cropData(this.xData,this.yData,q,x),c=m.xData,e=m.yData,m=m.start,g=!0;for(p=c.length||1;--p;)d=t?k(c[p])-k(c[p-1]):c[p]-c[p-1],0<d&&(void 0===h||d<h)?h=d:0>d&&this.requireSorting&&a.error(15);this.cropped=g;this.cropStart=m;this.processedXData=c;this.processedYData=e;this.closestPointRange=
+h},cropData:function(a,b,c,e){var d=a.length,g=0,m=d,h=D(this.cropShoulder,1),f;for(f=0;f<d;f++)if(a[f]>=c){g=Math.max(0,f-h);break}for(c=f;c<d;c++)if(a[c]>e){m=c+h;break}return{xData:a.slice(g,m),yData:b.slice(g,m),start:g,end:m}},generatePoints:function(){var a=this.options.data,b=this.data,c,d=this.processedXData,h=this.processedYData,g=this.pointClass,f=d.length,p=this.cropStart||0,k,n=this.hasGroupedData,l,t=[],q;b||n||(b=[],b.length=a.length,b=this.data=b);for(q=0;q<f;q++)k=p+q,n?(l=(new g).init(this,
+[d[q]].concat(e(h[q]))),l.dataGroup=this.groupMap[q]):(l=b[k])||void 0===a[k]||(b[k]=l=(new g).init(this,a[k],d[q])),l&&(l.index=k,t[q]=l);if(b&&(f!==(c=b.length)||n))for(q=0;q<c;q++)q!==p||n||(q+=f),b[q]&&(b[q].destroyElements(),b[q].plotX=void 0);this.data=b;this.points=t},getExtremes:function(a){var c=this.yAxis,e=this.processedXData,d,m=[],g=0;d=this.xAxis.getExtremes();var h=d.min,f=d.max,k,n,l,t;a=a||this.stackedYData||this.processedYData||[];d=a.length;for(t=0;t<d;t++)if(n=e[t],l=a[t],k=(p(l,
+!0)||b(l))&&(!c.positiveValuesOnly||l.length||0<l),n=this.getExtremesFromAll||this.options.getExtremesFromAll||this.cropped||(e[t]||n)>=h&&(e[t]||n)<=f,k&&n)if(k=l.length)for(;k--;)null!==l[k]&&(m[g++]=l[k]);else m[g++]=l;this.dataMin=G(m);this.dataMax=H(m)},translate:function(){this.processedXData||this.processData();this.generatePoints();var a=this.options,b=a.stacking,c=this.xAxis,e=c.categories,d=this.yAxis,g=this.points,h=g.length,f=!!this.modifyValue,n=a.pointPlacement,l="between"===n||p(n),
+t=a.threshold,q=a.startFromThreshold?t:0,x,u,w,C,E=Number.MAX_VALUE;"between"===n&&(n=.5);p(n)&&(n*=D(a.pointRange||c.pointRange));for(a=0;a<h;a++){var z=g[a],A=z.x,B=z.y;u=z.low;var H=b&&d.stacks[(this.negStacks&&B<(q?0:t)?"-":"")+this.stackKey],G;d.positiveValuesOnly&&null!==B&&0>=B&&(z.isNull=!0);z.plotX=x=r(Math.min(Math.max(-1E5,c.translate(A,0,0,0,1,n,"flags"===this.type)),1E5));b&&this.visible&&!z.isNull&&H&&H[A]&&(C=this.getStackIndicator(C,A,this.index),G=H[A],B=G.points[C.key],u=B[0],B=
+B[1],u===q&&C.key===H[A].base&&(u=D(t,d.min)),d.positiveValuesOnly&&0>=u&&(u=null),z.total=z.stackTotal=G.total,z.percentage=G.total&&z.y/G.total*100,z.stackY=B,G.setOffset(this.pointXOffset||0,this.barW||0));z.yBottom=k(u)?d.translate(u,0,1,0,1):null;f&&(B=this.modifyValue(B,z));z.plotY=u="number"===typeof B&&Infinity!==B?Math.min(Math.max(-1E5,d.translate(B,0,1,0,1)),1E5):void 0;z.isInside=void 0!==u&&0<=u&&u<=d.len&&0<=x&&x<=c.len;z.clientX=l?r(c.translate(A,0,0,0,1,n)):x;z.negative=z.y<(t||0);
+z.category=e&&void 0!==e[z.x]?e[z.x]:z.x;z.isNull||(void 0!==w&&(E=Math.min(E,Math.abs(x-w))),w=x);z.zone=this.zones.length&&z.getZone()}this.closestPointRangePx=E},getValidPoints:function(a,b){var c=this.chart;return z(a||this.points||[],function(a){return b&&!c.isInsidePlot(a.plotX,a.plotY,c.inverted)?!1:!a.isNull})},setClip:function(a){var b=this.chart,c=this.options,e=b.renderer,d=b.inverted,g=this.clipBox,h=g||b.clipBox,m=this.sharedClipKey||["_sharedClip",a&&a.duration,a&&a.easing,h.height,
+c.xAxis,c.yAxis].join(),f=b[m],p=b[m+"m"];f||(a&&(h.width=0,b[m+"m"]=p=e.clipRect(-99,d?-b.plotLeft:-b.plotTop,99,d?b.chartWidth:b.chartHeight)),b[m]=f=e.clipRect(h),f.count={length:0});a&&!f.count[this.index]&&(f.count[this.index]=!0,f.count.length+=1);!1!==c.clip&&(this.group.clip(a||g?f:b.clipRect),this.markerGroup.clip(p),this.sharedClipKey=m);a||(f.count[this.index]&&(delete f.count[this.index],--f.count.length),0===f.count.length&&m&&b[m]&&(g||(b[m]=b[m].destroy()),b[m+"m"]&&(b[m+"m"]=b[m+"m"].destroy())))},
+animate:function(a){var b=this.chart,c=A(this.options.animation),e;a?this.setClip(c):(e=this.sharedClipKey,(a=b[e])&&a.animate({width:b.plotSizeX},c),b[e+"m"]&&b[e+"m"].animate({width:b.plotSizeX+99},c),this.animate=null)},afterAnimate:function(){this.setClip();n(this,"afterAnimate")},drawPoints:function(){var a=this.points,b=this.chart,c,e,d,g,h=this.options.marker,f,n,k,l,t=this.markerGroup,q=D(h.enabled,this.xAxis.isRadial?!0:null,this.closestPointRangePx>=2*h.radius);if(!1!==h.enabled||this._hasPointMarkers)for(e=
+0;e<a.length;e++)d=a[e],c=d.plotY,g=d.graphic,f=d.marker||{},n=!!d.marker,k=q&&void 0===f.enabled||f.enabled,l=d.isInside,k&&p(c)&&null!==d.y?(c=D(f.symbol,this.symbol),d.hasImage=0===c.indexOf("url"),k=this.markerAttribs(d,d.selected&&"select"),g?g[l?"show":"hide"](!0).animate(k):l&&(0<k.width||d.hasImage)&&(d.graphic=g=b.renderer.symbol(c,k.x,k.y,k.width,k.height,n?f:h).add(t)),g&&g.attr(this.pointAttribs(d,d.selected&&"select")),g&&g.addClass(d.getClassName(),!0)):g&&(d.graphic=g.destroy())},markerAttribs:function(a,
+b){var c=this.options.marker,e=a.marker||{},d=D(e.radius,c.radius);b&&(c=c.states[b],b=e.states&&e.states[b],d=D(b&&b.radius,c&&c.radius,d+(c&&c.radiusPlus||0)));a.hasImage&&(d=0);a={x:Math.floor(a.plotX)-d,y:a.plotY-d};d&&(a.width=a.height=2*d);return a},pointAttribs:function(a,b){var c=this.options.marker,e=a&&a.options,d=e&&e.marker||{},g=this.color,h=e&&e.color,f=a&&a.color,e=D(d.lineWidth,c.lineWidth);a=a&&a.zone&&a.zone.color;g=h||a||f||g;a=d.fillColor||c.fillColor||g;g=d.lineColor||c.lineColor||
+g;b&&(c=c.states[b],b=d.states&&d.states[b]||{},e=D(b.lineWidth,c.lineWidth,e+D(b.lineWidthPlus,c.lineWidthPlus,0)),a=b.fillColor||c.fillColor||a,g=b.lineColor||c.lineColor||g);return{stroke:g,"stroke-width":e,fill:a}},destroy:function(){var a=this,b=a.chart,c=/AppleWebKit\/533/.test(E.navigator.userAgent),e,h=a.data||[],g,f,k;n(a,"destroy");w(a);u(a.axisTypes||[],function(b){(k=a[b])&&k.series&&(d(k.series,a),k.isDirty=k.forceRedraw=!0)});a.legendItem&&a.chart.legend.destroyItem(a);for(e=h.length;e--;)(g=
+h[e])&&g.destroy&&g.destroy();a.points=null;clearTimeout(a.animationTimeout);for(f in a)a[f]instanceof x&&!a[f].survive&&(e=c&&"group"===f?"hide":"destroy",a[f][e]());b.hoverSeries===a&&(b.hoverSeries=null);d(b.series,a);b.orderSeries();for(f in a)delete a[f]},getGraphPath:function(a,b,c){var e=this,d=e.options,g=d.step,h,f=[],m=[],p;a=a||e.points;(h=a.reversed)&&a.reverse();(g={right:1,center:2}[g]||g&&3)&&h&&(g=4-g);!d.connectNulls||b||c||(a=this.getValidPoints(a));u(a,function(h,n){var l=h.plotX,
+t=h.plotY,q=a[n-1];(h.leftCliff||q&&q.rightCliff)&&!c&&(p=!0);h.isNull&&!k(b)&&0<n?p=!d.connectNulls:h.isNull&&!b?p=!0:(0===n||p?n=["M",h.plotX,h.plotY]:e.getPointSpline?n=e.getPointSpline(a,h,n):g?(n=1===g?["L",q.plotX,t]:2===g?["L",(q.plotX+l)/2,q.plotY,"L",(q.plotX+l)/2,t]:["L",l,q.plotY],n.push("L",l,t)):n=["L",l,t],m.push(h.x),g&&m.push(h.x),f.push.apply(f,n),p=!1)});f.xMap=m;return e.graphPath=f},drawGraph:function(){var a=this,b=this.options,c=(this.gappedPath||this.getGraphPath).call(this),
+e=[["graph","highcharts-graph",b.lineColor||this.color,b.dashStyle]];u(this.zones,function(c,d){e.push(["zone-graph-"+d,"highcharts-graph highcharts-zone-graph-"+d+" "+(c.className||""),c.color||a.color,c.dashStyle||b.dashStyle])});u(e,function(e,d){var g=e[0],h=a[g];h?(h.endX=c.xMap,h.animate({d:c})):c.length&&(a[g]=a.chart.renderer.path(c).addClass(e[1]).attr({zIndex:1}).add(a.group),h={stroke:e[2],"stroke-width":b.lineWidth,fill:a.fillGraph&&a.color||"none"},e[3]?h.dashstyle=e[3]:"square"!==b.linecap&&
+(h["stroke-linecap"]=h["stroke-linejoin"]="round"),h=a[g].attr(h).shadow(2>d&&b.shadow));h&&(h.startX=c.xMap,h.isArea=c.isArea)})},applyZones:function(){var a=this,b=this.chart,c=b.renderer,e=this.zones,d,g,h=this.clips||[],f,k=this.graph,p=this.area,n=Math.max(b.chartWidth,b.chartHeight),l=this[(this.zoneAxis||"y")+"Axis"],t,q,x=b.inverted,w,r,C,E,z=!1;e.length&&(k||p)&&l&&void 0!==l.min&&(q=l.reversed,w=l.horiz,k&&k.hide(),p&&p.hide(),t=l.getExtremes(),u(e,function(e,m){d=q?w?b.plotWidth:0:w?0:
+l.toPixels(t.min);d=Math.min(Math.max(D(g,d),0),n);g=Math.min(Math.max(Math.round(l.toPixels(D(e.value,t.max),!0)),0),n);z&&(d=g=l.toPixels(t.max));r=Math.abs(d-g);C=Math.min(d,g);E=Math.max(d,g);l.isXAxis?(f={x:x?E:C,y:0,width:r,height:n},w||(f.x=b.plotHeight-f.x)):(f={x:0,y:x?E:C,width:n,height:r},w&&(f.y=b.plotWidth-f.y));x&&c.isVML&&(f=l.isXAxis?{x:0,y:q?C:E,height:f.width,width:b.chartWidth}:{x:f.y-b.plotLeft-b.spacingBox.x,y:0,width:f.height,height:b.chartHeight});h[m]?h[m].animate(f):(h[m]=
+c.clipRect(f),k&&a["zone-graph-"+m].clip(h[m]),p&&a["zone-area-"+m].clip(h[m]));z=e.value>t.max}),this.clips=h)},invertGroups:function(a){function b(){u(["group","markerGroup"],function(b){c[b]&&(e.renderer.isVML&&c[b].attr({width:c.yAxis.len,height:c.xAxis.len}),c[b].width=c.yAxis.len,c[b].height=c.xAxis.len,c[b].invert(a))})}var c=this,e=c.chart,d;c.xAxis&&(d=B(e,"resize",b),B(c,"destroy",d),b(a),c.invertGroups=b)},plotGroup:function(a,b,c,e,d){var g=this[a],h=!g;h&&(this[a]=g=this.chart.renderer.g(b).attr({zIndex:e||
+.1}).add(d),g.addClass("highcharts-series-"+this.index+" highcharts-"+this.type+"-series highcharts-color-"+this.colorIndex+" "+(this.options.className||"")));g.attr({visibility:c})[h?"attr":"animate"](this.getPlotBox());return g},getPlotBox:function(){var a=this.chart,b=this.xAxis,c=this.yAxis;a.inverted&&(b=c,c=this.xAxis);return{translateX:b?b.left:a.plotLeft,translateY:c?c.top:a.plotTop,scaleX:1,scaleY:1}},render:function(){var a=this,b=a.chart,c,e=a.options,d=!!a.animate&&b.renderer.isSVG&&A(e.animation).duration,
+g=a.visible?"inherit":"hidden",h=e.zIndex,f=a.hasRendered,k=b.seriesGroup,p=b.inverted;c=a.plotGroup("group","series",g,h,k);a.markerGroup=a.plotGroup("markerGroup","markers",g,h,k);d&&a.animate(!0);c.inverted=a.isCartesian?p:!1;a.drawGraph&&(a.drawGraph(),a.applyZones());a.drawDataLabels&&a.drawDataLabels();a.visible&&a.drawPoints();a.drawTracker&&!1!==a.options.enableMouseTracking&&a.drawTracker();a.invertGroups(p);!1===e.clip||a.sharedClipKey||f||c.clip(b.clipRect);d&&a.animate();f||(a.animationTimeout=
+C(function(){a.afterAnimate()},d));a.isDirty=!1;a.hasRendered=!0},redraw:function(){var a=this.chart,b=this.isDirty||this.isDirtyData,c=this.group,e=this.xAxis,d=this.yAxis;c&&(a.inverted&&c.attr({width:a.plotWidth,height:a.plotHeight}),c.animate({translateX:D(e&&e.left,a.plotLeft),translateY:D(d&&d.top,a.plotTop)}));this.translate();this.render();b&&delete this.kdTree},kdAxisArray:["clientX","plotY"],searchPoint:function(a,b){var c=this.xAxis,e=this.yAxis,d=this.chart.inverted;return this.searchKDTree({clientX:d?
+c.len-a.chartY+c.pos:a.chartX-c.pos,plotY:d?e.len-a.chartX+e.pos:a.chartY-e.pos},b)},buildKDTree:function(){function a(c,e,d){var g,h;if(h=c&&c.length)return g=b.kdAxisArray[e%d],c.sort(function(a,b){return a[g]-b[g]}),h=Math.floor(h/2),{point:c[h],left:a(c.slice(0,h),e+1,d),right:a(c.slice(h+1),e+1,d)}}this.buildingKdTree=!0;var b=this,c=-1<b.options.findNearestPointBy.indexOf("y")?2:1;delete b.kdTree;C(function(){b.kdTree=a(b.getValidPoints(null,!b.directTouch),c,c);b.buildingKdTree=!1},b.options.kdNow?
+0:1)},searchKDTree:function(a,b){function c(a,b,f,m){var p=b.point,n=e.kdAxisArray[f%m],l,t,q=p;t=k(a[d])&&k(p[d])?Math.pow(a[d]-p[d],2):null;l=k(a[g])&&k(p[g])?Math.pow(a[g]-p[g],2):null;l=(t||0)+(l||0);p.dist=k(l)?Math.sqrt(l):Number.MAX_VALUE;p.distX=k(t)?Math.sqrt(t):Number.MAX_VALUE;n=a[n]-p[n];l=0>n?"left":"right";t=0>n?"right":"left";b[l]&&(l=c(a,b[l],f+1,m),q=l[h]<q[h]?l:p);b[t]&&Math.sqrt(n*n)<q[h]&&(a=c(a,b[t],f+1,m),q=a[h]<q[h]?a:q);return q}var e=this,d=this.kdAxisArray[0],g=this.kdAxisArray[1],
+h=b?"distX":"dist";b=-1<e.options.findNearestPointBy.indexOf("y")?2:1;this.kdTree||this.buildingKdTree||this.buildKDTree();if(this.kdTree)return c(a,this.kdTree,b,b)}})})(L);(function(a){function B(a,d,c,f,l){var b=a.chart.inverted;this.axis=a;this.isNegative=c;this.options=d;this.x=f;this.total=null;this.points={};this.stack=l;this.rightCliff=this.leftCliff=0;this.alignOptions={align:d.align||(b?c?"left":"right":"center"),verticalAlign:d.verticalAlign||(b?"middle":c?"bottom":"top"),y:k(d.y,b?4:c?
+14:-6),x:k(d.x,b?c?-6:6:0)};this.textAlign=d.textAlign||(b?c?"right":"left":"center")}var A=a.Axis,H=a.Chart,G=a.correctFloat,r=a.defined,f=a.destroyObjectProperties,l=a.each,q=a.format,k=a.pick;a=a.Series;B.prototype={destroy:function(){f(this,this.axis)},render:function(a){var d=this.options,c=d.format,c=c?q(c,this):d.formatter.call(this);this.label?this.label.attr({text:c,visibility:"hidden"}):this.label=this.axis.chart.renderer.text(c,null,null,d.useHTML).css(d.style).attr({align:this.textAlign,
+rotation:d.rotation,visibility:"hidden"}).add(a)},setOffset:function(a,d){var c=this.axis,f=c.chart,k=f.inverted,b=c.reversed,b=this.isNegative&&!b||!this.isNegative&&b,p=c.translate(c.usePercentage?100:this.total,0,0,0,1),c=c.translate(0),c=Math.abs(p-c);a=f.xAxis[0].translate(this.x)+a;var h=f.plotHeight,k={x:k?b?p:p-c:a,y:k?h-a-d:b?h-p-c:h-p,width:k?c:d,height:k?d:c};if(d=this.label)d.align(this.alignOptions,null,k),k=d.alignAttr,d[!1===this.options.crop||f.isInsidePlot(k.x,k.y)?"show":"hide"](!0)}};
+H.prototype.getStacks=function(){var a=this;l(a.yAxis,function(a){a.stacks&&a.hasVisibleSeries&&(a.oldStacks=a.stacks)});l(a.series,function(d){!d.options.stacking||!0!==d.visible&&!1!==a.options.chart.ignoreHiddenSeries||(d.stackKey=d.type+k(d.options.stack,""))})};A.prototype.buildStacks=function(){var a=this.series,d,c=k(this.options.reversedStacks,!0),f=a.length,l;if(!this.isXAxis){this.usePercentage=!1;for(l=f;l--;)a[c?l:f-l-1].setStackedPoints();for(l=f;l--;)d=a[c?l:f-l-1],d.setStackCliffs&&
+d.setStackCliffs();if(this.usePercentage)for(l=0;l<f;l++)a[l].setPercentStacks()}};A.prototype.renderStackTotals=function(){var a=this.chart,d=a.renderer,c=this.stacks,f,k,b=this.stackTotalGroup;b||(this.stackTotalGroup=b=d.g("stack-labels").attr({visibility:"visible",zIndex:6}).add());b.translate(a.plotLeft,a.plotTop);for(f in c)for(k in a=c[f],a)a[k].render(b)};A.prototype.resetStacks=function(){var a=this.stacks,d,c;if(!this.isXAxis)for(d in a)for(c in a[d])a[d][c].touched<this.stacksTouched?(a[d][c].destroy(),
+delete a[d][c]):(a[d][c].total=null,a[d][c].cum=null)};A.prototype.cleanStacks=function(){var a,d,c;if(!this.isXAxis)for(d in this.oldStacks&&(a=this.stacks=this.oldStacks),a)for(c in a[d])a[d][c].cum=a[d][c].total};a.prototype.setStackedPoints=function(){if(this.options.stacking&&(!0===this.visible||!1===this.chart.options.chart.ignoreHiddenSeries)){var a=this.processedXData,d=this.processedYData,c=[],f=d.length,l=this.options,b=l.threshold,p=l.startFromThreshold?b:0,h=l.stack,l=l.stacking,t=this.stackKey,
+q="-"+t,w=this.negStacks,e=this.yAxis,x=e.stacks,C=e.oldStacks,E,m,y,A,K,J,g;e.stacksTouched+=1;for(K=0;K<f;K++)J=a[K],g=d[K],E=this.getStackIndicator(E,J,this.index),A=E.key,y=(m=w&&g<(p?0:b))?q:t,x[y]||(x[y]={}),x[y][J]||(C[y]&&C[y][J]?(x[y][J]=C[y][J],x[y][J].total=null):x[y][J]=new B(e,e.options.stackLabels,m,J,h)),y=x[y][J],null!==g&&(y.points[A]=y.points[this.index]=[k(y.cum,p)],r(y.cum)||(y.base=A),y.touched=e.stacksTouched,0<E.index&&!1===this.singleStacks&&(y.points[A][0]=y.points[this.index+
+","+J+",0"][0])),"percent"===l?(m=m?t:q,w&&x[m]&&x[m][J]?(m=x[m][J],y.total=m.total=Math.max(m.total,y.total)+Math.abs(g)||0):y.total=G(y.total+(Math.abs(g)||0))):y.total=G(y.total+(g||0)),y.cum=k(y.cum,p)+(g||0),null!==g&&(y.points[A].push(y.cum),c[K]=y.cum);"percent"===l&&(e.usePercentage=!0);this.stackedYData=c;e.oldStacks={}}};a.prototype.setPercentStacks=function(){var a=this,d=a.stackKey,c=a.yAxis.stacks,f=a.processedXData,k;l([d,"-"+d],function(b){for(var d=f.length,h,n;d--;)if(h=f[d],k=a.getStackIndicator(k,
+h,a.index,b),h=(n=c[b]&&c[b][h])&&n.points[k.key])n=n.total?100/n.total:0,h[0]=G(h[0]*n),h[1]=G(h[1]*n),a.stackedYData[d]=h[1]})};a.prototype.getStackIndicator=function(a,d,c,f){!r(a)||a.x!==d||f&&a.key!==f?a={x:d,index:0,key:f}:a.index++;a.key=[c,d,a.index].join();return a}})(L);(function(a){var B=a.addEvent,A=a.animate,H=a.Axis,G=a.createElement,r=a.css,f=a.defined,l=a.each,q=a.erase,k=a.extend,u=a.fireEvent,d=a.inArray,c=a.isNumber,n=a.isObject,z=a.merge,b=a.pick,p=a.Point,h=a.Series,t=a.seriesTypes,
+D=a.setAnimation,w=a.splat;k(a.Chart.prototype,{addSeries:function(a,c,d){var e,h=this;a&&(c=b(c,!0),u(h,"addSeries",{options:a},function(){e=h.initSeries(a);h.isDirtyLegend=!0;h.linkSeries();c&&h.redraw(d)}));return e},addAxis:function(a,c,d,h){var e=c?"xAxis":"yAxis",f=this.options;a=z(a,{index:this[e].length,isX:c});new H(this,a);f[e]=w(f[e]||{});f[e].push(a);b(d,!0)&&this.redraw(h)},showLoading:function(a){var b=this,c=b.options,e=b.loadingDiv,d=c.loading,h=function(){e&&r(e,{left:b.plotLeft+
+"px",top:b.plotTop+"px",width:b.plotWidth+"px",height:b.plotHeight+"px"})};e||(b.loadingDiv=e=G("div",{className:"highcharts-loading highcharts-loading-hidden"},null,b.container),b.loadingSpan=G("span",{className:"highcharts-loading-inner"},null,e),B(b,"redraw",h));e.className="highcharts-loading";b.loadingSpan.innerHTML=a||c.lang.loading;r(e,k(d.style,{zIndex:10}));r(b.loadingSpan,d.labelStyle);b.loadingShown||(r(e,{opacity:0,display:""}),A(e,{opacity:d.style.opacity||.5},{duration:d.showDuration||
+0}));b.loadingShown=!0;h()},hideLoading:function(){var a=this.options,b=this.loadingDiv;b&&(b.className="highcharts-loading highcharts-loading-hidden",A(b,{opacity:0},{duration:a.loading.hideDuration||100,complete:function(){r(b,{display:"none"})}}));this.loadingShown=!1},propsRequireDirtyBox:"backgroundColor borderColor borderWidth margin marginTop marginRight marginBottom marginLeft spacing spacingTop spacingRight spacingBottom spacingLeft borderRadius plotBackgroundColor plotBackgroundImage plotBorderColor plotBorderWidth plotShadow shadow".split(" "),
+propsRequireUpdateSeries:"chart.inverted chart.polar chart.ignoreHiddenSeries chart.type colors plotOptions".split(" "),update:function(a,h){var e,k={credits:"addCredits",title:"setTitle",subtitle:"setSubtitle"},m=a.chart,p,n;if(m){z(!0,this.options.chart,m);"className"in m&&this.setClassName(m.className);if("inverted"in m||"polar"in m)this.propFromSeries(),p=!0;"alignTicks"in m&&(p=!0);for(e in m)m.hasOwnProperty(e)&&(-1!==d("chart."+e,this.propsRequireUpdateSeries)&&(n=!0),-1!==d(e,this.propsRequireDirtyBox)&&
+(this.isDirtyBox=!0));"style"in m&&this.renderer.setStyle(m.style)}for(e in a){if(this[e]&&"function"===typeof this[e].update)this[e].update(a[e],!1);else if("function"===typeof this[k[e]])this[k[e]](a[e]);"chart"!==e&&-1!==d(e,this.propsRequireUpdateSeries)&&(n=!0)}a.colors&&(this.options.colors=a.colors);a.plotOptions&&z(!0,this.options.plotOptions,a.plotOptions);l(["xAxis","yAxis","series","colorAxis","pane"],function(b){a[b]&&l(w(a[b]),function(a,c){(c=f(a.id)&&this.get(a.id)||this[b][c])&&c.coll===
+b&&c.update(a,!1)},this)},this);p&&l(this.axes,function(a){a.update({},!1)});n&&l(this.series,function(a){a.update({},!1)});a.loading&&z(!0,this.options.loading,a.loading);e=m&&m.width;m=m&&m.height;c(e)&&e!==this.chartWidth||c(m)&&m!==this.chartHeight?this.setSize(e,m):b(h,!0)&&this.redraw()},setSubtitle:function(a){this.setTitle(void 0,a)}});k(p.prototype,{update:function(a,c,d,h){function e(){f.applyOptions(a);null===f.y&&p&&(f.graphic=p.destroy());n(a,!0)&&(p&&p.element&&a&&a.marker&&a.marker.symbol&&
+(f.graphic=p.destroy()),a&&a.dataLabels&&f.dataLabel&&(f.dataLabel=f.dataLabel.destroy()));l=f.index;k.updateParallelArrays(f,l);t.data[l]=n(t.data[l],!0)||n(a,!0)?f.options:a;k.isDirty=k.isDirtyData=!0;!k.fixedBox&&k.hasCartesianSeries&&(g.isDirtyBox=!0);"point"===t.legendType&&(g.isDirtyLegend=!0);c&&g.redraw(d)}var f=this,k=f.series,p=f.graphic,l,g=k.chart,t=k.options;c=b(c,!0);!1===h?e():f.firePointEvent("update",{options:a},e)},remove:function(a,b){this.series.removePoint(d(this,this.series.data),
+a,b)}});k(h.prototype,{addPoint:function(a,c,d,h){var e=this.options,f=this.data,k=this.chart,p=this.xAxis,p=p&&p.hasNames&&p.names,n=e.data,g,l,t=this.xData,q,w;c=b(c,!0);g={series:this};this.pointClass.prototype.applyOptions.apply(g,[a]);w=g.x;q=t.length;if(this.requireSorting&&w<t[q-1])for(l=!0;q&&t[q-1]>w;)q--;this.updateParallelArrays(g,"splice",q,0,0);this.updateParallelArrays(g,q);p&&g.name&&(p[w]=g.name);n.splice(q,0,a);l&&(this.data.splice(q,0,null),this.processData());"point"===e.legendType&&
+this.generatePoints();d&&(f[0]&&f[0].remove?f[0].remove(!1):(f.shift(),this.updateParallelArrays(g,"shift"),n.shift()));this.isDirtyData=this.isDirty=!0;c&&k.redraw(h)},removePoint:function(a,c,d){var e=this,h=e.data,f=h[a],k=e.points,p=e.chart,n=function(){k&&k.length===h.length&&k.splice(a,1);h.splice(a,1);e.options.data.splice(a,1);e.updateParallelArrays(f||{series:e},"splice",a,1);f&&f.destroy();e.isDirty=!0;e.isDirtyData=!0;c&&p.redraw()};D(d,p);c=b(c,!0);f?f.firePointEvent("remove",null,n):
+n()},remove:function(a,c,d){function e(){h.destroy();f.isDirtyLegend=f.isDirtyBox=!0;f.linkSeries();b(a,!0)&&f.redraw(c)}var h=this,f=h.chart;!1!==d?u(h,"remove",null,e):e()},update:function(a,c){var e=this,d=this.chart,h=this.userOptions,f=this.oldType||this.type,p=a.type||h.type||d.options.chart.type,n=t[f].prototype,q=["group","markerGroup","dataLabelsGroup"],g;if(p&&p!==f||void 0!==a.zIndex)q.length=0;l(q,function(a){q[a]=e[a];delete e[a]});a=z(h,{animation:!1,index:this.index,pointStart:this.xData[0]},
+{data:this.options.data},a);this.remove(!1,null,!1);for(g in n)this[g]=void 0;k(this,t[p||f].prototype);l(q,function(a){e[a]=q[a]});this.init(d,a);this.oldType=f;d.linkSeries();b(c,!0)&&d.redraw(!1)}});k(H.prototype,{update:function(a,c){var e=this.chart;a=e.options[this.coll][this.options.index]=z(this.userOptions,a);this.destroy(!0);this.init(e,k(a,{events:void 0}));e.isDirtyBox=!0;b(c,!0)&&e.redraw()},remove:function(a){for(var c=this.chart,e=this.coll,d=this.series,h=d.length;h--;)d[h]&&d[h].remove(!1);
+q(c.axes,this);q(c[e],this);c.options[e].splice(this.options.index,1);l(c[e],function(a,b){a.options.index=b});this.destroy();c.isDirtyBox=!0;b(a,!0)&&c.redraw()},setTitle:function(a,b){this.update({title:a},b)},setCategories:function(a,b){this.update({categories:a},b)}})})(L);(function(a){var B=a.color,A=a.each,H=a.map,G=a.pick,r=a.Series,f=a.seriesType;f("area","line",{softThreshold:!1,threshold:0},{singleStacks:!1,getStackPoints:function(){var a=[],f=[],k=this.xAxis,r=this.yAxis,d=r.stacks[this.stackKey],
+c={},n=this.points,z=this.index,b=r.series,p=b.length,h,t=G(r.options.reversedStacks,!0)?1:-1,D,w;if(this.options.stacking){for(D=0;D<n.length;D++)c[n[D].x]=n[D];for(w in d)null!==d[w].total&&f.push(w);f.sort(function(a,b){return a-b});h=H(b,function(){return this.visible});A(f,function(b,n){var e=0,l,m;if(c[b]&&!c[b].isNull)a.push(c[b]),A([-1,1],function(a){var e=1===a?"rightNull":"leftNull",k=0,q=d[f[n+a]];if(q)for(D=z;0<=D&&D<p;)l=q.points[D],l||(D===z?c[b][e]=!0:h[D]&&(m=d[b].points[D])&&(k-=
+m[1]-m[0])),D+=t;c[b][1===a?"rightCliff":"leftCliff"]=k});else{for(D=z;0<=D&&D<p;){if(l=d[b].points[D]){e=l[1];break}D+=t}e=r.translate(e,0,1,0,1);a.push({isNull:!0,plotX:k.translate(b,0,0,0,1),x:b,plotY:e,yBottom:e})}})}return a},getGraphPath:function(a){var f=r.prototype.getGraphPath,k=this.options,l=k.stacking,d=this.yAxis,c,n,z=[],b=[],p=this.index,h,t=d.stacks[this.stackKey],D=k.threshold,w=d.getThreshold(k.threshold),e,k=k.connectNulls||"percent"===l,x=function(c,e,f){var k=a[c];c=l&&t[k.x].points[p];
+var m=k[f+"Null"]||0;f=k[f+"Cliff"]||0;var n,q,k=!0;f||m?(n=(m?c[0]:c[1])+f,q=c[0]+f,k=!!m):!l&&a[e]&&a[e].isNull&&(n=q=D);void 0!==n&&(b.push({plotX:h,plotY:null===n?w:d.getThreshold(n),isNull:k,isCliff:!0}),z.push({plotX:h,plotY:null===q?w:d.getThreshold(q),doCurve:!1}))};a=a||this.points;l&&(a=this.getStackPoints());for(c=0;c<a.length;c++)if(n=a[c].isNull,h=G(a[c].rectPlotX,a[c].plotX),e=G(a[c].yBottom,w),!n||k)k||x(c,c-1,"left"),n&&!l&&k||(b.push(a[c]),z.push({x:c,plotX:h,plotY:e})),k||x(c,c+
+1,"right");c=f.call(this,b,!0,!0);z.reversed=!0;n=f.call(this,z,!0,!0);n.length&&(n[0]="L");n=c.concat(n);f=f.call(this,b,!1,k);n.xMap=c.xMap;this.areaPath=n;return f},drawGraph:function(){this.areaPath=[];r.prototype.drawGraph.apply(this);var a=this,f=this.areaPath,k=this.options,u=[["area","highcharts-area",this.color,k.fillColor]];A(this.zones,function(d,c){u.push(["zone-area-"+c,"highcharts-area highcharts-zone-area-"+c+" "+d.className,d.color||a.color,d.fillColor||k.fillColor])});A(u,function(d){var c=
+d[0],n=a[c];n?(n.endX=f.xMap,n.animate({d:f})):(n=a[c]=a.chart.renderer.path(f).addClass(d[1]).attr({fill:G(d[3],B(d[2]).setOpacity(G(k.fillOpacity,.75)).get()),zIndex:0}).add(a.group),n.isArea=!0);n.startX=f.xMap;n.shiftUnit=k.step?2:1})},drawLegendSymbol:a.LegendSymbolMixin.drawRectangle})})(L);(function(a){var B=a.pick;a=a.seriesType;a("spline","line",{},{getPointSpline:function(a,H,G){var r=H.plotX,f=H.plotY,l=a[G-1];G=a[G+1];var q,k,u,d;if(l&&!l.isNull&&!1!==l.doCurve&&!H.isCliff&&G&&!G.isNull&&
+!1!==G.doCurve&&!H.isCliff){a=l.plotY;u=G.plotX;G=G.plotY;var c=0;q=(1.5*r+l.plotX)/2.5;k=(1.5*f+a)/2.5;u=(1.5*r+u)/2.5;d=(1.5*f+G)/2.5;u!==q&&(c=(d-k)*(u-r)/(u-q)+f-d);k+=c;d+=c;k>a&&k>f?(k=Math.max(a,f),d=2*f-k):k<a&&k<f&&(k=Math.min(a,f),d=2*f-k);d>G&&d>f?(d=Math.max(G,f),k=2*f-d):d<G&&d<f&&(d=Math.min(G,f),k=2*f-d);H.rightContX=u;H.rightContY=d}H=["C",B(l.rightContX,l.plotX),B(l.rightContY,l.plotY),B(q,r),B(k,f),r,f];l.rightContX=l.rightContY=null;return H}})})(L);(function(a){var B=a.seriesTypes.area.prototype,
+A=a.seriesType;A("areaspline","spline",a.defaultPlotOptions.area,{getStackPoints:B.getStackPoints,getGraphPath:B.getGraphPath,setStackCliffs:B.setStackCliffs,drawGraph:B.drawGraph,drawLegendSymbol:a.LegendSymbolMixin.drawRectangle})})(L);(function(a){var B=a.animObject,A=a.color,H=a.each,G=a.extend,r=a.isNumber,f=a.merge,l=a.pick,q=a.Series,k=a.seriesType,u=a.svg;k("column","line",{borderRadius:0,crisp:!0,groupPadding:.2,marker:null,pointPadding:.1,minPointLength:0,cropThreshold:50,pointRange:null,
+states:{hover:{halo:!1,brightness:.1,shadow:!1},select:{color:"#cccccc",borderColor:"#000000",shadow:!1}},dataLabels:{align:null,verticalAlign:null,y:null},softThreshold:!1,startFromThreshold:!0,stickyTracking:!1,tooltip:{distance:6},threshold:0,borderColor:"#ffffff"},{cropShoulder:0,directTouch:!0,trackerGroups:["group","dataLabelsGroup"],negStacks:!0,init:function(){q.prototype.init.apply(this,arguments);var a=this,c=a.chart;c.hasRendered&&H(c.series,function(c){c.type===a.type&&(c.isDirty=!0)})},
+getColumnMetrics:function(){var a=this,c=a.options,f=a.xAxis,k=a.yAxis,b=f.reversed,p,h={},t=0;!1===c.grouping?t=1:H(a.chart.series,function(b){var c=b.options,e=b.yAxis,d;b.type===a.type&&b.visible&&k.len===e.len&&k.pos===e.pos&&(c.stacking?(p=b.stackKey,void 0===h[p]&&(h[p]=t++),d=h[p]):!1!==c.grouping&&(d=t++),b.columnIndex=d)});var q=Math.min(Math.abs(f.transA)*(f.ordinalSlope||c.pointRange||f.closestPointRange||f.tickInterval||1),f.len),w=q*c.groupPadding,e=(q-2*w)/(t||1),c=Math.min(c.maxPointWidth||
+f.len,l(c.pointWidth,e*(1-2*c.pointPadding)));a.columnMetrics={width:c,offset:(e-c)/2+(w+((a.columnIndex||0)+(b?1:0))*e-q/2)*(b?-1:1)};return a.columnMetrics},crispCol:function(a,c,f,k){var b=this.chart,d=this.borderWidth,h=-(d%2?.5:0),d=d%2?.5:1;b.inverted&&b.renderer.isVML&&(d+=1);this.options.crisp&&(f=Math.round(a+f)+h,a=Math.round(a)+h,f-=a);k=Math.round(c+k)+d;h=.5>=Math.abs(c)&&.5<k;c=Math.round(c)+d;k-=c;h&&k&&(--c,k+=1);return{x:a,y:c,width:f,height:k}},translate:function(){var a=this,c=
+a.chart,f=a.options,k=a.dense=2>a.closestPointRange*a.xAxis.transA,k=a.borderWidth=l(f.borderWidth,k?0:1),b=a.yAxis,p=a.translatedThreshold=b.getThreshold(f.threshold),h=l(f.minPointLength,5),t=a.getColumnMetrics(),r=t.width,w=a.barW=Math.max(r,1+2*k),e=a.pointXOffset=t.offset;c.inverted&&(p-=.5);f.pointPadding&&(w=Math.ceil(w));q.prototype.translate.apply(a);H(a.points,function(d){var f=l(d.yBottom,p),k=999+Math.abs(f),k=Math.min(Math.max(-k,d.plotY),b.len+k),m=d.plotX+e,n=w,t=Math.min(k,f),q,u=
+Math.max(k,f)-t;Math.abs(u)<h&&h&&(u=h,q=!b.reversed&&!d.negative||b.reversed&&d.negative,t=Math.abs(t-p)>h?f-h:p-(q?h:0));d.barX=m;d.pointWidth=r;d.tooltipPos=c.inverted?[b.len+b.pos-c.plotLeft-k,a.xAxis.len-m-n/2,u]:[m+n/2,k+b.pos-c.plotTop,u];d.shapeType="rect";d.shapeArgs=a.crispCol.apply(a,d.isNull?[d.plotX,b.len/2,0,0]:[m,t,n,u])})},getSymbol:a.noop,drawLegendSymbol:a.LegendSymbolMixin.drawRectangle,drawGraph:function(){this.group[this.dense?"addClass":"removeClass"]("highcharts-dense-data")},
+pointAttribs:function(a,c){var d=this.options,k,b=this.pointAttrToOptions||{};k=b.stroke||"borderColor";var p=b["stroke-width"]||"borderWidth",h=a&&a.color||this.color,l=a[k]||d[k]||this.color||h,q=a[p]||d[p]||this[p]||0,b=d.dashStyle;a&&this.zones.length&&(h=(h=a.getZone())&&h.color||a.options.color||this.color);c&&(a=f(d.states[c],a.options.states&&a.options.states[c]||{}),c=a.brightness,h=a.color||void 0!==c&&A(h).brighten(a.brightness).get()||h,l=a[k]||l,q=a[p]||q,b=a.dashStyle||b);k={fill:h,
+stroke:l,"stroke-width":q};d.borderRadius&&(k.r=d.borderRadius);b&&(k.dashstyle=b);return k},drawPoints:function(){var a=this,c=this.chart,k=a.options,l=c.renderer,b=k.animationLimit||250,p;H(a.points,function(d){var h=d.graphic;if(r(d.plotY)&&null!==d.y){p=d.shapeArgs;if(h)h[c.pointCount<b?"animate":"attr"](f(p));else d.graphic=h=l[d.shapeType](p).add(d.group||a.group);h.attr(a.pointAttribs(d,d.selected&&"select")).shadow(k.shadow,null,k.stacking&&!k.borderRadius);h.addClass(d.getClassName(),!0)}else h&&
+(d.graphic=h.destroy())})},animate:function(a){var c=this,d=this.yAxis,f=c.options,b=this.chart.inverted,k={};u&&(a?(k.scaleY=.001,a=Math.min(d.pos+d.len,Math.max(d.pos,d.toPixels(f.threshold))),b?k.translateX=a-d.len:k.translateY=a,c.group.attr(k)):(k[b?"translateX":"translateY"]=d.pos,c.group.animate(k,G(B(c.options.animation),{step:function(a,b){c.group.attr({scaleY:Math.max(.001,b.pos)})}})),c.animate=null))},remove:function(){var a=this,c=a.chart;c.hasRendered&&H(c.series,function(c){c.type===
+a.type&&(c.isDirty=!0)});q.prototype.remove.apply(a,arguments)}})})(L);(function(a){a=a.seriesType;a("bar","column",null,{inverted:!0})})(L);(function(a){var B=a.Series;a=a.seriesType;a("scatter","line",{lineWidth:0,findNearestPointBy:"xy",marker:{enabled:!0},tooltip:{headerFormat:'\x3cspan style\x3d"color:{point.color}"\x3e\u25cf\x3c/span\x3e \x3cspan style\x3d"font-size: 0.85em"\x3e {series.name}\x3c/span\x3e\x3cbr/\x3e',pointFormat:"x: \x3cb\x3e{point.x}\x3c/b\x3e\x3cbr/\x3ey: \x3cb\x3e{point.y}\x3c/b\x3e\x3cbr/\x3e"}},
+{sorted:!1,requireSorting:!1,noSharedTooltip:!0,trackerGroups:["group","markerGroup","dataLabelsGroup"],takeOrdinalPosition:!1,drawGraph:function(){this.options.lineWidth&&B.prototype.drawGraph.call(this)}})})(L);(function(a){var B=a.pick,A=a.relativeLength;a.CenteredSeriesMixin={getCenter:function(){var a=this.options,G=this.chart,r=2*(a.slicedOffset||0),f=G.plotWidth-2*r,G=G.plotHeight-2*r,l=a.center,l=[B(l[0],"50%"),B(l[1],"50%"),a.size||"100%",a.innerSize||0],q=Math.min(f,G),k,u;for(k=0;4>k;++k)u=
+l[k],a=2>k||2===k&&/%$/.test(u),l[k]=A(u,[f,G,q,l[2]][k])+(a?r:0);l[3]>l[2]&&(l[3]=l[2]);return l}}})(L);(function(a){var B=a.addEvent,A=a.defined,H=a.each,G=a.extend,r=a.inArray,f=a.noop,l=a.pick,q=a.Point,k=a.Series,u=a.seriesType,d=a.setAnimation;u("pie","line",{center:[null,null],clip:!1,colorByPoint:!0,dataLabels:{distance:30,enabled:!0,formatter:function(){return null===this.y?void 0:this.point.name},x:0},ignoreHiddenPoint:!0,legendType:"point",marker:null,size:null,showInLegend:!1,slicedOffset:10,
+stickyTracking:!1,tooltip:{followPointer:!0},borderColor:"#ffffff",borderWidth:1,states:{hover:{brightness:.1,shadow:!1}}},{isCartesian:!1,requireSorting:!1,directTouch:!0,noSharedTooltip:!0,trackerGroups:["group","dataLabelsGroup"],axisTypes:[],pointAttribs:a.seriesTypes.column.prototype.pointAttribs,animate:function(a){var c=this,d=c.points,b=c.startAngleRad;a||(H(d,function(a){var d=a.graphic,f=a.shapeArgs;d&&(d.attr({r:a.startR||c.center[3]/2,start:b,end:b}),d.animate({r:f.r,start:f.start,end:f.end},
+c.options.animation))}),c.animate=null)},updateTotals:function(){var a,d=0,f=this.points,b=f.length,k,h=this.options.ignoreHiddenPoint;for(a=0;a<b;a++)k=f[a],0>k.y&&(k.y=null),d+=h&&!k.visible?0:k.y;this.total=d;for(a=0;a<b;a++)k=f[a],k.percentage=0<d&&(k.visible||!h)?k.y/d*100:0,k.total=d},generatePoints:function(){k.prototype.generatePoints.call(this);this.updateTotals()},translate:function(a){this.generatePoints();var c=0,d=this.options,b=d.slicedOffset,f=b+(d.borderWidth||0),h,k,q,w=d.startAngle||
+0,e=this.startAngleRad=Math.PI/180*(w-90),w=(this.endAngleRad=Math.PI/180*(l(d.endAngle,w+360)-90))-e,r=this.points,u=d.dataLabels.distance,d=d.ignoreHiddenPoint,E,m=r.length,y;a||(this.center=a=this.getCenter());this.getX=function(b,c){q=Math.asin(Math.min((b-a[1])/(a[2]/2+u),1));return a[0]+(c?-1:1)*Math.cos(q)*(a[2]/2+u)};for(E=0;E<m;E++){y=r[E];h=e+c*w;if(!d||y.visible)c+=y.percentage/100;k=e+c*w;y.shapeType="arc";y.shapeArgs={x:a[0],y:a[1],r:a[2]/2,innerR:a[3]/2,start:Math.round(1E3*h)/1E3,end:Math.round(1E3*
+k)/1E3};q=(k+h)/2;q>1.5*Math.PI?q-=2*Math.PI:q<-Math.PI/2&&(q+=2*Math.PI);y.slicedTranslation={translateX:Math.round(Math.cos(q)*b),translateY:Math.round(Math.sin(q)*b)};h=Math.cos(q)*a[2]/2;k=Math.sin(q)*a[2]/2;y.tooltipPos=[a[0]+.7*h,a[1]+.7*k];y.half=q<-Math.PI/2||q>Math.PI/2?1:0;y.angle=q;f=Math.min(f,u/5);y.labelPos=[a[0]+h+Math.cos(q)*u,a[1]+k+Math.sin(q)*u,a[0]+h+Math.cos(q)*f,a[1]+k+Math.sin(q)*f,a[0]+h,a[1]+k,0>u?"center":y.half?"right":"left",q]}},drawGraph:null,drawPoints:function(){var a=
+this,d=a.chart.renderer,f,b,k,h,l=a.options.shadow;l&&!a.shadowGroup&&(a.shadowGroup=d.g("shadow").add(a.group));H(a.points,function(c){if(null!==c.y){b=c.graphic;h=c.shapeArgs;f=c.getTranslate();var p=c.shadowGroup;l&&!p&&(p=c.shadowGroup=d.g("shadow").add(a.shadowGroup));p&&p.attr(f);k=a.pointAttribs(c,c.selected&&"select");b?b.setRadialReference(a.center).attr(k).animate(G(h,f)):(c.graphic=b=d[c.shapeType](h).setRadialReference(a.center).attr(f).add(a.group),c.visible||b.attr({visibility:"hidden"}),
+b.attr(k).attr({"stroke-linejoin":"round"}).shadow(l,p));b.addClass(c.getClassName())}})},searchPoint:f,sortByAngle:function(a,d){a.sort(function(a,b){return void 0!==a.angle&&(b.angle-a.angle)*d})},drawLegendSymbol:a.LegendSymbolMixin.drawRectangle,getCenter:a.CenteredSeriesMixin.getCenter,getSymbol:f},{init:function(){q.prototype.init.apply(this,arguments);var a=this,d;a.name=l(a.name,"Slice");d=function(c){a.slice("select"===c.type)};B(a,"select",d);B(a,"unselect",d);return a},setVisible:function(a,
+d){var c=this,b=c.series,f=b.chart,h=b.options.ignoreHiddenPoint;d=l(d,h);a!==c.visible&&(c.visible=c.options.visible=a=void 0===a?!c.visible:a,b.options.data[r(c,b.data)]=c.options,H(["graphic","dataLabel","connector","shadowGroup"],function(b){if(c[b])c[b][a?"show":"hide"](!0)}),c.legendItem&&f.legend.colorizeItem(c,a),a||"hover"!==c.state||c.setState(""),h&&(b.isDirty=!0),d&&f.redraw())},slice:function(a,f,k){var b=this.series;d(k,b.chart);l(f,!0);this.sliced=this.options.sliced=A(a)?a:!this.sliced;
+b.options.data[r(this,b.data)]=this.options;this.graphic.animate(this.getTranslate());this.shadowGroup&&this.shadowGroup.animate(this.getTranslate())},getTranslate:function(){return this.sliced?this.slicedTranslation:{translateX:0,translateY:0}},haloPath:function(a){var c=this.shapeArgs;return this.sliced||!this.visible?[]:this.series.chart.renderer.symbols.arc(c.x,c.y,c.r+a,c.r+a,{innerR:this.shapeArgs.r,start:c.start,end:c.end})}})})(L);(function(a){var B=a.addEvent,A=a.arrayMax,H=a.defined,G=a.each,
+r=a.extend,f=a.format,l=a.map,q=a.merge,k=a.noop,u=a.pick,d=a.relativeLength,c=a.Series,n=a.seriesTypes,z=a.stableSort;a.distribute=function(a,c){function b(a,b){return a.target-b.target}var d,f=!0,k=a,e=[],p;p=0;for(d=a.length;d--;)p+=a[d].size;if(p>c){z(a,function(a,b){return(b.rank||0)-(a.rank||0)});for(p=d=0;p<=c;)p+=a[d].size,d++;e=a.splice(d-1,a.length)}z(a,b);for(a=l(a,function(a){return{size:a.size,targets:[a.target]}});f;){for(d=a.length;d--;)f=a[d],p=(Math.min.apply(0,f.targets)+Math.max.apply(0,
+f.targets))/2,f.pos=Math.min(Math.max(0,p-f.size/2),c-f.size);d=a.length;for(f=!1;d--;)0<d&&a[d-1].pos+a[d-1].size>a[d].pos&&(a[d-1].size+=a[d].size,a[d-1].targets=a[d-1].targets.concat(a[d].targets),a[d-1].pos+a[d-1].size>c&&(a[d-1].pos=c-a[d-1].size),a.splice(d,1),f=!0)}d=0;G(a,function(a){var b=0;G(a.targets,function(){k[d].pos=a.pos+b;b+=k[d].size;d++})});k.push.apply(k,e);z(k,b)};c.prototype.drawDataLabels=function(){var a=this,c=a.options,d=c.dataLabels,k=a.points,l,n,e=a.hasRendered||0,r,C,
+E=u(d.defer,!0),m=a.chart.renderer;if(d.enabled||a._hasPointLabels)a.dlProcessOptions&&a.dlProcessOptions(d),C=a.plotGroup("dataLabelsGroup","data-labels",E&&!e?"hidden":"visible",d.zIndex||6),E&&(C.attr({opacity:+e}),e||B(a,"afterAnimate",function(){a.visible&&C.show(!0);C[c.animation?"animate":"attr"]({opacity:1},{duration:200})})),n=d,G(k,function(b){var e,h=b.dataLabel,k,g,p,t=b.connector,w=!h,x;l=b.dlOptions||b.options&&b.options.dataLabels;if(e=u(l&&l.enabled,n.enabled)&&null!==b.y)for(g in d=
+q(n,l),k=b.getLabelConfig(),r=d.format?f(d.format,k):d.formatter.call(k,d),x=d.style,p=d.rotation,x.color=u(d.color,x.color,a.color,"#000000"),"contrast"===x.color&&(b.contrastColor=m.getContrast(b.color||a.color),x.color=d.inside||0>d.distance||c.stacking?b.contrastColor:"#000000"),c.cursor&&(x.cursor=c.cursor),k={fill:d.backgroundColor,stroke:d.borderColor,"stroke-width":d.borderWidth,r:d.borderRadius||0,rotation:p,padding:d.padding,zIndex:1},k)void 0===k[g]&&delete k[g];!h||e&&H(r)?e&&H(r)&&(h?
+k.text=r:(h=b.dataLabel=m[p?"text":"label"](r,0,-9999,d.shape,null,null,d.useHTML,null,"data-label"),h.addClass("highcharts-data-label-color-"+b.colorIndex+" "+(d.className||"")+(d.useHTML?"highcharts-tracker":""))),h.attr(k),h.css(x).shadow(d.shadow),h.added||h.add(C),a.alignDataLabel(b,h,d,null,w)):(b.dataLabel=h.destroy(),t&&(b.connector=t.destroy()))})};c.prototype.alignDataLabel=function(a,c,d,f,k){var b=this.chart,e=b.inverted,h=u(a.plotX,-9999),l=u(a.plotY,-9999),p=c.getBBox(),m,n=d.rotation,
+q=d.align,t=this.visible&&(a.series.forceDL||b.isInsidePlot(h,Math.round(l),e)||f&&b.isInsidePlot(h,e?f.x+1:f.y+f.height-1,e)),D="justify"===u(d.overflow,"justify");t&&(m=d.style.fontSize,m=b.renderer.fontMetrics(m,c).b,f=r({x:e?b.plotWidth-l:h,y:Math.round(e?b.plotHeight-h:l),width:0,height:0},f),r(d,{width:p.width,height:p.height}),n?(D=!1,e=b.renderer.rotCorr(m,n),e={x:f.x+d.x+f.width/2+e.x,y:f.y+d.y+{top:0,middle:.5,bottom:1}[d.verticalAlign]*f.height},c[k?"attr":"animate"](e).attr({align:q}),
+h=(n+720)%360,h=180<h&&360>h,"left"===q?e.y-=h?p.height:0:"center"===q?(e.x-=p.width/2,e.y-=p.height/2):"right"===q&&(e.x-=p.width,e.y-=h?0:p.height)):(c.align(d,null,f),e=c.alignAttr),D?a.isLabelJustified=this.justifyDataLabel(c,d,e,p,f,k):u(d.crop,!0)&&(t=b.isInsidePlot(e.x,e.y)&&b.isInsidePlot(e.x+p.width,e.y+p.height)),d.shape&&!n&&c.attr({anchorX:a.plotX,anchorY:a.plotY}));t||(c.attr({y:-9999}),c.placed=!1)};c.prototype.justifyDataLabel=function(a,c,d,f,k,l){var b=this.chart,h=c.align,p=c.verticalAlign,
+n,m,q=a.box?0:a.padding||0;n=d.x+q;0>n&&("right"===h?c.align="left":c.x=-n,m=!0);n=d.x+f.width-q;n>b.plotWidth&&("left"===h?c.align="right":c.x=b.plotWidth-n,m=!0);n=d.y+q;0>n&&("bottom"===p?c.verticalAlign="top":c.y=-n,m=!0);n=d.y+f.height-q;n>b.plotHeight&&("top"===p?c.verticalAlign="bottom":c.y=b.plotHeight-n,m=!0);m&&(a.placed=!l,a.align(c,null,k));return m};n.pie&&(n.pie.prototype.drawDataLabels=function(){var b=this,d=b.data,f,k=b.chart,n=b.options.dataLabels,q=u(n.connectorPadding,10),e=u(n.connectorWidth,
+1),r=k.plotWidth,C=k.plotHeight,E,m=n.distance,y=b.center,z=y[2]/2,B=y[1],H=0<m,g,F,L,N,P=[[],[]],O,v,M,R,S=[0,0,0,0];b.visible&&(n.enabled||b._hasPointLabels)&&(G(d,function(a){a.dataLabel&&a.visible&&a.dataLabel.shortened&&(a.dataLabel.attr({width:"auto"}).css({width:"auto",textOverflow:"clip"}),a.dataLabel.shortened=!1)}),c.prototype.drawDataLabels.apply(b),G(d,function(a){a.dataLabel&&a.visible&&(P[a.half].push(a),a.dataLabel._pos=null)}),G(P,function(c,e){var d,h,p=c.length,t,w,u;if(p)for(b.sortByAngle(c,
+e-.5),0<m&&(d=Math.max(0,B-z-m),h=Math.min(B+z+m,k.plotHeight),t=l(c,function(a){if(a.dataLabel)return u=a.dataLabel.getBBox().height||21,{target:a.labelPos[1]-d+u/2,size:u,rank:a.y}}),a.distribute(t,h+u-d)),R=0;R<p;R++)f=c[R],L=f.labelPos,g=f.dataLabel,M=!1===f.visible?"hidden":"inherit",w=L[1],t?void 0===t[R].pos?M="hidden":(N=t[R].size,v=d+t[R].pos):v=w,O=n.justify?y[0]+(e?-1:1)*(z+m):b.getX(v<d+2||v>h-2?w:v,e),g._attr={visibility:M,align:L[6]},g._pos={x:O+n.x+({left:q,right:-q}[L[6]]||0),y:v+
+n.y-10},L.x=O,L.y=v,null===b.options.size&&(F=g.getBBox().width,w=null,O-F<q?(w=Math.round(F-O+q),S[3]=Math.max(w,S[3])):O+F>r-q&&(w=Math.round(O+F-r+q),S[1]=Math.max(w,S[1])),0>v-N/2?S[0]=Math.max(Math.round(-v+N/2),S[0]):v+N/2>C&&(S[2]=Math.max(Math.round(v+N/2-C),S[2])),g.sideOverflow=w)}),0===A(S)||this.verifyDataLabelOverflow(S))&&(this.placeDataLabels(),H&&e&&G(this.points,function(a){var c;E=a.connector;if((g=a.dataLabel)&&g._pos&&a.visible){M=g._attr.visibility;if(c=!E)a.connector=E=k.renderer.path().addClass("highcharts-data-label-connector highcharts-color-"+
+a.colorIndex).add(b.dataLabelsGroup),E.attr({"stroke-width":e,stroke:n.connectorColor||a.color||"#666666"});E[c?"attr":"animate"]({d:b.connectorPath(a.labelPos)});E.attr("visibility",M)}else E&&(a.connector=E.destroy())}))},n.pie.prototype.connectorPath=function(a){var b=a.x,c=a.y;return u(this.options.dataLabels.softConnector,!0)?["M",b+("left"===a[6]?5:-5),c,"C",b,c,2*a[2]-a[4],2*a[3]-a[5],a[2],a[3],"L",a[4],a[5]]:["M",b+("left"===a[6]?5:-5),c,"L",a[2],a[3],"L",a[4],a[5]]},n.pie.prototype.placeDataLabels=
+function(){G(this.points,function(a){var b=a.dataLabel;b&&a.visible&&((a=b._pos)?(b.sideOverflow&&(b._attr.width=b.getBBox().width-b.sideOverflow,b.css({width:b._attr.width+"px",textOverflow:"ellipsis"}),b.shortened=!0),b.attr(b._attr),b[b.moved?"animate":"attr"](a),b.moved=!0):b&&b.attr({y:-9999}))},this)},n.pie.prototype.alignDataLabel=k,n.pie.prototype.verifyDataLabelOverflow=function(a){var b=this.center,c=this.options,f=c.center,k=c.minSize||80,l,e;null!==f[0]?l=Math.max(b[2]-Math.max(a[1],a[3]),
+k):(l=Math.max(b[2]-a[1]-a[3],k),b[0]+=(a[3]-a[1])/2);null!==f[1]?l=Math.max(Math.min(l,b[2]-Math.max(a[0],a[2])),k):(l=Math.max(Math.min(l,b[2]-a[0]-a[2]),k),b[1]+=(a[0]-a[2])/2);l<b[2]?(b[2]=l,b[3]=Math.min(d(c.innerSize||0,l),l),this.translate(b),this.drawDataLabels&&this.drawDataLabels()):e=!0;return e});n.column&&(n.column.prototype.alignDataLabel=function(a,d,f,k,l){var b=this.chart.inverted,e=a.series,h=a.dlBox||a.shapeArgs,n=u(a.below,a.plotY>u(this.translatedThreshold,e.yAxis.len)),p=u(f.inside,
+!!this.options.stacking);h&&(k=q(h),0>k.y&&(k.height+=k.y,k.y=0),h=k.y+k.height-e.yAxis.len,0<h&&(k.height-=h),b&&(k={x:e.yAxis.len-k.y-k.height,y:e.xAxis.len-k.x-k.width,width:k.height,height:k.width}),p||(b?(k.x+=n?0:k.width,k.width=0):(k.y+=n?k.height:0,k.height=0)));f.align=u(f.align,!b||p?"center":n?"right":"left");f.verticalAlign=u(f.verticalAlign,b||p?"middle":n?"top":"bottom");c.prototype.alignDataLabel.call(this,a,d,f,k,l);a.isLabelJustified&&a.contrastColor&&a.dataLabel.css({color:a.contrastColor})})})(L);
+(function(a){var B=a.Chart,A=a.each,H=a.pick,G=a.addEvent;B.prototype.callbacks.push(function(a){function f(){var f=[];A(a.series||[],function(a){var k=a.options.dataLabels,l=a.dataLabelCollections||["dataLabel"];(k.enabled||a._hasPointLabels)&&!k.allowOverlap&&a.visible&&A(l,function(d){A(a.points,function(a){a[d]&&(a[d].labelrank=H(a.labelrank,a.shapeArgs&&a.shapeArgs.height),f.push(a[d]))})})});a.hideOverlappingLabels(f)}f();G(a,"redraw",f)});B.prototype.hideOverlappingLabels=function(a){var f=
+a.length,l,q,k,r,d,c,n,z,b,p=function(a,b,c,d,e,f,k,l){return!(e>a+c||e+k<a||f>b+d||f+l<b)};for(q=0;q<f;q++)if(l=a[q])l.oldOpacity=l.opacity,l.newOpacity=1;a.sort(function(a,b){return(b.labelrank||0)-(a.labelrank||0)});for(q=0;q<f;q++)for(k=a[q],l=q+1;l<f;++l)if(r=a[l],k&&r&&k!==r&&k.placed&&r.placed&&0!==k.newOpacity&&0!==r.newOpacity&&(d=k.alignAttr,c=r.alignAttr,n=k.parentGroup,z=r.parentGroup,b=2*(k.box?0:k.padding),d=p(d.x+n.translateX,d.y+n.translateY,k.width-b,k.height-b,c.x+z.translateX,c.y+
+z.translateY,r.width-b,r.height-b)))(k.labelrank<r.labelrank?k:r).newOpacity=0;A(a,function(a){var b,c;a&&(c=a.newOpacity,a.oldOpacity!==c&&a.placed&&(c?a.show(!0):b=function(){a.hide()},a.alignAttr.opacity=c,a[a.isOld?"animate":"attr"](a.alignAttr,null,b)),a.isOld=!0)})}})(L);(function(a){var B=a.addEvent,A=a.Chart,H=a.createElement,G=a.css,r=a.defaultOptions,f=a.defaultPlotOptions,l=a.each,q=a.extend,k=a.fireEvent,u=a.hasTouch,d=a.inArray,c=a.isObject,n=a.Legend,z=a.merge,b=a.pick,p=a.Point,h=a.Series,
+t=a.seriesTypes,D=a.svg;a=a.TrackerMixin={drawTrackerPoint:function(){var a=this,b=a.chart.pointer,c=function(a){var c=b.getPointFromEvent(a);if(void 0!==c)c.onMouseOver(a)};l(a.points,function(a){a.graphic&&(a.graphic.element.point=a);a.dataLabel&&(a.dataLabel.div?a.dataLabel.div.point=a:a.dataLabel.element.point=a)});a._hasTracking||(l(a.trackerGroups,function(e){if(a[e]){a[e].addClass("highcharts-tracker").on("mouseover",c).on("mouseout",function(a){b.onTrackerMouseOut(a)});if(u)a[e].on("touchstart",
+c);a.options.cursor&&a[e].css(G).css({cursor:a.options.cursor})}}),a._hasTracking=!0)},drawTrackerGraph:function(){var a=this,b=a.options,c=b.trackByArea,d=[].concat(c?a.areaPath:a.graphPath),f=d.length,h=a.chart,k=h.pointer,n=h.renderer,p=h.options.tooltip.snap,q=a.tracker,g,r=function(){if(h.hoverSeries!==a)a.onMouseOver()},t="rgba(192,192,192,"+(D?.0001:.002)+")";if(f&&!c)for(g=f+1;g--;)"M"===d[g]&&d.splice(g+1,0,d[g+1]-p,d[g+2],"L"),(g&&"M"===d[g]||g===f)&&d.splice(g,0,"L",d[g-2]+p,d[g-1]);q?
+q.attr({d:d}):a.graph&&(a.tracker=n.path(d).attr({"stroke-linejoin":"round",visibility:a.visible?"visible":"hidden",stroke:t,fill:c?t:"none","stroke-width":a.graph.strokeWidth()+(c?0:2*p),zIndex:2}).add(a.group),l([a.tracker,a.markerGroup],function(a){a.addClass("highcharts-tracker").on("mouseover",r).on("mouseout",function(a){k.onTrackerMouseOut(a)});b.cursor&&a.css({cursor:b.cursor});if(u)a.on("touchstart",r)}))}};t.column&&(t.column.prototype.drawTracker=a.drawTrackerPoint);t.pie&&(t.pie.prototype.drawTracker=
+a.drawTrackerPoint);t.scatter&&(t.scatter.prototype.drawTracker=a.drawTrackerPoint);q(n.prototype,{setItemEvents:function(a,b,c){var d=this,e=d.chart.renderer.boxWrapper,f="highcharts-legend-"+(a.series?"point":"series")+"-active";(c?b:a.legendGroup).on("mouseover",function(){a.setState("hover");e.addClass(f);b.css(d.options.itemHoverStyle)}).on("mouseout",function(){b.css(a.visible?d.itemStyle:d.itemHiddenStyle);e.removeClass(f);a.setState()}).on("click",function(b){var c=function(){a.setVisible&&
+a.setVisible()};b={browserEvent:b};a.firePointEvent?a.firePointEvent("legendItemClick",b,c):k(a,"legendItemClick",b,c)})},createCheckboxForItem:function(a){a.checkbox=H("input",{type:"checkbox",checked:a.selected,defaultChecked:a.selected},this.options.itemCheckboxStyle,this.chart.container);B(a.checkbox,"click",function(b){k(a.series||a,"checkboxClick",{checked:b.target.checked,item:a},function(){a.select()})})}});r.legend.itemStyle.cursor="pointer";q(A.prototype,{showResetZoom:function(){var a=
+this,b=r.lang,c=a.options.chart.resetZoomButton,d=c.theme,f=d.states,h="chart"===c.relativeTo?null:"plotBox";this.resetZoomButton=a.renderer.button(b.resetZoom,null,null,function(){a.zoomOut()},d,f&&f.hover).attr({align:c.position.align,title:b.resetZoomTitle}).addClass("highcharts-reset-zoom").add().align(c.position,!1,h)},zoomOut:function(){var a=this;k(a,"selection",{resetSelection:!0},function(){a.zoom()})},zoom:function(a){var d,f=this.pointer,h=!1,k;!a||a.resetSelection?l(this.axes,function(a){d=
+a.zoom()}):l(a.xAxis.concat(a.yAxis),function(a){var b=a.axis;f[b.isXAxis?"zoomX":"zoomY"]&&(d=b.zoom(a.min,a.max),b.displayBtn&&(h=!0))});k=this.resetZoomButton;h&&!k?this.showResetZoom():!h&&c(k)&&(this.resetZoomButton=k.destroy());d&&this.redraw(b(this.options.chart.animation,a&&a.animation,100>this.pointCount))},pan:function(a,b){var c=this,d=c.hoverPoints,e;d&&l(d,function(a){a.setState()});l("xy"===b?[1,0]:[1],function(b){b=c[b?"xAxis":"yAxis"][0];var d=b.horiz,f=a[d?"chartX":"chartY"],d=d?
+"mouseDownX":"mouseDownY",h=c[d],k=(b.pointRange||0)/2,g=b.getExtremes(),l=b.toValue(h-f,!0)+k,k=b.toValue(h+b.len-f,!0)-k,m=k<l,h=m?k:l,l=m?l:k,m=b.toValue(b.toPixels(g.min)-b.minPixelPadding),k=b.toValue(b.toPixels(g.max)+b.minPixelPadding),m=Math.min(g.dataMin,m)-h,g=l-Math.max(g.dataMax,k);b.series.length&&0>m&&0>g&&(b.setExtremes(h,l,!1,!1,{trigger:"pan"}),e=!0);c[d]=f});e&&c.redraw(!1);G(c.container,{cursor:"move"})}});q(p.prototype,{select:function(a,c){var e=this,f=e.series,h=f.chart;a=b(a,
+!e.selected);e.firePointEvent(a?"select":"unselect",{accumulate:c},function(){e.selected=e.options.selected=a;f.options.data[d(e,f.data)]=e.options;e.setState(a&&"select");c||l(h.getSelectedPoints(),function(a){a.selected&&a!==e&&(a.selected=a.options.selected=!1,f.options.data[d(a,f.data)]=a.options,a.setState(""),a.firePointEvent("unselect"))})})},onMouseOver:function(a){var b=this.series.chart.pointer;this.firePointEvent("mouseOver");b.runPointActions(a,this)},onMouseOut:function(){var a=this.series.chart;
+this.firePointEvent("mouseOut");l(a.hoverPoints||[],function(a){a.setState()});a.hoverPoints=a.hoverPoint=null},importEvents:function(){if(!this.hasImportedEvents){var a=z(this.series.options.point,this.options).events,b;this.events=a;for(b in a)B(this,b,a[b]);this.hasImportedEvents=!0}},setState:function(a,c){var d=Math.floor(this.plotX),e=this.plotY,h=this.series,k=h.options.states[a]||{},l=f[h.type].marker&&h.options.marker,n=l&&!1===l.enabled,p=l&&l.states&&l.states[a]||{},r=!1===p.enabled,g=
+h.stateMarkerGraphic,t=this.marker||{},u=h.chart,w=h.halo,z,A=l&&h.markerAttribs;a=a||"";if(!(a===this.state&&!c||this.selected&&"select"!==a||!1===k.enabled||a&&(r||n&&!1===p.enabled)||a&&t.states&&t.states[a]&&!1===t.states[a].enabled)){A&&(z=h.markerAttribs(this,a));if(this.graphic)this.state&&this.graphic.removeClass("highcharts-point-"+this.state),a&&this.graphic.addClass("highcharts-point-"+a),this.graphic.attr(h.pointAttribs(this,a)),z&&this.graphic.animate(z,b(u.options.chart.animation,p.animation,
+l.animation)),g&&g.hide();else{if(a&&p){l=t.symbol||h.symbol;g&&g.currentSymbol!==l&&(g=g.destroy());if(g)g[c?"animate":"attr"]({x:z.x,y:z.y});else l&&(h.stateMarkerGraphic=g=u.renderer.symbol(l,z.x,z.y,z.width,z.height).add(h.markerGroup),g.currentSymbol=l);g&&g.attr(h.pointAttribs(this,a))}g&&(g[a&&u.isInsidePlot(d,e,u.inverted)?"show":"hide"](),g.element.point=this)}(d=k.halo)&&d.size?(w||(h.halo=w=u.renderer.path().add(A?h.markerGroup:h.group)),w[c?"animate":"attr"]({d:this.haloPath(d.size)}),
+w.attr({"class":"highcharts-halo highcharts-color-"+b(this.colorIndex,h.colorIndex)}),w.point=this,w.attr(q({fill:this.color||h.color,"fill-opacity":d.opacity,zIndex:-1},d.attributes))):w&&w.point&&w.point.haloPath&&w.animate({d:w.point.haloPath(0)});this.state=a}},haloPath:function(a){return this.series.chart.renderer.symbols.circle(Math.floor(this.plotX)-a,this.plotY-a,2*a,2*a)}});q(h.prototype,{onMouseOver:function(){var a=this.chart,b=a.hoverSeries;if(b&&b!==this)b.onMouseOut();this.options.events.mouseOver&&
+k(this,"mouseOver");this.setState("hover");a.hoverSeries=this},onMouseOut:function(){var a=this.options,b=this.chart,c=b.tooltip,d=b.hoverPoint;b.hoverSeries=null;if(d)d.onMouseOut();this&&a.events.mouseOut&&k(this,"mouseOut");!c||this.stickyTracking||c.shared&&!this.noSharedTooltip||c.hide();this.setState()},setState:function(a){var c=this,d=c.options,f=c.graph,h=d.states,k=d.lineWidth,d=0;a=a||"";if(c.state!==a&&(l([c.group,c.markerGroup,c.dataLabelsGroup],function(b){b&&(c.state&&b.removeClass("highcharts-series-"+
+c.state),a&&b.addClass("highcharts-series-"+a))}),c.state=a,!h[a]||!1!==h[a].enabled)&&(a&&(k=h[a].lineWidth||k+(h[a].lineWidthPlus||0)),f&&!f.dashstyle))for(k={"stroke-width":k},f.animate(k,b(c.chart.options.chart.animation,h[a]&&h[a].animation));c["zone-graph-"+d];)c["zone-graph-"+d].attr(k),d+=1},setVisible:function(a,b){var c=this,d=c.chart,e=c.legendItem,f,h=d.options.chart.ignoreHiddenSeries,n=c.visible;f=(c.visible=a=c.options.visible=c.userOptions.visible=void 0===a?!n:a)?"show":"hide";l(["group",
+"dataLabelsGroup","markerGroup","tracker","tt"],function(a){if(c[a])c[a][f]()});if(d.hoverSeries===c||(d.hoverPoint&&d.hoverPoint.series)===c)c.onMouseOut();e&&d.legend.colorizeItem(c,a);c.isDirty=!0;c.options.stacking&&l(d.series,function(a){a.options.stacking&&a.visible&&(a.isDirty=!0)});l(c.linkedSeries,function(b){b.setVisible(a,!1)});h&&(d.isDirtyBox=!0);!1!==b&&d.redraw();k(c,f)},show:function(){this.setVisible(!0)},hide:function(){this.setVisible(!1)},select:function(a){this.selected=a=void 0===
+a?!this.selected:a;this.checkbox&&(this.checkbox.checked=a);k(this,a?"select":"unselect")},drawTracker:a.drawTrackerGraph})})(L);(function(a){var B=a.Chart,A=a.each,H=a.inArray,G=a.isArray,r=a.isObject,f=a.pick,l=a.splat;B.prototype.setResponsive=function(f){var k=this.options.responsive,l=[],d=this.currentResponsive;k&&k.rules&&A(k.rules,function(c){void 0===c._id&&(c._id=a.uniqueKey());this.matchResponsiveRule(c,l,f)},this);var c=a.merge.apply(0,a.map(l,function(c){return a.find(k.rules,function(a){return a._id===
+c}).chartOptions})),l=l.toString()||void 0;l!==(d&&d.ruleIds)&&(d&&this.update(d.undoOptions,f),l?(this.currentResponsive={ruleIds:l,mergedOptions:c,undoOptions:this.currentOptions(c)},this.update(c,f)):this.currentResponsive=void 0)};B.prototype.matchResponsiveRule=function(a,k){var l=a.condition;(l.callback||function(){return this.chartWidth<=f(l.maxWidth,Number.MAX_VALUE)&&this.chartHeight<=f(l.maxHeight,Number.MAX_VALUE)&&this.chartWidth>=f(l.minWidth,0)&&this.chartHeight>=f(l.minHeight,0)}).call(this)&&
+k.push(a._id)};B.prototype.currentOptions=function(a){function f(a,c,k,q){var b,d;for(b in a)if(!q&&-1<H(b,["series","xAxis","yAxis"]))for(a[b]=l(a[b]),k[b]=[],d=0;d<a[b].length;d++)c[b][d]&&(k[b][d]={},f(a[b][d],c[b][d],k[b][d],q+1));else r(a[b])?(k[b]=G(a[b])?[]:{},f(a[b],c[b]||{},k[b],q+1)):k[b]=c[b]||null}var q={};f(a,this.options,q,0);return q}})(L);return L});
+
+/*
+ Highcharts JS v5.0.10 (2017-03-31)
+ Plugin for displaying a message when there is no data visible in chart.
+
+ (c) 2010-2017 Highsoft AS
+ Author: Oystein Moseng
+
+ License: www.highcharts.com/license
+*/
+(function(d){"object"===typeof module&&module.exports?module.exports=d:d(Highcharts)})(function(d){(function(c){function d(){return!!this.points.length}function g(){this.hasData()?this.hideNoData():this.showNoData()}var h=c.seriesTypes,e=c.Chart.prototype,f=c.getOptions(),k=c.extend,l=c.each;k(f.lang,{noData:"No data to display"});f.noData={position:{x:0,y:0,align:"center",verticalAlign:"middle"}};f.noData.style={fontWeight:"bold",fontSize:"12px",color:"#666666"};l(["pie","gauge","waterfall","bubble",
+"treemap"],function(a){h[a]&&(h[a].prototype.hasData=d)});c.Series.prototype.hasData=function(){return this.visible&&void 0!==this.dataMax&&void 0!==this.dataMin};e.showNoData=function(a){var b=this.options;a=a||b.lang.noData;b=b.noData;this.noDataLabel||(this.noDataLabel=this.renderer.label(a,0,0,null,null,null,b.useHTML,null,"no-data"),this.noDataLabel.attr(b.attr).css(b.style),this.noDataLabel.add(),this.noDataLabel.align(k(this.noDataLabel.getBBox(),b.position),!1,"plotBox"))};e.hideNoData=function(){this.noDataLabel&&
+(this.noDataLabel=this.noDataLabel.destroy())};e.hasData=function(){for(var a=this.series,b=a.length;b--;)if(a[b].hasData()&&!a[b].options.isInternal)return!0;return!1};e.callbacks.push(function(a){c.addEvent(a,"load",g);c.addEvent(a,"redraw",g)})})(d)});
+
+/*
+ Highcharts JS v5.0.10 (2017-03-31)
+
+ (c) 2009-2016 Torstein Honsi
+
+ License: www.highcharts.com/license
+*/
+(function(y){"object"===typeof module&&module.exports?module.exports=y:y(Highcharts)})(function(y){(function(a){function p(a,b){this.init(a,b)}var r=a.CenteredSeriesMixin,v=a.each,m=a.extend,k=a.merge,h=a.splat;m(p.prototype,{coll:"pane",init:function(a,b){this.chart=b;this.background=[];b.pane.push(this);this.setOptions(a)},setOptions:function(a){this.options=k(this.defaultOptions,this.chart.angular?{background:{}}:void 0,a)},render:function(){var a=this.options,b=this.options.background,d=this.chart.renderer;
+this.group||(this.group=d.g("pane-group").attr({zIndex:a.zIndex||0}).add());this.updateCenter();if(b)for(b=h(b),a=Math.max(b.length,this.background.length||0),d=0;d<a;d++)b[d]?this.renderBackground(k(this.defaultBackgroundOptions,b[d]),d):this.background[d]&&(this.background[d]=this.background[d].destroy(),this.background.splice(d,1))},renderBackground:function(a,b){var d="animate";this.background[b]||(this.background[b]=this.chart.renderer.path().add(this.group),d="attr");this.background[b][d]({d:this.axis.getPlotBandPath(a.from,
+a.to,a)}).attr({fill:a.backgroundColor,stroke:a.borderColor,"stroke-width":a.borderWidth,"class":"highcharts-pane "+(a.className||"")})},defaultOptions:{center:["50%","50%"],size:"85%",startAngle:0},defaultBackgroundOptions:{shape:"circle",borderWidth:1,borderColor:"#cccccc",backgroundColor:{linearGradient:{x1:0,y1:0,x2:0,y2:1},stops:[[0,"#ffffff"],[1,"#e6e6e6"]]},from:-Number.MAX_VALUE,innerRadius:0,to:Number.MAX_VALUE,outerRadius:"105%"},updateCenter:function(a){this.center=(a||this.axis||{}).center=
+r.getCenter.call(this)},update:function(a,b){k(!0,this.options,a);this.setOptions(this.options);this.render();v(this.chart.axes,function(d){d.pane===this&&(d.pane=null,d.update({},b))},this)}});a.Pane=p})(y);(function(a){var p=a.each,r=a.extend,v=a.map,m=a.merge,k=a.noop,h=a.pick,t=a.pInt,b=a.wrap,d,e,g=a.Axis.prototype;a=a.Tick.prototype;d={getOffset:k,redraw:function(){this.isDirty=!1},render:function(){this.isDirty=!1},setScale:k,setCategories:k,setTitle:k};e={defaultRadialGaugeOptions:{labels:{align:"center",
+x:0,y:null},minorGridLineWidth:0,minorTickInterval:"auto",minorTickLength:10,minorTickPosition:"inside",minorTickWidth:1,tickLength:10,tickPosition:"inside",tickWidth:2,title:{rotation:0},zIndex:2},defaultRadialXOptions:{gridLineWidth:1,labels:{align:null,distance:15,x:0,y:null},maxPadding:0,minPadding:0,showLastLabel:!1,tickLength:0},defaultRadialYOptions:{gridLineInterpolation:"circle",labels:{align:"right",x:-3,y:-2},showLastLabel:!1,title:{x:4,text:null,rotation:90}},setOptions:function(c){c=
+this.options=m(this.defaultOptions,this.defaultRadialOptions,c);c.plotBands||(c.plotBands=[])},getOffset:function(){g.getOffset.call(this);this.chart.axisOffset[this.side]=0},getLinePath:function(c,b){c=this.center;var d=this.chart,f=h(b,c[2]/2-this.offset);this.isCircular||void 0!==b?b=this.chart.renderer.symbols.arc(this.left+c[0],this.top+c[1],f,f,{start:this.startAngleRad,end:this.endAngleRad,open:!0,innerR:0}):(b=this.postTranslate(this.angleRad,f),b=["M",c[0]+d.plotLeft,c[1]+d.plotTop,"L",b.x,
+b.y]);return b},setAxisTranslation:function(){g.setAxisTranslation.call(this);this.center&&(this.transA=this.isCircular?(this.endAngleRad-this.startAngleRad)/(this.max-this.min||1):this.center[2]/2/(this.max-this.min||1),this.minPixelPadding=this.isXAxis?this.transA*this.minPointOffset:0)},beforeSetTickPositions:function(){if(this.autoConnect=this.isCircular&&void 0===h(this.userMax,this.options.max)&&this.endAngleRad-this.startAngleRad===2*Math.PI)this.max+=this.categories&&1||this.pointRange||this.closestPointRange||
+0},setAxisSize:function(){g.setAxisSize.call(this);this.isRadial&&(this.pane.updateCenter(this),this.isCircular&&(this.sector=this.endAngleRad-this.startAngleRad),this.len=this.width=this.height=this.center[2]*h(this.sector,1)/2)},getPosition:function(c,b){return this.postTranslate(this.isCircular?this.translate(c):this.angleRad,h(this.isCircular?b:this.translate(c),this.center[2]/2)-this.offset)},postTranslate:function(c,b){var d=this.chart,f=this.center;c=this.startAngleRad+c;return{x:d.plotLeft+
+f[0]+Math.cos(c)*b,y:d.plotTop+f[1]+Math.sin(c)*b}},getPlotBandPath:function(c,b,d){var f=this.center,n=this.startAngleRad,a=f[2]/2,e=[h(d.outerRadius,"100%"),d.innerRadius,h(d.thickness,10)],g=Math.min(this.offset,0),u=/%$/,k,m=this.isCircular;"polygon"===this.options.gridLineInterpolation?f=this.getPlotLinePath(c).concat(this.getPlotLinePath(b,!0)):(c=Math.max(c,this.min),b=Math.min(b,this.max),m||(e[0]=this.translate(c),e[1]=this.translate(b)),e=v(e,function(c){u.test(c)&&(c=t(c,10)*a/100);return c}),
+"circle"!==d.shape&&m?(c=n+this.translate(c),b=n+this.translate(b)):(c=-Math.PI/2,b=1.5*Math.PI,k=!0),e[0]-=g,e[2]-=g,f=this.chart.renderer.symbols.arc(this.left+f[0],this.top+f[1],e[0],e[0],{start:Math.min(c,b),end:Math.max(c,b),innerR:h(e[1],e[0]-e[2]),open:k}));return f},getPlotLinePath:function(c,b){var d=this,f=d.center,e=d.chart,a=d.getPosition(c),g,t,h;d.isCircular?h=["M",f[0]+e.plotLeft,f[1]+e.plotTop,"L",a.x,a.y]:"circle"===d.options.gridLineInterpolation?(c=d.translate(c))&&(h=d.getLinePath(0,
+c)):(p(e.xAxis,function(c){c.pane===d.pane&&(g=c)}),h=[],c=d.translate(c),f=g.tickPositions,g.autoConnect&&(f=f.concat([f[0]])),b&&(f=[].concat(f).reverse()),p(f,function(b,d){t=g.getPosition(b,c);h.push(d?"L":"M",t.x,t.y)}));return h},getTitlePosition:function(){var c=this.center,b=this.chart,d=this.options.title;return{x:b.plotLeft+c[0]+(d.x||0),y:b.plotTop+c[1]-{high:.5,middle:.25,low:0}[d.align]*c[2]+(d.y||0)}}};b(g,"init",function(c,b,a){var f=b.angular,n=b.polar,g=a.isX,t=f&&g,x,k=b.options,
+p=this.pane=b.pane[a.pane||0],z=p.options;if(f){if(r(this,t?d:e),x=!g)this.defaultRadialOptions=this.defaultRadialGaugeOptions}else n&&(r(this,e),this.defaultRadialOptions=(x=g)?this.defaultRadialXOptions:m(this.defaultYAxisOptions,this.defaultRadialYOptions));f||n?(this.isRadial=!0,b.inverted=!1,k.chart.zoomType=null):this.isRadial=!1;x&&(p.axis=this);c.call(this,b,a);t||!f&&!n||(c=this.options,this.angleRad=(c.angle||0)*Math.PI/180,this.startAngleRad=(z.startAngle-90)*Math.PI/180,this.endAngleRad=
+(h(z.endAngle,z.startAngle+360)-90)*Math.PI/180,this.offset=c.offset||0,this.isCircular=x)});b(g,"autoLabelAlign",function(b){if(!this.isRadial)return b.apply(this,[].slice.call(arguments,1))});b(a,"getPosition",function(b,d,e,a,l){var c=this.axis;return c.getPosition?c.getPosition(e):b.call(this,d,e,a,l)});b(a,"getLabelPosition",function(b,d,e,a,l,g,t,k,u){var c=this.axis,f=g.y,n=20,q=g.align,w=(c.translate(this.pos)+c.startAngleRad+Math.PI/2)/Math.PI*180%360;c.isRadial?(b=c.getPosition(this.pos,
+c.center[2]/2+h(g.distance,-25)),"auto"===g.rotation?a.attr({rotation:w}):null===f&&(f=c.chart.renderer.fontMetrics(a.styles.fontSize).b-a.getBBox().height/2),null===q&&(c.isCircular?(this.label.getBBox().width>c.len*c.tickInterval/(c.max-c.min)&&(n=0),q=w>n&&w<180-n?"left":w>180+n&&w<360-n?"right":"center"):q="center",a.attr({align:q})),b.x+=g.x,b.y+=f):b=b.call(this,d,e,a,l,g,t,k,u);return b});b(a,"getMarkPath",function(b,d,e,a,l,g,t){var c=this.axis;c.isRadial?(b=c.getPosition(this.pos,c.center[2]/
+2+a),d=["M",d,e,"L",b.x,b.y]):d=b.call(this,d,e,a,l,g,t);return d})})(y);(function(a){var p=a.each,r=a.noop,v=a.pick,m=a.Series,k=a.seriesType,h=a.seriesTypes;k("arearange","area",{lineWidth:1,marker:null,threshold:null,tooltip:{pointFormat:'\x3cspan style\x3d"color:{series.color}"\x3e\u25cf\x3c/span\x3e {series.name}: \x3cb\x3e{point.low}\x3c/b\x3e - \x3cb\x3e{point.high}\x3c/b\x3e\x3cbr/\x3e'},trackByArea:!0,dataLabels:{align:null,verticalAlign:null,xLow:0,xHigh:0,yLow:0,yHigh:0},states:{hover:{halo:!1}}},
+{pointArrayMap:["low","high"],dataLabelCollections:["dataLabel","dataLabelUpper"],toYData:function(a){return[a.low,a.high]},pointValKey:"low",deferTranslatePolar:!0,highToXY:function(a){var b=this.chart,d=this.xAxis.postTranslate(a.rectPlotX,this.yAxis.len-a.plotHigh);a.plotHighX=d.x-b.plotLeft;a.plotHigh=d.y-b.plotTop},translate:function(){var a=this,b=a.yAxis,d=!!a.modifyValue;h.area.prototype.translate.apply(a);p(a.points,function(e){var g=e.low,c=e.high,f=e.plotY;null===c||null===g?e.isNull=!0:
+(e.plotLow=f,e.plotHigh=b.translate(d?a.modifyValue(c,e):c,0,1,0,1),d&&(e.yBottom=e.plotHigh))});this.chart.polar&&p(this.points,function(b){a.highToXY(b)})},getGraphPath:function(a){var b=[],d=[],e,g=h.area.prototype.getGraphPath,c,f,n;n=this.options;var w=this.chart.polar&&!1!==n.connectEnds,l=n.step;a=a||this.points;for(e=a.length;e--;)c=a[e],c.isNull||w||a[e+1]&&!a[e+1].isNull||d.push({plotX:c.plotX,plotY:c.plotY,doCurve:!1}),f={polarPlotY:c.polarPlotY,rectPlotX:c.rectPlotX,yBottom:c.yBottom,
+plotX:v(c.plotHighX,c.plotX),plotY:c.plotHigh,isNull:c.isNull},d.push(f),b.push(f),c.isNull||w||a[e-1]&&!a[e-1].isNull||d.push({plotX:c.plotX,plotY:c.plotY,doCurve:!1});a=g.call(this,a);l&&(!0===l&&(l="left"),n.step={left:"right",center:"center",right:"left"}[l]);b=g.call(this,b);d=g.call(this,d);n.step=l;n=[].concat(a,b);this.chart.polar||"M"!==d[0]||(d[0]="L");this.graphPath=n;this.areaPath=this.areaPath.concat(a,d);n.isArea=!0;n.xMap=a.xMap;this.areaPath.xMap=a.xMap;return n},drawDataLabels:function(){var a=
+this.data,b=a.length,d,e=[],g=m.prototype,c=this.options.dataLabels,f=c.align,n=c.verticalAlign,w=c.inside,l,q,h=this.chart.inverted;if(c.enabled||this._hasPointLabels){for(d=b;d--;)if(l=a[d])q=w?l.plotHigh<l.plotLow:l.plotHigh>l.plotLow,l.y=l.high,l._plotY=l.plotY,l.plotY=l.plotHigh,e[d]=l.dataLabel,l.dataLabel=l.dataLabelUpper,l.below=q,h?f||(c.align=q?"right":"left"):n||(c.verticalAlign=q?"top":"bottom"),c.x=c.xHigh,c.y=c.yHigh;g.drawDataLabels&&g.drawDataLabels.apply(this,arguments);for(d=b;d--;)if(l=
+a[d])q=w?l.plotHigh<l.plotLow:l.plotHigh>l.plotLow,l.dataLabelUpper=l.dataLabel,l.dataLabel=e[d],l.y=l.low,l.plotY=l._plotY,l.below=!q,h?f||(c.align=q?"left":"right"):n||(c.verticalAlign=q?"bottom":"top"),c.x=c.xLow,c.y=c.yLow;g.drawDataLabels&&g.drawDataLabels.apply(this,arguments)}c.align=f;c.verticalAlign=n},alignDataLabel:function(){h.column.prototype.alignDataLabel.apply(this,arguments)},setStackedPoints:r,getSymbol:r,drawPoints:r})})(y);(function(a){var p=a.seriesType;p("areasplinerange","arearange",
+null,{getPointSpline:a.seriesTypes.spline.prototype.getPointSpline})})(y);(function(a){var p=a.defaultPlotOptions,r=a.each,v=a.merge,m=a.noop,k=a.pick,h=a.seriesType,t=a.seriesTypes.column.prototype;h("columnrange","arearange",v(p.column,p.arearange,{lineWidth:1,pointRange:null}),{translate:function(){var b=this,d=b.yAxis,a=b.xAxis,g=a.startAngleRad,c,f=b.chart,n=b.xAxis.isRadial,w;t.translate.apply(b);r(b.points,function(e){var l=e.shapeArgs,h=b.options.minPointLength,x,u;e.plotHigh=w=d.translate(e.high,
+0,1,0,1);e.plotLow=e.plotY;u=w;x=k(e.rectPlotY,e.plotY)-w;Math.abs(x)<h?(h-=x,x+=h,u-=h/2):0>x&&(x*=-1,u-=x);n?(c=e.barX+g,e.shapeType="path",e.shapeArgs={d:b.polarArc(u+x,u,c,c+e.pointWidth)}):(l.height=x,l.y=u,e.tooltipPos=f.inverted?[d.len+d.pos-f.plotLeft-u-x/2,a.len+a.pos-f.plotTop-l.x-l.width/2,x]:[a.left-f.plotLeft+l.x+l.width/2,d.pos-f.plotTop+u+x/2,x])})},directTouch:!0,trackerGroups:["group","dataLabelsGroup"],drawGraph:m,crispCol:t.crispCol,drawPoints:t.drawPoints,drawTracker:t.drawTracker,
+getColumnMetrics:t.getColumnMetrics,animate:function(){return t.animate.apply(this,arguments)},polarArc:function(){return t.polarArc.apply(this,arguments)},pointAttribs:t.pointAttribs})})(y);(function(a){var p=a.each,r=a.isNumber,v=a.merge,m=a.pick,k=a.pInt,h=a.Series,t=a.seriesType,b=a.TrackerMixin;t("gauge","line",{dataLabels:{enabled:!0,defer:!1,y:15,borderRadius:3,crop:!1,verticalAlign:"top",zIndex:2,borderWidth:1,borderColor:"#cccccc"},dial:{},pivot:{},tooltip:{headerFormat:""},showInLegend:!1},
+{angular:!0,directTouch:!0,drawGraph:a.noop,fixedBox:!0,forceDL:!0,noSharedTooltip:!0,trackerGroups:["group","dataLabelsGroup"],translate:function(){var b=this.yAxis,a=this.options,g=b.center;this.generatePoints();p(this.points,function(c){var d=v(a.dial,c.dial),e=k(m(d.radius,80))*g[2]/200,w=k(m(d.baseLength,70))*e/100,l=k(m(d.rearLength,10))*e/100,q=d.baseWidth||3,h=d.topWidth||1,x=a.overshoot,u=b.startAngleRad+b.translate(c.y,null,null,null,!0);r(x)?(x=x/180*Math.PI,u=Math.max(b.startAngleRad-
+x,Math.min(b.endAngleRad+x,u))):!1===a.wrap&&(u=Math.max(b.startAngleRad,Math.min(b.endAngleRad,u)));u=180*u/Math.PI;c.shapeType="path";c.shapeArgs={d:d.path||["M",-l,-q/2,"L",w,-q/2,e,-h/2,e,h/2,w,q/2,-l,q/2,"z"],translateX:g[0],translateY:g[1],rotation:u};c.plotX=g[0];c.plotY=g[1]})},drawPoints:function(){var b=this,a=b.yAxis.center,g=b.pivot,c=b.options,f=c.pivot,n=b.chart.renderer;p(b.points,function(d){var a=d.graphic,f=d.shapeArgs,e=f.d,g=v(c.dial,d.dial);a?(a.animate(f),f.d=e):(d.graphic=n[d.shapeType](f).attr({rotation:f.rotation,
+zIndex:1}).addClass("highcharts-dial").add(b.group),d.graphic.attr({stroke:g.borderColor||"none","stroke-width":g.borderWidth||0,fill:g.backgroundColor||"#000000"}))});g?g.animate({translateX:a[0],translateY:a[1]}):(b.pivot=n.circle(0,0,m(f.radius,5)).attr({zIndex:2}).addClass("highcharts-pivot").translate(a[0],a[1]).add(b.group),b.pivot.attr({"stroke-width":f.borderWidth||0,stroke:f.borderColor||"#cccccc",fill:f.backgroundColor||"#000000"}))},animate:function(b){var d=this;b||(p(d.points,function(b){var c=
+b.graphic;c&&(c.attr({rotation:180*d.yAxis.startAngleRad/Math.PI}),c.animate({rotation:b.shapeArgs.rotation},d.options.animation))}),d.animate=null)},render:function(){this.group=this.plotGroup("group","series",this.visible?"visible":"hidden",this.options.zIndex,this.chart.seriesGroup);h.prototype.render.call(this);this.group.clip(this.chart.clipRect)},setData:function(b,a){h.prototype.setData.call(this,b,!1);this.processData();this.generatePoints();m(a,!0)&&this.chart.redraw()},drawTracker:b&&b.drawTrackerPoint},
+{setState:function(b){this.state=b}})})(y);(function(a){var p=a.each,r=a.noop,v=a.pick,m=a.seriesType,k=a.seriesTypes;m("boxplot","column",{threshold:null,tooltip:{pointFormat:'\x3cspan style\x3d"color:{point.color}"\x3e\u25cf\x3c/span\x3e \x3cb\x3e {series.name}\x3c/b\x3e\x3cbr/\x3eMaximum: {point.high}\x3cbr/\x3eUpper quartile: {point.q3}\x3cbr/\x3eMedian: {point.median}\x3cbr/\x3eLower quartile: {point.q1}\x3cbr/\x3eMinimum: {point.low}\x3cbr/\x3e'},whiskerLength:"50%",fillColor:"#ffffff",lineWidth:1,
+medianWidth:2,states:{hover:{brightness:-.3}},whiskerWidth:2},{pointArrayMap:["low","q1","median","q3","high"],toYData:function(a){return[a.low,a.q1,a.median,a.q3,a.high]},pointValKey:"high",pointAttribs:function(a){var h=this.options,b=a&&a.color||this.color;return{fill:a.fillColor||h.fillColor||b,stroke:h.lineColor||b,"stroke-width":h.lineWidth||0}},drawDataLabels:r,translate:function(){var a=this.yAxis,m=this.pointArrayMap;k.column.prototype.translate.apply(this);p(this.points,function(b){p(m,
+function(d){null!==b[d]&&(b[d+"Plot"]=a.translate(b[d],0,1,0,1))})})},drawPoints:function(){var a=this,k=a.options,b=a.chart.renderer,d,e,g,c,f,n,w=0,l,q,m,x,u=!1!==a.doQuartiles,r,z=a.options.whiskerLength;p(a.points,function(h){var A=h.graphic,p=A?"animate":"attr",t=h.shapeArgs,y={},D={},H={},I=h.color||a.color;void 0!==h.plotY&&(l=t.width,q=Math.floor(t.x),m=q+l,x=Math.round(l/2),d=Math.floor(u?h.q1Plot:h.lowPlot),e=Math.floor(u?h.q3Plot:h.lowPlot),g=Math.floor(h.highPlot),c=Math.floor(h.lowPlot),
+A||(h.graphic=A=b.g("point").add(a.group),h.stem=b.path().addClass("highcharts-boxplot-stem").add(A),z&&(h.whiskers=b.path().addClass("highcharts-boxplot-whisker").add(A)),u&&(h.box=b.path(void 0).addClass("highcharts-boxplot-box").add(A)),h.medianShape=b.path(void 0).addClass("highcharts-boxplot-median").add(A)),y.stroke=h.stemColor||k.stemColor||I,y["stroke-width"]=v(h.stemWidth,k.stemWidth,k.lineWidth),y.dashstyle=h.stemDashStyle||k.stemDashStyle,h.stem.attr(y),z&&(D.stroke=h.whiskerColor||k.whiskerColor||
+I,D["stroke-width"]=v(h.whiskerWidth,k.whiskerWidth,k.lineWidth),h.whiskers.attr(D)),u&&(A=a.pointAttribs(h),h.box.attr(A)),H.stroke=h.medianColor||k.medianColor||I,H["stroke-width"]=v(h.medianWidth,k.medianWidth,k.lineWidth),h.medianShape.attr(H),n=h.stem.strokeWidth()%2/2,w=q+x+n,h.stem[p]({d:["M",w,e,"L",w,g,"M",w,d,"L",w,c]}),u&&(n=h.box.strokeWidth()%2/2,d=Math.floor(d)+n,e=Math.floor(e)+n,q+=n,m+=n,h.box[p]({d:["M",q,e,"L",q,d,"L",m,d,"L",m,e,"L",q,e,"z"]})),z&&(n=h.whiskers.strokeWidth()%2/
+2,g+=n,c+=n,r=/%$/.test(z)?x*parseFloat(z)/100:z/2,h.whiskers[p]({d:["M",w-r,g,"L",w+r,g,"M",w-r,c,"L",w+r,c]})),f=Math.round(h.medianPlot),n=h.medianShape.strokeWidth()%2/2,f+=n,h.medianShape[p]({d:["M",q,f,"L",m,f]}))})},setStackedPoints:r})})(y);(function(a){var p=a.each,r=a.noop,v=a.seriesType,m=a.seriesTypes;v("errorbar","boxplot",{color:"#000000",grouping:!1,linkedTo:":previous",tooltip:{pointFormat:'\x3cspan style\x3d"color:{point.color}"\x3e\u25cf\x3c/span\x3e {series.name}: \x3cb\x3e{point.low}\x3c/b\x3e - \x3cb\x3e{point.high}\x3c/b\x3e\x3cbr/\x3e'},
+whiskerWidth:null},{type:"errorbar",pointArrayMap:["low","high"],toYData:function(a){return[a.low,a.high]},pointValKey:"high",doQuartiles:!1,drawDataLabels:m.arearange?function(){var a=this.pointValKey;m.arearange.prototype.drawDataLabels.call(this);p(this.data,function(h){h.y=h[a]})}:r,getColumnMetrics:function(){return this.linkedParent&&this.linkedParent.columnMetrics||m.column.prototype.getColumnMetrics.call(this)}})})(y);(function(a){var p=a.correctFloat,r=a.isNumber,v=a.pick,m=a.Point,k=a.Series,
+h=a.seriesType,t=a.seriesTypes;h("waterfall","column",{dataLabels:{inside:!0},lineWidth:1,lineColor:"#333333",dashStyle:"dot",borderColor:"#333333",states:{hover:{lineWidthPlus:0}}},{pointValKey:"y",translate:function(){var b=this.options,a=this.yAxis,e,g,c,f,n,h,l,q,k,m,u=v(b.minPointLength,5),r=u/2,z=b.threshold,y=b.stacking,B;t.column.prototype.translate.apply(this);q=k=z;g=this.points;e=0;for(b=g.length;e<b;e++)c=g[e],l=this.processedYData[e],f=c.shapeArgs,n=y&&a.stacks[(this.negStacks&&l<z?"-":
+"")+this.stackKey],B=this.getStackIndicator(B,c.x,this.index),m=n?n[c.x].points[B.key]:[0,l],c.isSum?c.y=p(l):c.isIntermediateSum&&(c.y=p(l-k)),h=Math.max(q,q+c.y)+m[0],f.y=a.toPixels(h,!0),c.isSum?(f.y=a.toPixels(m[1],!0),f.height=Math.min(a.toPixels(m[0],!0),a.len)-f.y):c.isIntermediateSum?(f.y=a.toPixels(m[1],!0),f.height=Math.min(a.toPixels(k,!0),a.len)-f.y,k=m[1]):(f.height=0<l?a.toPixels(q,!0)-f.y:a.toPixels(q,!0)-a.toPixels(q-l,!0),q+=n&&n[c.x]?n[c.x].total:l),0>f.height&&(f.y+=f.height,f.height*=
+-1),c.plotY=f.y=Math.round(f.y)-this.borderWidth%2/2,f.height=Math.max(Math.round(f.height),.001),c.yBottom=f.y+f.height,f.height<=u&&!c.isNull?(f.height=u,f.y-=r,c.plotY=f.y,c.minPointLengthOffset=0>c.y?-r:r):c.minPointLengthOffset=0,f=c.plotY+(c.negative?f.height:0),this.chart.inverted?c.tooltipPos[0]=a.len-f:c.tooltipPos[1]=f},processData:function(b){var a=this.yData,e=this.options.data,g,c=a.length,f,n,h,l,q,m;n=f=h=l=this.options.threshold||0;for(m=0;m<c;m++)q=a[m],g=e&&e[m]?e[m]:{},"sum"===
+q||g.isSum?a[m]=p(n):"intermediateSum"===q||g.isIntermediateSum?a[m]=p(f):(n+=q,f+=q),h=Math.min(n,h),l=Math.max(n,l);k.prototype.processData.call(this,b);this.options.stacking||(this.dataMin=h,this.dataMax=l)},toYData:function(b){return b.isSum?0===b.x?null:"sum":b.isIntermediateSum?0===b.x?null:"intermediateSum":b.y},pointAttribs:function(b,a){var d=this.options.upColor;d&&!b.options.color&&(b.color=0<b.y?d:null);b=t.column.prototype.pointAttribs.call(this,b,a);delete b.dashstyle;return b},getGraphPath:function(){return["M",
+0,0]},getCrispPath:function(){var b=this.data,a=b.length,e=this.graph.strokeWidth()+this.borderWidth,e=Math.round(e)%2/2,g=[],c,f,n;for(n=1;n<a;n++)f=b[n].shapeArgs,c=b[n-1].shapeArgs,f=["M",c.x+c.width,c.y+b[n-1].minPointLengthOffset+e,"L",f.x,c.y+b[n-1].minPointLengthOffset+e],0>b[n-1].y&&(f[2]+=c.height,f[5]+=c.height),g=g.concat(f);return g},drawGraph:function(){k.prototype.drawGraph.call(this);this.graph.attr({d:this.getCrispPath()})},setStackedPoints:function(){var b=this.options,a,e;k.prototype.setStackedPoints.apply(this,
+arguments);a=this.stackedYData?this.stackedYData.length:0;for(e=1;e<a;e++)b.data[e].isSum||b.data[e].isIntermediateSum||(this.stackedYData[e]+=this.stackedYData[e-1])},getExtremes:function(){if(this.options.stacking)return k.prototype.getExtremes.apply(this,arguments)}},{getClassName:function(){var b=m.prototype.getClassName.call(this);this.isSum?b+=" highcharts-sum":this.isIntermediateSum&&(b+=" highcharts-intermediate-sum");return b},isValid:function(){return r(this.y,!0)||this.isSum||this.isIntermediateSum}})})(y);
+(function(a){var p=a.Series,r=a.seriesType,v=a.seriesTypes;r("polygon","scatter",{marker:{enabled:!1,states:{hover:{enabled:!1}}},stickyTracking:!1,tooltip:{followPointer:!0,pointFormat:""},trackByArea:!0},{type:"polygon",getGraphPath:function(){for(var a=p.prototype.getGraphPath.call(this),k=a.length+1;k--;)(k===a.length||"M"===a[k])&&0<k&&a.splice(k,0,"z");return this.areaPath=a},drawGraph:function(){this.options.fillColor=this.color;v.area.prototype.drawGraph.call(this)},drawLegendSymbol:a.LegendSymbolMixin.drawRectangle,
+drawTracker:p.prototype.drawTracker,setStackedPoints:a.noop})})(y);(function(a){var p=a.arrayMax,r=a.arrayMin,v=a.Axis,m=a.color,k=a.each,h=a.isNumber,t=a.noop,b=a.pick,d=a.pInt,e=a.Point,g=a.Series,c=a.seriesType,f=a.seriesTypes;c("bubble","scatter",{dataLabels:{formatter:function(){return this.point.z},inside:!0,verticalAlign:"middle"},marker:{lineColor:null,lineWidth:1,radius:null,states:{hover:{radiusPlus:0}},symbol:"circle"},minSize:8,maxSize:"20%",softThreshold:!1,states:{hover:{halo:{size:5}}},
+tooltip:{pointFormat:"({point.x}, {point.y}), Size: {point.z}"},turboThreshold:0,zThreshold:0,zoneAxis:"z"},{pointArrayMap:["y","z"],parallelArrays:["x","y","z"],trackerGroups:["markerGroup","dataLabelsGroup"],bubblePadding:!0,zoneAxis:"z",directTouch:!0,pointAttribs:function(a,c){var d=b(this.options.marker.fillOpacity,.5);a=g.prototype.pointAttribs.call(this,a,c);1!==d&&(a.fill=m(a.fill).setOpacity(d).get("rgba"));return a},getRadii:function(b,a,c,d){var f,e,g,n=this.zData,h=[],l=this.options,q=
+"width"!==l.sizeBy,k=l.zThreshold,m=a-b;e=0;for(f=n.length;e<f;e++)g=n[e],l.sizeByAbsoluteValue&&null!==g&&(g=Math.abs(g-k),a=Math.max(a-k,Math.abs(b-k)),b=0),null===g?g=null:g<b?g=c/2-1:(g=0<m?(g-b)/m:.5,q&&0<=g&&(g=Math.sqrt(g)),g=Math.ceil(c+g*(d-c))/2),h.push(g);this.radii=h},animate:function(b){var a=this.options.animation;b||(k(this.points,function(b){var c=b.graphic,d;c&&c.width&&(d={x:c.x,y:c.y,width:c.width,height:c.height},c.attr({x:b.plotX,y:b.plotY,width:1,height:1}),c.animate(d,a))}),
+this.animate=null)},translate:function(){var b,c=this.data,d,e,g=this.radii;f.scatter.prototype.translate.call(this);for(b=c.length;b--;)d=c[b],e=g?g[b]:0,h(e)&&e>=this.minPxSize/2?(d.marker=a.extend(d.marker,{radius:e,width:2*e,height:2*e}),d.dlBox={x:d.plotX-e,y:d.plotY-e,width:2*e,height:2*e}):d.shapeArgs=d.plotY=d.dlBox=void 0},alignDataLabel:f.column.prototype.alignDataLabel,buildKDTree:t,applyZones:t},{haloPath:function(b){return e.prototype.haloPath.call(this,0===b?0:(this.marker?this.marker.radius||
+0:0)+b)},ttBelow:!1});v.prototype.beforePadding=function(){var a=this,c=this.len,f=this.chart,e=0,g=c,m=this.isXAxis,t=m?"xData":"yData",v=this.min,y={},J=Math.min(f.plotWidth,f.plotHeight),B=Number.MAX_VALUE,E=-Number.MAX_VALUE,F=this.max-v,C=c/F,G=[];k(this.series,function(c){var e=c.options;!c.bubblePadding||!c.visible&&f.options.chart.ignoreHiddenSeries||(a.allowZoomOutside=!0,G.push(c),m&&(k(["minSize","maxSize"],function(b){var a=e[b],c=/%$/.test(a),a=d(a);y[b]=c?J*a/100:a}),c.minPxSize=y.minSize,
+c.maxPxSize=Math.max(y.maxSize,y.minSize),c=c.zData,c.length&&(B=b(e.zMin,Math.min(B,Math.max(r(c),!1===e.displayNegative?e.zThreshold:-Number.MAX_VALUE))),E=b(e.zMax,Math.max(E,p(c))))))});k(G,function(b){var c=b[t],d=c.length,f;m&&b.getRadii(B,E,b.minPxSize,b.maxPxSize);if(0<F)for(;d--;)h(c[d])&&a.dataMin<=c[d]&&c[d]<=a.dataMax&&(f=b.radii[d],e=Math.min((c[d]-v)*C-f,e),g=Math.max((c[d]-v)*C+f,g))});G.length&&0<F&&!this.isLog&&(g-=c,C*=(c+e-g)/c,k([["min","userMin",e],["max","userMax",g]],function(c){void 0===
+b(a.options[c[0]],a[c[1]])&&(a[c[0]]+=c[2]/C)}))}})(y);(function(a){function p(b,a){var d=this.chart,g=this.options.animation,c=this.group,f=this.markerGroup,h=this.xAxis.center,k=d.plotLeft,l=d.plotTop;d.polar?d.renderer.isSVG&&(!0===g&&(g={}),a?(b={translateX:h[0]+k,translateY:h[1]+l,scaleX:.001,scaleY:.001},c.attr(b),f&&f.attr(b)):(b={translateX:k,translateY:l,scaleX:1,scaleY:1},c.animate(b,g),f&&f.animate(b,g),this.animate=null)):b.call(this,a)}var r=a.each,v=a.pick,m=a.seriesTypes,k=a.wrap,h=
+a.Series.prototype,t=a.Pointer.prototype;h.searchPointByAngle=function(b){var a=this.chart,e=this.xAxis.pane.center;return this.searchKDTree({clientX:180+-180/Math.PI*Math.atan2(b.chartX-e[0]-a.plotLeft,b.chartY-e[1]-a.plotTop)})};h.getConnectors=function(b,a,e,g){var c,d,h,k,l,m,p,r;d=g?1:0;c=0<=a&&a<=b.length-1?a:0>a?b.length-1+a:0;a=0>c-1?b.length-(1+d):c-1;d=c+1>b.length-1?d:c+1;h=b[a];d=b[d];k=h.plotX;h=h.plotY;l=d.plotX;m=d.plotY;d=b[c].plotX;c=b[c].plotY;k=(1.5*d+k)/2.5;h=(1.5*c+h)/2.5;l=(1.5*
+d+l)/2.5;p=(1.5*c+m)/2.5;m=Math.sqrt(Math.pow(k-d,2)+Math.pow(h-c,2));r=Math.sqrt(Math.pow(l-d,2)+Math.pow(p-c,2));k=Math.atan2(h-c,k-d);p=Math.PI/2+(k+Math.atan2(p-c,l-d))/2;Math.abs(k-p)>Math.PI/2&&(p-=Math.PI);k=d+Math.cos(p)*m;h=c+Math.sin(p)*m;l=d+Math.cos(Math.PI+p)*r;p=c+Math.sin(Math.PI+p)*r;d={rightContX:l,rightContY:p,leftContX:k,leftContY:h,plotX:d,plotY:c};e&&(d.prevPointCont=this.getConnectors(b,a,!1,g));return d};k(h,"buildKDTree",function(b){this.chart.polar&&(this.kdByAngle?this.searchPoint=
+this.searchPointByAngle:this.options.findNearestPointBy="xy");b.apply(this)});h.toXY=function(b){var a,e=this.chart,g=b.plotX;a=b.plotY;b.rectPlotX=g;b.rectPlotY=a;a=this.xAxis.postTranslate(b.plotX,this.yAxis.len-a);b.plotX=b.polarPlotX=a.x-e.plotLeft;b.plotY=b.polarPlotY=a.y-e.plotTop;this.kdByAngle?(e=(g/Math.PI*180+this.xAxis.pane.options.startAngle)%360,0>e&&(e+=360),b.clientX=e):b.clientX=b.plotX};m.spline&&(k(m.spline.prototype,"getPointSpline",function(a,d,e,g){this.chart.polar?g?(a=this.getConnectors(d,
+g,!0,this.connectEnds),a=["C",a.prevPointCont.rightContX,a.prevPointCont.rightContY,a.leftContX,a.leftContY,a.plotX,a.plotY]):a=["M",e.plotX,e.plotY]:a=a.call(this,d,e,g);return a}),m.areasplinerange&&(m.areasplinerange.prototype.getPointSpline=m.spline.prototype.getPointSpline));k(h,"translate",function(a){var b=this.chart;a.call(this);if(b.polar&&(this.kdByAngle=b.tooltip&&b.tooltip.shared,!this.preventPostTranslate))for(a=this.points,b=a.length;b--;)this.toXY(a[b])});k(h,"getGraphPath",function(a,
+d){var b=this,g,c,f;if(this.chart.polar){d=d||this.points;for(g=0;g<d.length;g++)if(!d[g].isNull){c=g;break}!1!==this.options.connectEnds&&void 0!==c&&(this.connectEnds=!0,d.splice(d.length,0,d[c]),f=!0);r(d,function(a){void 0===a.polarPlotY&&b.toXY(a)})}g=a.apply(this,[].slice.call(arguments,1));f&&d.pop();return g});k(h,"animate",p);m.column&&(m=m.column.prototype,m.polarArc=function(a,d,e,g){var b=this.xAxis.center,f=this.yAxis.len;return this.chart.renderer.symbols.arc(b[0],b[1],f-d,null,{start:e,
+end:g,innerR:f-v(a,f)})},k(m,"animate",p),k(m,"translate",function(a){var b=this.xAxis,e=b.startAngleRad,g,c,f;this.preventPostTranslate=!0;a.call(this);if(b.isRadial)for(g=this.points,f=g.length;f--;)c=g[f],a=c.barX+e,c.shapeType="path",c.shapeArgs={d:this.polarArc(c.yBottom,c.plotY,a,a+c.pointWidth)},this.toXY(c),c.tooltipPos=[c.plotX,c.plotY],c.ttBelow=c.plotY>b.center[1]}),k(m,"alignDataLabel",function(a,d,e,g,c,f){this.chart.polar?(a=d.rectPlotX/Math.PI*180,null===g.align&&(g.align=20<a&&160>
+a?"left":200<a&&340>a?"right":"center"),null===g.verticalAlign&&(g.verticalAlign=45>a||315<a?"bottom":135<a&&225>a?"top":"middle"),h.alignDataLabel.call(this,d,e,g,c,f)):a.call(this,d,e,g,c,f)}));k(t,"getCoordinates",function(a,d){var b=this.chart,g={xAxis:[],yAxis:[]};b.polar?r(b.axes,function(a){var c=a.isXAxis,e=a.center,h=d.chartX-e[0]-b.plotLeft,e=d.chartY-e[1]-b.plotTop;g[c?"xAxis":"yAxis"].push({axis:a,value:a.translate(c?Math.PI-Math.atan2(h,e):Math.sqrt(Math.pow(h,2)+Math.pow(e,2)),!0)})}):
+g=a.call(this,d);return g});k(a.Chart.prototype,"getAxes",function(b){this.pane||(this.pane=[]);r(a.splat(this.options.pane),function(b){new a.Pane(b,this)},this);b.call(this)});k(a.Chart.prototype,"drawChartBox",function(a){a.call(this);r(this.pane,function(a){a.render()})});k(a.Chart.prototype,"get",function(b,d){return a.find(this.pane,function(a){return a.options.id===d})||b.call(this,d)})})(y)});
+
+/*
+  Highcharts JS v5.0.10 (2017-03-31)
+ Solid angular gauge module
+
+ (c) 2010-2017 Torstein Honsi
+
+ License: www.highcharts.com/license
+*/
+(function(l){"object"===typeof module&&module.exports?module.exports=l:l(Highcharts)})(function(l){(function(f){var l=f.pInt,u=f.pick,m=f.each,v=f.isNumber,w=f.wrap,n;w(f.Renderer.prototype.symbols,"arc",function(a,d,e,c,f,g){a=a(d,e,c,f,g);g.rounded&&(c=((g.r||c)-g.innerR)/2,g=["A",c,c,0,1,1,a[12],a[13]],a.splice.apply(a,[a.length-1,0].concat(["A",c,c,0,1,1,a[1],a[2]])),a.splice.apply(a,[11,3].concat(g)));return a});n={initDataClasses:function(a){var d=this,e=this.chart,c,t=0,g=this.options;this.dataClasses=
+c=[];m(a.dataClasses,function(h,b){h=f.merge(h);c.push(h);h.color||("category"===g.dataClassColor?(b=e.options.colors,h.color=b[t++],t===b.length&&(t=0)):h.color=d.tweenColors(f.color(g.minColor),f.color(g.maxColor),b/(a.dataClasses.length-1)))})},initStops:function(a){this.stops=a.stops||[[0,this.options.minColor],[1,this.options.maxColor]];m(this.stops,function(a){a.color=f.color(a[1])})},toColor:function(a,d){var e=this.stops,c,f,g=this.dataClasses,h,b;if(g)for(b=g.length;b--;){if(h=g[b],c=h.from,
+e=h.to,(void 0===c||a>=c)&&(void 0===e||a<=e)){f=h.color;d&&(d.dataClass=b);break}}else{this.isLog&&(a=this.val2lin(a));a=1-(this.max-a)/(this.max-this.min);for(b=e.length;b--&&!(a>e[b][0]););c=e[b]||e[b+1];e=e[b+1]||c;a=1-(e[0]-a)/(e[0]-c[0]||1);f=this.tweenColors(c.color,e.color,a)}return f},tweenColors:function(a,d,e){var c;d.rgba.length&&a.rgba.length?(a=a.rgba,d=d.rgba,c=1!==d[3]||1!==a[3],a=(c?"rgba(":"rgb(")+Math.round(d[0]+(a[0]-d[0])*(1-e))+","+Math.round(d[1]+(a[1]-d[1])*(1-e))+","+Math.round(d[2]+
+(a[2]-d[2])*(1-e))+(c?","+(d[3]+(a[3]-d[3])*(1-e)):"")+")"):a=d.input||"none";return a}};m(["fill","stroke"],function(a){f.Fx.prototype[a+"Setter"]=function(){this.elem.attr(a,n.tweenColors(f.color(this.start),f.color(this.end),this.pos),null,!0)}});f.seriesType("solidgauge","gauge",{colorByPoint:!0},{translate:function(){var a=this.yAxis;f.extend(a,n);!a.dataClasses&&a.options.dataClasses&&a.initDataClasses(a.options);a.initStops(a.options);f.seriesTypes.gauge.prototype.translate.call(this)},drawPoints:function(){var a=
+this,d=a.yAxis,e=d.center,c=a.options,t=a.chart.renderer,g=c.overshoot,h=v(g)?g/180*Math.PI:0,b;v(c.threshold)&&(b=d.startAngleRad+d.translate(c.threshold,null,null,null,!0));this.thresholdAngleRad=u(b,d.startAngleRad);m(a.points,function(b){var g=b.graphic,k=d.startAngleRad+d.translate(b.y,null,null,null,!0),m=l(u(b.options.radius,c.radius,100))*e[2]/200,p=l(u(b.options.innerRadius,c.innerRadius,60))*e[2]/200,q=d.toColor(b.y,b),r=Math.min(d.startAngleRad,d.endAngleRad),n=Math.max(d.startAngleRad,
+d.endAngleRad);"none"===q&&(q=b.color||a.color||"none");"none"!==q&&(b.color=q);k=Math.max(r-h,Math.min(n+h,k));!1===c.wrap&&(k=Math.max(r,Math.min(n,k)));r=Math.min(k,a.thresholdAngleRad);k=Math.max(k,a.thresholdAngleRad);k-r>2*Math.PI&&(k=r+2*Math.PI);b.shapeArgs=p={x:e[0],y:e[1],r:m,innerR:p,start:r,end:k,rounded:c.rounded};b.startR=m;g?(b=p.d,g.animate(f.extend({fill:q},p)),b&&(p.d=b)):(b.graphic=t.arc(p).addClass("highcharts-point").attr({fill:q,"sweep-flag":0}).add(a.group),"square"!==c.linecap&&
+b.graphic.attr({"stroke-linecap":"round","stroke-linejoin":"round"}),b.graphic.attr({stroke:c.borderColor||"none","stroke-width":c.borderWidth||0}))})},animate:function(a){a||(this.startAngleRad=this.thresholdAngleRad,f.seriesTypes.pie.prototype.animate.call(this,a))}})})(l)});
+
 /*
  * [js-sha1]{@link https://github.com/emn178/js-sha1}
  *
@@ -13035,26 +12796,404 @@ if (typeof jQuery === 'undefined') {
   }
 })();
 
-/*!
- * Distpicker v1.0.4
- * https://github.com/fengyuanchen/distpicker
- *
- * Copyright (c) 2014-2016 Fengyuan Chen
- * Released under the MIT license
- *
- * Date: 2016-06-01T15:05:52.606Z
+/*
+ * TouchSlider v1.0.5
+ * By qiqiboy, http://www.qiqiboy.com, http://weibo.com/qiqiboy, 2012/04/11
  */
-!function(n){"function"==typeof define&&define.amd?define("ChineseDistricts",[],n):n()}(function(){var n={86:{11e4:"北京市",12e4:"天津市",13e4:"河北省",14e4:"山西省",15e4:"内蒙古自治区",21e4:"辽宁省",22e4:"吉林省",23e4:"黑龙江省",31e4:"上海市",32e4:"江苏省",33e4:"浙江省",34e4:"安徽省",35e4:"福建省",36e4:"江西省",37e4:"山东省",41e4:"河南省",42e4:"湖北省",43e4:"湖南省",44e4:"广东省",45e4:"广西壮族自治区",46e4:"海南省",5e5:"重庆市",51e4:"四川省",52e4:"贵州省",53e4:"云南省",54e4:"西藏自治区",61e4:"陕西省",62e4:"甘肃省",63e4:"青海省",64e4:"宁夏回族自治区",65e4:"新疆维吾尔自治区",71e4:"台湾省",81e4:"香港特别行政区",82e4:"澳门特别行政区"},11e4:{110100:"北京市市辖区"},110100:{110101:"东城区",110102:"西城区",110105:"朝阳区",110106:"丰台区",110107:"石景山区",110108:"海淀区",110109:"门头沟区",110111:"房山区",110112:"通州区",110113:"顺义区",110114:"昌平区",110115:"大兴区",110116:"怀柔区",110117:"平谷区",110118:"密云区",110119:"延庆区"},12e4:{120100:"天津市市辖区",120200:"天津市郊县"},120100:{120101:"和平区",120102:"河东区",120103:"河西区",120104:"南开区",120105:"河北区",120106:"红桥区",120110:"东丽区",120111:"西青区",120112:"津南区",120113:"北辰区",120114:"武清区",120115:"宝坻区",120116:"滨海新区",120117:"宁河区",120118:"静海区",120225:"蓟县"},13e4:{130100:"石家庄市",130200:"唐山市",130300:"秦皇岛市",130400:"邯郸市",130500:"邢台市",130600:"保定市",130700:"张家口市",130800:"承德市",130900:"沧州市",131e3:"廊坊市",131100:"衡水市"},130100:{130102:"长安区",130104:"桥西区",130105:"新华区",130107:"井陉矿区",130108:"裕华区",130109:"藁城区",130110:"鹿泉区",130111:"栾城区",130121:"井陉县",130123:"正定县",130125:"行唐县",130126:"灵寿县",130127:"高邑县",130128:"深泽县",130129:"赞皇县",130130:"无极县",130131:"平山县",130132:"元氏县",130133:"赵县",130181:"辛集市",130183:"晋州市",130184:"新乐市"},130200:{130202:"路南区",130203:"路北区",130204:"古冶区",130205:"开平区",130207:"丰南区",130208:"丰润区",130209:"曹妃甸区",130223:"滦县",130224:"滦南县",130225:"乐亭县",130227:"迁西县",130229:"玉田县",130281:"遵化市",130283:"迁安市"},130300:{130302:"海港区",130303:"山海关区",130304:"北戴河区",130306:"抚宁区",130321:"青龙满族自治县",130322:"昌黎县",130324:"卢龙县"},130400:{130402:"邯山区",130403:"丛台区",130404:"复兴区",130406:"峰峰矿区",130421:"邯郸县",130423:"临漳县",130424:"成安县",130425:"大名县",130426:"涉县",130427:"磁县",130428:"肥乡县",130429:"永年县",130430:"邱县",130431:"鸡泽县",130432:"广平县",130433:"馆陶县",130434:"魏县",130435:"曲周县",130481:"武安市"},130500:{130502:"桥东区",130503:"桥西区",130521:"邢台县",130522:"临城县",130523:"内丘县",130524:"柏乡县",130525:"隆尧县",130526:"任县",130527:"南和县",130528:"宁晋县",130529:"巨鹿县",130530:"新河县",130531:"广宗县",130532:"平乡县",130533:"威县",130534:"清河县",130535:"临西县",130581:"南宫市",130582:"沙河市"},130600:{130602:"竞秀区",130606:"莲池区",130607:"满城区",130608:"清苑区",130609:"徐水区",130623:"涞水县",130624:"阜平县",130626:"定兴县",130627:"唐县",130628:"高阳县",130629:"容城县",130630:"涞源县",130631:"望都县",130632:"安新县",130633:"易县",130634:"曲阳县",130635:"蠡县",130636:"顺平县",130637:"博野县",130638:"雄县",130681:"涿州市",130682:"定州市",130683:"安国市",130684:"高碑店市"},130700:{130702:"桥东区",130703:"桥西区",130705:"宣化区",130706:"下花园区",130721:"宣化县",130722:"张北县",130723:"康保县",130724:"沽源县",130725:"尚义县",130726:"蔚县",130727:"阳原县",130728:"怀安县",130729:"万全县",130730:"怀来县",130731:"涿鹿县",130732:"赤城县",130733:"崇礼县"},130800:{130802:"双桥区",130803:"双滦区",130804:"鹰手营子矿区",130821:"承德县",130822:"兴隆县",130823:"平泉县",130824:"滦平县",130825:"隆化县",130826:"丰宁满族自治县",130827:"宽城满族自治县",130828:"围场满族蒙古族自治县"},130900:{130902:"新华区",130903:"运河区",130921:"沧县",130922:"青县",130923:"东光县",130924:"海兴县",130925:"盐山县",130926:"肃宁县",130927:"南皮县",130928:"吴桥县",130929:"献县",130930:"孟村回族自治县",130981:"泊头市",130982:"任丘市",130983:"黄骅市",130984:"河间市"},131e3:{131002:"安次区",131003:"广阳区",131022:"固安县",131023:"永清县",131024:"香河县",131025:"大城县",131026:"文安县",131028:"大厂回族自治县",131081:"霸州市",131082:"三河市"},131100:{131102:"桃城区",131121:"枣强县",131122:"武邑县",131123:"武强县",131124:"饶阳县",131125:"安平县",131126:"故城县",131127:"景县",131128:"阜城县",131181:"冀州市",131182:"深州市"},14e4:{140100:"太原市",140200:"大同市",140300:"阳泉市",140400:"长治市",140500:"晋城市",140600:"朔州市",140700:"晋中市",140800:"运城市",140900:"忻州市",141e3:"临汾市",141100:"吕梁市"},140100:{140105:"小店区",140106:"迎泽区",140107:"杏花岭区",140108:"尖草坪区",140109:"万柏林区",140110:"晋源区",140121:"清徐县",140122:"阳曲县",140123:"娄烦县",140181:"古交市"},140200:{140202:"城区",140203:"矿区",140211:"南郊区",140212:"新荣区",140221:"阳高县",140222:"天镇县",140223:"广灵县",140224:"灵丘县",140225:"浑源县",140226:"左云县",140227:"大同县"},140300:{140302:"城区",140303:"矿区",140311:"郊区",140321:"平定县",140322:"盂县"},140400:{140402:"城区",140411:"郊区",140421:"长治县",140423:"襄垣县",140424:"屯留县",140425:"平顺县",140426:"黎城县",140427:"壶关县",140428:"长子县",140429:"武乡县",140430:"沁县",140431:"沁源县",140481:"潞城市"},140500:{140502:"城区",140521:"沁水县",140522:"阳城县",140524:"陵川县",140525:"泽州县",140581:"高平市"},140600:{140602:"朔城区",140603:"平鲁区",140621:"山阴县",140622:"应县",140623:"右玉县",140624:"怀仁县"},140700:{140702:"榆次区",140721:"榆社县",140722:"左权县",140723:"和顺县",140724:"昔阳县",140725:"寿阳县",140726:"太谷县",140727:"祁县",140728:"平遥县",140729:"灵石县",140781:"介休市"},140800:{140802:"盐湖区",140821:"临猗县",140822:"万荣县",140823:"闻喜县",140824:"稷山县",140825:"新绛县",140826:"绛县",140827:"垣曲县",140828:"夏县",140829:"平陆县",140830:"芮城县",140881:"永济市",140882:"河津市"},140900:{140902:"忻府区",140921:"定襄县",140922:"五台县",140923:"代县",140924:"繁峙县",140925:"宁武县",140926:"静乐县",140927:"神池县",140928:"五寨县",140929:"岢岚县",140930:"河曲县",140931:"保德县",140932:"偏关县",140981:"原平市"},141e3:{141002:"尧都区",141021:"曲沃县",141022:"翼城县",141023:"襄汾县",141024:"洪洞县",141025:"古县",141026:"安泽县",141027:"浮山县",141028:"吉县",141029:"乡宁县",141030:"大宁县",141031:"隰县",141032:"永和县",141033:"蒲县",141034:"汾西县",141081:"侯马市",141082:"霍州市"},141100:{141102:"离石区",141121:"文水县",141122:"交城县",141123:"兴县",141124:"临县",141125:"柳林县",141126:"石楼县",141127:"岚县",141128:"方山县",141129:"中阳县",141130:"交口县",141181:"孝义市",141182:"汾阳市"},15e4:{150100:"呼和浩特市",150200:"包头市",150300:"乌海市",150400:"赤峰市",150500:"通辽市",150600:"鄂尔多斯市",150700:"呼伦贝尔市",150800:"巴彦淖尔市",150900:"乌兰察布市",152200:"兴安盟",152500:"锡林郭勒盟",152900:"阿拉善盟"},150100:{150102:"新城区",150103:"回民区",150104:"玉泉区",150105:"赛罕区",150121:"土默特左旗",150122:"托克托县",150123:"和林格尔县",150124:"清水河县",150125:"武川县"},150200:{150202:"东河区",150203:"昆都仑区",150204:"青山区",150205:"石拐区",150206:"白云鄂博矿区",150207:"九原区",150221:"土默特右旗",150222:"固阳县",150223:"达尔罕茂明安联合旗"},150300:{150302:"海勃湾区",150303:"海南区",150304:"乌达区"},150400:{150402:"红山区",150403:"元宝山区",150404:"松山区",150421:"阿鲁科尔沁旗",150422:"巴林左旗",150423:"巴林右旗",150424:"林西县",150425:"克什克腾旗",150426:"翁牛特旗",150428:"喀喇沁旗",150429:"宁城县",150430:"敖汉旗"},150500:{150502:"科尔沁区",150521:"科尔沁左翼中旗",150522:"科尔沁左翼后旗",150523:"开鲁县",150524:"库伦旗",150525:"奈曼旗",150526:"扎鲁特旗",150581:"霍林郭勒市"},150600:{150602:"东胜区",150621:"达拉特旗",150622:"准格尔旗",150623:"鄂托克前旗",150624:"鄂托克旗",150625:"杭锦旗",150626:"乌审旗",150627:"伊金霍洛旗"},150700:{150702:"海拉尔区",150703:"扎赉诺尔区",150721:"阿荣旗",150722:"莫力达瓦达斡尔族自治旗",150723:"鄂伦春自治旗",150724:"鄂温克族自治旗",150725:"陈巴尔虎旗",150726:"新巴尔虎左旗",150727:"新巴尔虎右旗",150781:"满洲里市",150782:"牙克石市",150783:"扎兰屯市",150784:"额尔古纳市",150785:"根河市"},150800:{150802:"临河区",150821:"五原县",150822:"磴口县",150823:"乌拉特前旗",150824:"乌拉特中旗",150825:"乌拉特后旗",150826:"杭锦后旗"},150900:{150902:"集宁区",150921:"卓资县",150922:"化德县",150923:"商都县",150924:"兴和县",150925:"凉城县",150926:"察哈尔右翼前旗",150927:"察哈尔右翼中旗",150928:"察哈尔右翼后旗",150929:"四子王旗",150981:"丰镇市"},152200:{152201:"乌兰浩特市",152202:"阿尔山市",152221:"科尔沁右翼前旗",152222:"科尔沁右翼中旗",152223:"扎赉特旗",152224:"突泉县"},152500:{152501:"二连浩特市",152502:"锡林浩特市",152522:"阿巴嘎旗",152523:"苏尼特左旗",152524:"苏尼特右旗",152525:"东乌珠穆沁旗",152526:"西乌珠穆沁旗",152527:"太仆寺旗",152528:"镶黄旗",152529:"正镶白旗",152530:"正蓝旗",152531:"多伦县"},152900:{152921:"阿拉善左旗",152922:"阿拉善右旗",152923:"额济纳旗"},21e4:{210100:"沈阳市",210200:"大连市",210300:"鞍山市",210400:"抚顺市",210500:"本溪市",210600:"丹东市",210700:"锦州市",210800:"营口市",210900:"阜新市",211e3:"辽阳市",211100:"盘锦市",211200:"铁岭市",211300:"朝阳市",211400:"葫芦岛市"},210100:{210102:"和平区",210103:"沈河区",210104:"大东区",210105:"皇姑区",210106:"铁西区",210111:"苏家屯区",210112:"浑南区",210113:"沈北新区",210114:"于洪区",210122:"辽中县",210123:"康平县",210124:"法库县",210181:"新民市"},210200:{210202:"中山区",210203:"西岗区",210204:"沙河口区",210211:"甘井子区",210212:"旅顺口区",210213:"金州区",210214:"普兰店区",210224:"长海县",210281:"瓦房店市",210283:"庄河市"},210300:{210302:"铁东区",210303:"铁西区",210304:"立山区",210311:"千山区",210321:"台安县",210323:"岫岩满族自治县",210381:"海城市"},210400:{210402:"新抚区",210403:"东洲区",210404:"望花区",210411:"顺城区",210421:"抚顺县",210422:"新宾满族自治县",210423:"清原满族自治县"},210500:{210502:"平山区",210503:"溪湖区",210504:"明山区",210505:"南芬区",210521:"本溪满族自治县",210522:"桓仁满族自治县"},210600:{210602:"元宝区",210603:"振兴区",210604:"振安区",210624:"宽甸满族自治县",210681:"东港市",210682:"凤城市"},210700:{210702:"古塔区",210703:"凌河区",210711:"太和区",210726:"黑山县",210727:"义县",210781:"凌海市",210782:"北镇市"},210800:{210802:"站前区",210803:"西市区",210804:"鲅鱼圈区",210811:"老边区",210881:"盖州市",210882:"大石桥市"},210900:{210902:"海州区",210903:"新邱区",210904:"太平区",210905:"清河门区",210911:"细河区",210921:"阜新蒙古族自治县",210922:"彰武县"},211e3:{211002:"白塔区",211003:"文圣区",211004:"宏伟区",211005:"弓长岭区",211011:"太子河区",211021:"辽阳县",211081:"灯塔市"},211100:{211102:"双台子区",211103:"兴隆台区",211121:"大洼县",211122:"盘山县"},211200:{211202:"银州区",211204:"清河区",211221:"铁岭县",211223:"西丰县",211224:"昌图县",211281:"调兵山市",211282:"开原市"},211300:{211302:"双塔区",211303:"龙城区",211321:"朝阳县",211322:"建平县",211324:"喀喇沁左翼蒙古族自治县",211381:"北票市",211382:"凌源市"},211400:{211402:"连山区",211403:"龙港区",211404:"南票区",211421:"绥中县",211422:"建昌县",211481:"兴城市"},22e4:{220100:"长春市",220200:"吉林市",220300:"四平市",220400:"辽源市",220500:"通化市",220600:"白山市",220700:"松原市",220800:"白城市",222400:"延边朝鲜族自治州"},220100:{220102:"南关区",220103:"宽城区",220104:"朝阳区",220105:"二道区",220106:"绿园区",220112:"双阳区",220113:"九台区",220122:"农安县",220182:"榆树市",220183:"德惠市"},220200:{220202:"昌邑区",220203:"龙潭区",220204:"船营区",220211:"丰满区",220221:"永吉县",220281:"蛟河市",220282:"桦甸市",220283:"舒兰市",220284:"磐石市"},220300:{220302:"铁西区",220303:"铁东区",220322:"梨树县",220323:"伊通满族自治县",220381:"公主岭市",220382:"双辽市"},220400:{220402:"龙山区",220403:"西安区",220421:"东丰县",220422:"东辽县"},220500:{220502:"东昌区",220503:"二道江区",220521:"通化县",220523:"辉南县",220524:"柳河县",220581:"梅河口市",220582:"集安市"},220600:{220602:"浑江区",220605:"江源区",220621:"抚松县",220622:"靖宇县",220623:"长白朝鲜族自治县",220681:"临江市"},220700:{220702:"宁江区",220721:"前郭尔罗斯蒙古族自治县",220722:"长岭县",220723:"乾安县",220781:"扶余市"},220800:{220802:"洮北区",220821:"镇赉县",220822:"通榆县",220881:"洮南市",220882:"大安市"},222400:{222401:"延吉市",222402:"图们市",222403:"敦化市",222404:"珲春市",222405:"龙井市",222406:"和龙市",222424:"汪清县",222426:"安图县"},23e4:{230100:"哈尔滨市",230200:"齐齐哈尔市",230300:"鸡西市",230400:"鹤岗市",230500:"双鸭山市",230600:"大庆市",230700:"伊春市",230800:"佳木斯市",230900:"七台河市",231e3:"牡丹江市",231100:"黑河市",231200:"绥化市",232700:"大兴安岭地区"},230100:{230102:"道里区",230103:"南岗区",230104:"道外区",230108:"平房区",230109:"松北区",230110:"香坊区",230111:"呼兰区",230112:"阿城区",230113:"双城区",230123:"依兰县",230124:"方正县",230125:"宾县",230126:"巴彦县",230127:"木兰县",230128:"通河县",230129:"延寿县",230183:"尚志市",230184:"五常市"},230200:{230202:"龙沙区",230203:"建华区",230204:"铁锋区",230205:"昂昂溪区",230206:"富拉尔基区",230207:"碾子山区",230208:"梅里斯达斡尔族区",230221:"龙江县",230223:"依安县",230224:"泰来县",230225:"甘南县",230227:"富裕县",230229:"克山县",230230:"克东县",230231:"拜泉县",230281:"讷河市"},230300:{230302:"鸡冠区",230303:"恒山区",230304:"滴道区",230305:"梨树区",230306:"城子河区",230307:"麻山区",230321:"鸡东县",230381:"虎林市",230382:"密山市"},230400:{230402:"向阳区",230403:"工农区",230404:"南山区",230405:"兴安区",230406:"东山区",230407:"兴山区",230421:"萝北县",230422:"绥滨县"},230500:{230502:"尖山区",230503:"岭东区",230505:"四方台区",230506:"宝山区",230521:"集贤县",230522:"友谊县",230523:"宝清县",230524:"饶河县"},230600:{230602:"萨尔图区",230603:"龙凤区",230604:"让胡路区",230605:"红岗区",230606:"大同区",230621:"肇州县",230622:"肇源县",230623:"林甸县",230624:"杜尔伯特蒙古族自治县"},230700:{230702:"伊春区",230703:"南岔区",230704:"友好区",230705:"西林区",230706:"翠峦区",230707:"新青区",230708:"美溪区",230709:"金山屯区",230710:"五营区",230711:"乌马河区",230712:"汤旺河区",230713:"带岭区",230714:"乌伊岭区",230715:"红星区",230716:"上甘岭区",230722:"嘉荫县",230781:"铁力市"},230800:{230803:"向阳区",230804:"前进区",230805:"东风区",230811:"郊区",230822:"桦南县",230826:"桦川县",230828:"汤原县",230833:"抚远市",230881:"同江市",230882:"富锦市"},230900:{230902:"新兴区",230903:"桃山区",230904:"茄子河区",230921:"勃利县"},231e3:{231002:"东安区",231003:"阳明区",231004:"爱民区",231005:"西安区",231025:"林口县",231081:"绥芬河市",231083:"海林市",231084:"宁安市",231085:"穆棱市",231086:"东宁市"},231100:{231102:"爱辉区",231121:"嫩江县",231123:"逊克县",231124:"孙吴县",231181:"北安市",231182:"五大连池市"},231200:{231202:"北林区",231221:"望奎县",231222:"兰西县",231223:"青冈县",231224:"庆安县",231225:"明水县",231226:"绥棱县",231281:"安达市",231282:"肇东市",231283:"海伦市"},232700:{232701:"加格达奇区",232721:"呼玛县",232722:"塔河县",232723:"漠河县"},31e4:{310100:"上海市市辖区",310200:"上海市郊县"},310100:{310101:"黄浦区",310104:"徐汇区",310105:"长宁区",310106:"静安区",310107:"普陀区",310109:"虹口区",310110:"杨浦区",310112:"闵行区",310113:"宝山区",310114:"嘉定区",310115:"浦东新区",310116:"金山区",310117:"松江区",310118:"青浦区",310120:"奉贤区",310230:"崇明县"},32e4:{320100:"南京市",320200:"无锡市",320300:"徐州市",320400:"常州市",320500:"苏州市",320600:"南通市",320700:"连云港市",320800:"淮安市",320900:"盐城市",321e3:"扬州市",321100:"镇江市",321200:"泰州市",321300:"宿迁市"},320100:{320102:"玄武区",320104:"秦淮区",320105:"建邺区",320106:"鼓楼区",320111:"浦口区",320113:"栖霞区",320114:"雨花台区",320115:"江宁区",320116:"六合区",320117:"溧水区",320118:"高淳区"},320200:{320205:"锡山区",320206:"惠山区",320211:"滨湖区",320213:"梁溪区",320214:"新吴区",320281:"江阴市",320282:"宜兴市"},320300:{320302:"鼓楼区",320303:"云龙区",320305:"贾汪区",320311:"泉山区",320312:"铜山区",320321:"丰县",320322:"沛县",320324:"睢宁县",320381:"新沂市",320382:"邳州市"},320400:{320402:"天宁区",320404:"钟楼区",320411:"新北区",320412:"武进区",320413:"金坛区",320481:"溧阳市"},320500:{320505:"虎丘区",320506:"吴中区",320507:"相城区",320508:"姑苏区",320509:"吴江区",320581:"常熟市",320582:"张家港市",320583:"昆山市",320585:"太仓市"},320600:{320602:"崇川区",320611:"港闸区",320612:"通州区",320621:"海安县",320623:"如东县",320681:"启东市",320682:"如皋市",320684:"海门市"},320700:{320703:"连云区",320706:"海州区",320707:"赣榆区",320722:"东海县",320723:"灌云县",320724:"灌南县"},320800:{320802:"清河区",320803:"淮安区",320804:"淮阴区",320811:"清浦区",320826:"涟水县",320829:"洪泽县",320830:"盱眙县",320831:"金湖县"},320900:{320902:"亭湖区",320903:"盐都区",320904:"大丰区",320921:"响水县",320922:"滨海县",320923:"阜宁县",320924:"射阳县",320925:"建湖县",320981:"东台市"},321e3:{321002:"广陵区",321003:"邗江区",321012:"江都区",321023:"宝应县",321081:"仪征市",321084:"高邮市"},321100:{321102:"京口区",321111:"润州区",321112:"丹徒区",321181:"丹阳市",321182:"扬中市",321183:"句容市"},321200:{321202:"海陵区",321203:"高港区",321204:"姜堰区",321281:"兴化市",321282:"靖江市",321283:"泰兴市"},321300:{321302:"宿城区",321311:"宿豫区",321322:"沭阳县",321323:"泗阳县",321324:"泗洪县"},33e4:{330100:"杭州市",330200:"宁波市",330300:"温州市",330400:"嘉兴市",330500:"湖州市",330600:"绍兴市",330700:"金华市",330800:"衢州市",330900:"舟山市",331e3:"台州市",331100:"丽水市"},330100:{330102:"上城区",330103:"下城区",330104:"江干区",330105:"拱墅区",330106:"西湖区",330108:"滨江区",330109:"萧山区",330110:"余杭区",330111:"富阳区",330122:"桐庐县",330127:"淳安县",330182:"建德市",330185:"临安市"},330200:{330203:"海曙区",330204:"江东区",330205:"江北区",330206:"北仑区",330211:"镇海区",330212:"鄞州区",330225:"象山县",330226:"宁海县",330281:"余姚市",330282:"慈溪市",330283:"奉化市"},330300:{330302:"鹿城区",330303:"龙湾区",330304:"瓯海区",330305:"洞头区",330324:"永嘉县",330326:"平阳县",330327:"苍南县",330328:"文成县",330329:"泰顺县",330381:"瑞安市",330382:"乐清市"},330400:{330402:"南湖区",330411:"秀洲区",330421:"嘉善县",330424:"海盐县",330481:"海宁市",330482:"平湖市",330483:"桐乡市"},330500:{330502:"吴兴区",330503:"南浔区",330521:"德清县",330522:"长兴县",330523:"安吉县"},330600:{330602:"越城区",330603:"柯桥区",330604:"上虞区",330624:"新昌县",330681:"诸暨市",330683:"嵊州市"},330700:{330702:"婺城区",330703:"金东区",330723:"武义县",330726:"浦江县",330727:"磐安县",330781:"兰溪市",330782:"义乌市",330783:"东阳市",330784:"永康市"},330800:{330802:"柯城区",330803:"衢江区",330822:"常山县",330824:"开化县",330825:"龙游县",330881:"江山市"},330900:{330902:"定海区",330903:"普陀区",330921:"岱山县",330922:"嵊泗县"},331e3:{331002:"椒江区",331003:"黄岩区",331004:"路桥区",331021:"玉环县",331022:"三门县",331023:"天台县",331024:"仙居县",331081:"温岭市",331082:"临海市"},331100:{331102:"莲都区",331121:"青田县",331122:"缙云县",331123:"遂昌县",331124:"松阳县",331125:"云和县",331126:"庆元县",331127:"景宁畲族自治县",331181:"龙泉市"},34e4:{340100:"合肥市",340200:"芜湖市",340300:"蚌埠市",340400:"淮南市",340500:"马鞍山市",340600:"淮北市",340700:"铜陵市",340800:"安庆市",341e3:"黄山市",341100:"滁州市",341200:"阜阳市",341300:"宿州市",341500:"六安市",341600:"亳州市",341700:"池州市",341800:"宣城市"},340100:{340102:"瑶海区",340103:"庐阳区",340104:"蜀山区",340111:"包河区",340121:"长丰县",340122:"肥东县",340123:"肥西县",340124:"庐江县",340181:"巢湖市"},340200:{340202:"镜湖区",340203:"弋江区",340207:"鸠江区",340208:"三山区",340221:"芜湖县",340222:"繁昌县",340223:"南陵县",340225:"无为县"},340300:{340302:"龙子湖区",340303:"蚌山区",340304:"禹会区",340311:"淮上区",340321:"怀远县",340322:"五河县",340323:"固镇县"},340400:{340402:"大通区",340403:"田家庵区",340404:"谢家集区",340405:"八公山区",340406:"潘集区",340421:"凤台县",340422:"寿县"},340500:{340503:"花山区",340504:"雨山区",340506:"博望区",340521:"当涂县",340522:"含山县",340523:"和县"},340600:{340602:"杜集区",340603:"相山区",340604:"烈山区",340621:"濉溪县"},340700:{340705:"铜官区",340706:"义安区",340711:"郊区",340722:"枞阳县"},340800:{340802:"迎江区",340803:"大观区",340811:"宜秀区",340822:"怀宁县",340824:"潜山县",340825:"太湖县",340826:"宿松县",340827:"望江县",340828:"岳西县",340881:"桐城市"},341e3:{341002:"屯溪区",341003:"黄山区",341004:"徽州区",341021:"歙县",341022:"休宁县",341023:"黟县",341024:"祁门县"},341100:{341102:"琅琊区",341103:"南谯区",341122:"来安县",341124:"全椒县",341125:"定远县",341126:"凤阳县",341181:"天长市",341182:"明光市"},341200:{341202:"颍州区",341203:"颍东区",341204:"颍泉区",341221:"临泉县",341222:"太和县",341225:"阜南县",341226:"颍上县",341282:"界首市"},341300:{341302:"埇桥区",341321:"砀山县",341322:"萧县",341323:"灵璧县",341324:"泗县"},341500:{341502:"金安区",341503:"裕安区",341504:"叶集区",341522:"霍邱县",341523:"舒城县",341524:"金寨县",341525:"霍山县"},341600:{341602:"谯城区",341621:"涡阳县",341622:"蒙城县",341623:"利辛县"},341700:{341702:"贵池区",341721:"东至县",341722:"石台县",341723:"青阳县"},341800:{341802:"宣州区",341821:"郎溪县",341822:"广德县",341823:"泾县",341824:"绩溪县",341825:"旌德县",341881:"宁国市"},35e4:{350100:"福州市",350200:"厦门市",350300:"莆田市",350400:"三明市",350500:"泉州市",350600:"漳州市",350700:"南平市",350800:"龙岩市",350900:"宁德市"},350100:{350102:"鼓楼区",350103:"台江区",350104:"仓山区",350105:"马尾区",350111:"晋安区",350121:"闽侯县",350122:"连江县",350123:"罗源县",350124:"闽清县",350125:"永泰县",350128:"平潭县",350181:"福清市",350182:"长乐市"},350200:{350203:"思明区",350205:"海沧区",350206:"湖里区",350211:"集美区",350212:"同安区",350213:"翔安区"},350300:{350302:"城厢区",350303:"涵江区",350304:"荔城区",350305:"秀屿区",350322:"仙游县"},350400:{350402:"梅列区",350403:"三元区",350421:"明溪县",350423:"清流县",350424:"宁化县",350425:"大田县",350426:"尤溪县",350427:"沙县",350428:"将乐县",350429:"泰宁县",350430:"建宁县",350481:"永安市"},350500:{350502:"鲤城区",350503:"丰泽区",350504:"洛江区",350505:"泉港区",350521:"惠安县",350524:"安溪县",350525:"永春县",350526:"德化县",350527:"金门县",350581:"石狮市",350582:"晋江市",350583:"南安市"},350600:{350602:"芗城区",350603:"龙文区",350622:"云霄县",350623:"漳浦县",350624:"诏安县",350625:"长泰县",350626:"东山县",350627:"南靖县",350628:"平和县",350629:"华安县",350681:"龙海市"},350700:{350702:"延平区",350703:"建阳区",350721:"顺昌县",350722:"浦城县",350723:"光泽县",350724:"松溪县",350725:"政和县",350781:"邵武市",350782:"武夷山市",350783:"建瓯市"},350800:{350802:"新罗区",350803:"永定区",350821:"长汀县",350823:"上杭县",350824:"武平县",350825:"连城县",350881:"漳平市"},350900:{350902:"蕉城区",350921:"霞浦县",350922:"古田县",350923:"屏南县",350924:"寿宁县",350925:"周宁县",350926:"柘荣县",350981:"福安市",350982:"福鼎市"},36e4:{360100:"南昌市",360200:"景德镇市",360300:"萍乡市",360400:"九江市",360500:"新余市",360600:"鹰潭市",360700:"赣州市",360800:"吉安市",360900:"宜春市",361e3:"抚州市",361100:"上饶市"},360100:{360102:"东湖区",360103:"西湖区",360104:"青云谱区",360105:"湾里区",360111:"青山湖区",360112:"新建区",360121:"南昌县",360123:"安义县",360124:"进贤县"},360200:{360202:"昌江区",360203:"珠山区",360222:"浮梁县",360281:"乐平市"},360300:{360302:"安源区",360313:"湘东区",360321:"莲花县",360322:"上栗县",360323:"芦溪县"},360400:{360402:"庐山区",360403:"浔阳区",360421:"九江县",360423:"武宁县",360424:"修水县",360425:"永修县",360426:"德安县",360427:"星子县",360428:"都昌县",360429:"湖口县",360430:"彭泽县",360481:"瑞昌市",360482:"共青城市"},360500:{360502:"渝水区",360521:"分宜县"},360600:{360602:"月湖区",360622:"余江县",360681:"贵溪市"},360700:{360702:"章贡区",360703:"南康区",360721:"赣县",360722:"信丰县",360723:"大余县",360724:"上犹县",360725:"崇义县",360726:"安远县",360727:"龙南县",360728:"定南县",360729:"全南县",360730:"宁都县",360731:"于都县",360732:"兴国县",360733:"会昌县",360734:"寻乌县",360735:"石城县",360781:"瑞金市"},360800:{360802:"吉州区",360803:"青原区",360821:"吉安县",360822:"吉水县",360823:"峡江县",360824:"新干县",360825:"永丰县",360826:"泰和县",360827:"遂川县",360828:"万安县",360829:"安福县",360830:"永新县",360881:"井冈山市"},360900:{360902:"袁州区",360921:"奉新县",360922:"万载县",360923:"上高县",360924:"宜丰县",360925:"靖安县",360926:"铜鼓县",360981:"丰城市",360982:"樟树市",360983:"高安市"},361e3:{361002:"临川区",361021:"南城县",361022:"黎川县",361023:"南丰县",361024:"崇仁县",361025:"乐安县",361026:"宜黄县",361027:"金溪县",361028:"资溪县",361029:"东乡县",361030:"广昌县"},361100:{361102:"信州区",361103:"广丰区",361121:"上饶县",361123:"玉山县",361124:"铅山县",361125:"横峰县",361126:"弋阳县",361127:"余干县",361128:"鄱阳县",361129:"万年县",361130:"婺源县",361181:"德兴市"},37e4:{370100:"济南市",370200:"青岛市",370300:"淄博市",370400:"枣庄市",370500:"东营市",370600:"烟台市",370700:"潍坊市",370800:"济宁市",370900:"泰安市",371e3:"威海市",371100:"日照市",371200:"莱芜市",371300:"临沂市",371400:"德州市",371500:"聊城市",371600:"滨州市",371700:"菏泽市"},370100:{370102:"历下区",370103:"市中区",370104:"槐荫区",370105:"天桥区",370112:"历城区",370113:"长清区",370124:"平阴县",370125:"济阳县",370126:"商河县",370181:"章丘市"},370200:{370202:"市南区",370203:"市北区",370211:"黄岛区",370212:"崂山区",370213:"李沧区",370214:"城阳区",370281:"胶州市",370282:"即墨市",370283:"平度市",370285:"莱西市"},370300:{370302:"淄川区",370303:"张店区",370304:"博山区",370305:"临淄区",370306:"周村区",370321:"桓台县",370322:"高青县",370323:"沂源县"},370400:{370402:"市中区",370403:"薛城区",370404:"峄城区",370405:"台儿庄区",370406:"山亭区",370481:"滕州市"},370500:{370502:"东营区",370503:"河口区",370521:"垦利县",370522:"利津县",370523:"广饶县"},370600:{370602:"芝罘区",370611:"福山区",370612:"牟平区",370613:"莱山区",370634:"长岛县",370681:"龙口市",370682:"莱阳市",370683:"莱州市",370684:"蓬莱市",370685:"招远市",370686:"栖霞市",370687:"海阳市"},370700:{370702:"潍城区",370703:"寒亭区",370704:"坊子区",370705:"奎文区",370724:"临朐县",370725:"昌乐县",370781:"青州市",370782:"诸城市",370783:"寿光市",370784:"安丘市",370785:"高密市",370786:"昌邑市"},370800:{370811:"任城区",370812:"兖州区",370826:"微山县",370827:"鱼台县",370828:"金乡县",370829:"嘉祥县",370830:"汶上县",370831:"泗水县",370832:"梁山县",370881:"曲阜市",370883:"邹城市"},370900:{370902:"泰山区",370911:"岱岳区",370921:"宁阳县",370923:"东平县",370982:"新泰市",370983:"肥城市"},371e3:{371002:"环翠区",371003:"文登区",371082:"荣成市",371083:"乳山市"},371100:{371102:"东港区",371103:"岚山区",371121:"五莲县",371122:"莒县"},371200:{371202:"莱城区",371203:"钢城区"},371300:{371302:"兰山区",371311:"罗庄区",371312:"河东区",371321:"沂南县",371322:"郯城县",371323:"沂水县",371324:"兰陵县",371325:"费县",371326:"平邑县",371327:"莒南县",371328:"蒙阴县",371329:"临沭县"},371400:{371402:"德城区",371403:"陵城区",371422:"宁津县",371423:"庆云县",371424:"临邑县",371425:"齐河县",371426:"平原县",371427:"夏津县",371428:"武城县",371481:"乐陵市",371482:"禹城市"},371500:{371502:"东昌府区",371521:"阳谷县",371522:"莘县",371523:"茌平县",371524:"东阿县",371525:"冠县",371526:"高唐县",371581:"临清市"},371600:{371602:"滨城区",371603:"沾化区",371621:"惠民县",371622:"阳信县",371623:"无棣县",371625:"博兴县",371626:"邹平县"},371700:{371702:"牡丹区",371721:"曹县",371722:"单县",371723:"成武县",371724:"巨野县",371725:"郓城县",371726:"鄄城县",371727:"定陶县",371728:"东明县"},41e4:{410100:"郑州市",410200:"开封市",410300:"洛阳市",410400:"平顶山市",410500:"安阳市",410600:"鹤壁市",410700:"新乡市",410800:"焦作市",410900:"濮阳市",411e3:"许昌市",411100:"漯河市",411200:"三门峡市",411300:"南阳市",411400:"商丘市",411500:"信阳市",411600:"周口市",411700:"驻马店市",419001:"济源市"},410100:{410102:"中原区",410103:"二七区",410104:"管城回族区",410105:"金水区",410106:"上街区",410108:"惠济区",410122:"中牟县",410181:"巩义市",410182:"荥阳市",410183:"新密市",410184:"新郑市",410185:"登封市"},410200:{410202:"龙亭区",410203:"顺河回族区",410204:"鼓楼区",410205:"禹王台区",410212:"祥符区",410221:"杞县",410222:"通许县",410223:"尉氏县",410225:"兰考县"},410300:{410302:"老城区",410303:"西工区",410304:"瀍河回族区",410305:"涧西区",410306:"吉利区",410311:"洛龙区",410322:"孟津县",410323:"新安县",410324:"栾川县",410325:"嵩县",410326:"汝阳县",410327:"宜阳县",410328:"洛宁县",410329:"伊川县",410381:"偃师市"},410400:{410402:"新华区",410403:"卫东区",410404:"石龙区",410411:"湛河区",410421:"宝丰县",410422:"叶县",410423:"鲁山县",410425:"郏县",410481:"舞钢市",410482:"汝州市"},410500:{410502:"文峰区",410503:"北关区",410505:"殷都区",410506:"龙安区",410522:"安阳县",410523:"汤阴县",410526:"滑县",410527:"内黄县",410581:"林州市"},410600:{410602:"鹤山区",410603:"山城区",410611:"淇滨区",410621:"浚县",410622:"淇县"},410700:{410702:"红旗区",410703:"卫滨区",410704:"凤泉区",410711:"牧野区",410721:"新乡县",410724:"获嘉县",410725:"原阳县",410726:"延津县",410727:"封丘县",410728:"长垣县",410781:"卫辉市",410782:"辉县市"},410800:{410802:"解放区",410803:"中站区",410804:"马村区",410811:"山阳区",410821:"修武县",410822:"博爱县",410823:"武陟县",410825:"温县",410882:"沁阳市",410883:"孟州市"},410900:{410902:"华龙区",410922:"清丰县",410923:"南乐县",410926:"范县",410927:"台前县",410928:"濮阳县"},411e3:{411002:"魏都区",411023:"许昌县",411024:"鄢陵县",411025:"襄城县",411081:"禹州市",411082:"长葛市"},411100:{411102:"源汇区",411103:"郾城区",411104:"召陵区",411121:"舞阳县",411122:"临颍县"},411200:{411202:"湖滨区",411203:"陕州区",411221:"渑池县",411224:"卢氏县",411281:"义马市",411282:"灵宝市"},411300:{411302:"宛城区",411303:"卧龙区",411321:"南召县",411322:"方城县",411323:"西峡县",411324:"镇平县",411325:"内乡县",411326:"淅川县",411327:"社旗县",411328:"唐河县",411329:"新野县",411330:"桐柏县",411381:"邓州市"},411400:{411402:"梁园区",411403:"睢阳区",411421:"民权县",411422:"睢县",411423:"宁陵县",411424:"柘城县",411425:"虞城县",411426:"夏邑县",411481:"永城市"},411500:{411502:"浉河区",411503:"平桥区",411521:"罗山县",411522:"光山县",411523:"新县",411524:"商城县",411525:"固始县",411526:"潢川县",411527:"淮滨县",411528:"息县"},411600:{411602:"川汇区",411621:"扶沟县",411622:"西华县",411623:"商水县",411624:"沈丘县",411625:"郸城县",411626:"淮阳县",411627:"太康县",411628:"鹿邑县",411681:"项城市"},411700:{411702:"驿城区",411721:"西平县",411722:"上蔡县",411723:"平舆县",411724:"正阳县",411725:"确山县",411726:"泌阳县",411727:"汝南县",411728:"遂平县",411729:"新蔡县"},42e4:{420100:"武汉市",420200:"黄石市",420300:"十堰市",420500:"宜昌市",420600:"襄阳市",420700:"鄂州市",420800:"荆门市",420900:"孝感市",421e3:"荆州市",421100:"黄冈市",421200:"咸宁市",421300:"随州市",422800:"恩施土家族苗族自治州",429004:"仙桃市",429005:"潜江市",429006:"天门市",429021:"神农架林区"},420100:{420102:"江岸区",420103:"江汉区",420104:"硚口区",420105:"汉阳区",420106:"武昌区",420107:"青山区",420111:"洪山区",420112:"东西湖区",420113:"汉南区",420114:"蔡甸区",420115:"江夏区",420116:"黄陂区",420117:"新洲区"},420200:{420202:"黄石港区",420203:"西塞山区",420204:"下陆区",420205:"铁山区",420222:"阳新县",420281:"大冶市"},420300:{420302:"茅箭区",420303:"张湾区",420304:"郧阳区",420322:"郧西县",420323:"竹山县",420324:"竹溪县",420325:"房县",420381:"丹江口市"},420500:{420502:"西陵区",420503:"伍家岗区",420504:"点军区",420505:"猇亭区",420506:"夷陵区",420525:"远安县",420526:"兴山县",420527:"秭归县",420528:"长阳土家族自治县",420529:"五峰土家族自治县",420581:"宜都市",420582:"当阳市",420583:"枝江市"},420600:{420602:"襄城区",420606:"樊城区",420607:"襄州区",420624:"南漳县",420625:"谷城县",420626:"保康县",420682:"老河口市",420683:"枣阳市",420684:"宜城市"},420700:{420702:"梁子湖区",420703:"华容区",420704:"鄂城区"},420800:{420802:"东宝区",420804:"掇刀区",420821:"京山县",420822:"沙洋县",420881:"钟祥市"},420900:{420902:"孝南区",420921:"孝昌县",420922:"大悟县",420923:"云梦县",420981:"应城市",420982:"安陆市",420984:"汉川市"},421e3:{421002:"沙市区",421003:"荆州区",421022:"公安县",421023:"监利县",421024:"江陵县",421081:"石首市",421083:"洪湖市",421087:"松滋市"},421100:{421102:"黄州区",421121:"团风县",421122:"红安县",421123:"罗田县",421124:"英山县",421125:"浠水县",421126:"蕲春县",421127:"黄梅县",421181:"麻城市",421182:"武穴市"},421200:{421202:"咸安区",421221:"嘉鱼县",421222:"通城县",421223:"崇阳县",421224:"通山县",421281:"赤壁市"},421300:{421303:"曾都区",421321:"随县",421381:"广水市"},422800:{422801:"恩施市",422802:"利川市",422822:"建始县",422823:"巴东县",422825:"宣恩县",422826:"咸丰县",422827:"来凤县",422828:"鹤峰县"},43e4:{430100:"长沙市",430200:"株洲市",430300:"湘潭市",430400:"衡阳市",430500:"邵阳市",430600:"岳阳市",430700:"常德市",430800:"张家界市",430900:"益阳市",431e3:"郴州市",431100:"永州市",431200:"怀化市",431300:"娄底市",433100:"湘西土家族苗族自治州"},430100:{430102:"芙蓉区",430103:"天心区",430104:"岳麓区",430105:"开福区",430111:"雨花区",430112:"望城区",430121:"长沙县",430124:"宁乡县",430181:"浏阳市"},430200:{430202:"荷塘区",430203:"芦淞区",430204:"石峰区",430211:"天元区",430221:"株洲县",430223:"攸县",430224:"茶陵县",430225:"炎陵县",430281:"醴陵市"},430300:{430302:"雨湖区",430304:"岳塘区",430321:"湘潭县",430381:"湘乡市",430382:"韶山市"},430400:{430405:"珠晖区",430406:"雁峰区",430407:"石鼓区",430408:"蒸湘区",430412:"南岳区",430421:"衡阳县",430422:"衡南县",430423:"衡山县",430424:"衡东县",430426:"祁东县",430481:"耒阳市",430482:"常宁市"},430500:{430502:"双清区",430503:"大祥区",430511:"北塔区",430521:"邵东县",430522:"新邵县",430523:"邵阳县",430524:"隆回县",430525:"洞口县",430527:"绥宁县",430528:"新宁县",430529:"城步苗族自治县",430581:"武冈市"},430600:{430602:"岳阳楼区",430603:"云溪区",430611:"君山区",430621:"岳阳县",430623:"华容县",430624:"湘阴县",430626:"平江县",430681:"汨罗市",430682:"临湘市"},430700:{430702:"武陵区",430703:"鼎城区",430721:"安乡县",430722:"汉寿县",430723:"澧县",430724:"临澧县",430725:"桃源县",430726:"石门县",430781:"津市市"},430800:{430802:"永定区",430811:"武陵源区",430821:"慈利县",430822:"桑植县"},430900:{430902:"资阳区",430903:"赫山区",430921:"南县",430922:"桃江县",430923:"安化县",430981:"沅江市"},431e3:{431002:"北湖区",431003:"苏仙区",431021:"桂阳县",431022:"宜章县",431023:"永兴县",431024:"嘉禾县",431025:"临武县",431026:"汝城县",431027:"桂东县",431028:"安仁县",431081:"资兴市"},431100:{431102:"零陵区",431103:"冷水滩区",431121:"祁阳县",431122:"东安县",431123:"双牌县",431124:"道县",431125:"江永县",431126:"宁远县",431127:"蓝山县",431128:"新田县",431129:"江华瑶族自治县"},431200:{431202:"鹤城区",431221:"中方县",431222:"沅陵县",431223:"辰溪县",431224:"溆浦县",431225:"会同县",431226:"麻阳苗族自治县",431227:"新晃侗族自治县",431228:"芷江侗族自治县",431229:"靖州苗族侗族自治县",431230:"通道侗族自治县",431281:"洪江市"},431300:{431302:"娄星区",431321:"双峰县",431322:"新化县",431381:"冷水江市",431382:"涟源市"},433100:{433101:"吉首市",433122:"泸溪县",433123:"凤凰县",433124:"花垣县",433125:"保靖县",433126:"古丈县",433127:"永顺县",433130:"龙山县"},44e4:{440100:"广州市",440200:"韶关市",440300:"深圳市",440400:"珠海市",440500:"汕头市",440600:"佛山市",440700:"江门市",440800:"湛江市",440900:"茂名市",441200:"肇庆市",441300:"惠州市",441400:"梅州市",441500:"汕尾市",441600:"河源市",441700:"阳江市",441800:"清远市",441900:"东莞市",442e3:"中山市",445100:"潮州市",445200:"揭阳市",445300:"云浮市"},440100:{440103:"荔湾区",440104:"越秀区",440105:"海珠区",440106:"天河区",440111:"白云区",440112:"黄埔区",440113:"番禺区",440114:"花都区",440115:"南沙区",440117:"从化区",440118:"增城区"},440200:{440203:"武江区",440204:"浈江区",440205:"曲江区",440222:"始兴县",440224:"仁化县",440229:"翁源县",440232:"乳源瑶族自治县",440233:"新丰县",440281:"乐昌市",440282:"南雄市"},440300:{440303:"罗湖区",440304:"福田区",440305:"南山区",440306:"宝安区",440307:"龙岗区",440308:"盐田区"},440400:{440402:"香洲区",440403:"斗门区",440404:"金湾区"},440500:{440507:"龙湖区",440511:"金平区",440512:"濠江区",440513:"潮阳区",440514:"潮南区",440515:"澄海区",440523:"南澳县"},440600:{440604:"禅城区",440605:"南海区",440606:"顺德区",440607:"三水区",440608:"高明区"},440700:{440703:"蓬江区",440704:"江海区",440705:"新会区",440781:"台山市",440783:"开平市",440784:"鹤山市",440785:"恩平市"},440800:{440802:"赤坎区",440803:"霞山区",440804:"坡头区",440811:"麻章区",440823:"遂溪县",440825:"徐闻县",440881:"廉江市",440882:"雷州市",440883:"吴川市"},440900:{440902:"茂南区",440904:"电白区",440981:"高州市",440982:"化州市",440983:"信宜市"},441200:{441202:"端州区",441203:"鼎湖区",441204:"高要区",441223:"广宁县",441224:"怀集县",441225:"封开县",441226:"德庆县",441284:"四会市"},441300:{441302:"惠城区",441303:"惠阳区",441322:"博罗县",441323:"惠东县",441324:"龙门县"},441400:{441402:"梅江区",441403:"梅县区",441422:"大埔县",441423:"丰顺县",441424:"五华县",441426:"平远县",441427:"蕉岭县",441481:"兴宁市"},441500:{441502:"城区",441521:"海丰县",441523:"陆河县",441581:"陆丰市"},441600:{441602:"源城区",441621:"紫金县",441622:"龙川县",441623:"连平县",441624:"和平县",441625:"东源县"},441700:{441702:"江城区",441704:"阳东区",441721:"阳西县",441781:"阳春市"},441800:{441802:"清城区",441803:"清新区",441821:"佛冈县",441823:"阳山县",441825:"连山壮族瑶族自治县",441826:"连南瑶族自治县",441881:"英德市",441882:"连州市"},441900:{441900:"三元里"},442e3:{442e3:"湖滨北路"},445100:{445102:"湘桥区",445103:"潮安区",445122:"饶平县"},445200:{445202:"榕城区",445203:"揭东区",445222:"揭西县",445224:"惠来县",445281:"普宁市"},445300:{445302:"云城区",445303:"云安区",445321:"新兴县",445322:"郁南县",445381:"罗定市"},45e4:{450100:"南宁市",450200:"柳州市",450300:"桂林市",450400:"梧州市",450500:"北海市",450600:"防城港市",450700:"钦州市",450800:"贵港市",450900:"玉林市",451e3:"百色市",451100:"贺州市",451200:"河池市",451300:"来宾市",451400:"崇左市"},450100:{450102:"兴宁区",450103:"青秀区",450105:"江南区",450107:"西乡塘区",450108:"良庆区",450109:"邕宁区",450110:"武鸣区",450123:"隆安县",450124:"马山县",450125:"上林县",450126:"宾阳县",450127:"横县"},450200:{450202:"城中区",450203:"鱼峰区",450204:"柳南区",450205:"柳北区",450221:"柳江县",450222:"柳城县",450223:"鹿寨县",450224:"融安县",450225:"融水苗族自治县",450226:"三江侗族自治县"},450300:{450302:"秀峰区",450303:"叠彩区",450304:"象山区",450305:"七星区",450311:"雁山区",450312:"临桂区",450321:"阳朔县",450323:"灵川县",450324:"全州县",450325:"兴安县",450326:"永福县",450327:"灌阳县",450328:"龙胜各族自治县",450329:"资源县",450330:"平乐县",450331:"荔浦县",450332:"恭城瑶族自治县"},450400:{450403:"万秀区",450405:"长洲区",450406:"龙圩区",450421:"苍梧县",450422:"藤县",450423:"蒙山县",450481:"岑溪市"},450500:{450502:"海城区",450503:"银海区",450512:"铁山港区",450521:"合浦县"},450600:{450602:"港口区",450603:"防城区",450621:"上思县",450681:"东兴市"},450700:{450702:"钦南区",450703:"钦北区",450721:"灵山县",450722:"浦北县"},450800:{450802:"港北区",450803:"港南区",450804:"覃塘区",450821:"平南县",450881:"桂平市"},450900:{450902:"玉州区",450903:"福绵区",450921:"容县",450922:"陆川县",450923:"博白县",450924:"兴业县",450981:"北流市"},451e3:{451002:"右江区",451021:"田阳县",451022:"田东县",451023:"平果县",451024:"德保县",451026:"那坡县",451027:"凌云县",451028:"乐业县",451029:"田林县",451030:"西林县",451031:"隆林各族自治县",451081:"靖西市"},451100:{451102:"八步区",451121:"昭平县",451122:"钟山县",451123:"富川瑶族自治县"},451200:{451202:"金城江区",451221:"南丹县",451222:"天峨县",451223:"凤山县",451224:"东兰县",451225:"罗城仫佬族自治县",451226:"环江毛南族自治县",451227:"巴马瑶族自治县",451228:"都安瑶族自治县",451229:"大化瑶族自治县",451281:"宜州市"},451300:{451302:"兴宾区",451321:"忻城县",451322:"象州县",451323:"武宣县",451324:"金秀瑶族自治县",451381:"合山市"},451400:{451402:"江州区",451421:"扶绥县",451422:"宁明县",451423:"龙州县",451424:"大新县",451425:"天等县",451481:"凭祥市"},46e4:{460100:"海口市",460200:"三亚市",460300:"三沙市",460400:"儋州市",469001:"五指山市",469002:"琼海市",469005:"文昌市",469006:"万宁市",469007:"东方市",469021:"定安县",469022:"屯昌县",469023:"澄迈县",469024:"临高县",469025:"白沙黎族自治县",469026:"昌江黎族自治县",469027:"乐东黎族自治县",469028:"陵水黎族自治县",469029:"保亭黎族苗族自治县",469030:"琼中黎族苗族自治县"},460100:{460105:"秀英区",460106:"龙华区",460107:"琼山区",460108:"美兰区"},460200:{460200:"三亚湾",460202:"海棠区",460203:"吉阳区",460204:"天涯区",460205:"崖州区"},460300:{460321:"西沙群岛",460322:"南沙群岛",460323:"中沙群岛的岛礁及其海域"},5e5:{
-500100:"重庆市市辖区",500200:"重庆市郊县"},500100:{500101:"万州区",500102:"涪陵区",500103:"渝中区",500104:"大渡口区",500105:"江北区",500106:"沙坪坝区",500107:"九龙坡区",500108:"南岸区",500109:"北碚区",500110:"綦江区",500111:"大足区",500112:"渝北区",500113:"巴南区",500114:"黔江区",500115:"长寿区",500116:"江津区",500117:"合川区",500118:"永川区",500119:"南川区",500120:"璧山区",500151:"铜梁区",500152:"潼南区",500153:"荣昌区",500228:"梁平县",500229:"城口县",500230:"丰都县",500231:"垫江县",500232:"武隆县",500233:"忠县",500234:"开县",500235:"云阳县",500236:"奉节县",500237:"巫山县",500238:"巫溪县",500240:"石柱土家族自治县",500241:"秀山土家族苗族自治县",500242:"酉阳土家族苗族自治县",500243:"彭水苗族土家族自治县"},51e4:{510100:"成都市",510300:"自贡市",510400:"攀枝花市",510500:"泸州市",510600:"德阳市",510700:"绵阳市",510800:"广元市",510900:"遂宁市",511e3:"内江市",511100:"乐山市",511300:"南充市",511400:"眉山市",511500:"宜宾市",511600:"广安市",511700:"达州市",511800:"雅安市",511900:"巴中市",512e3:"资阳市",513200:"阿坝藏族羌族自治州",513300:"甘孜藏族自治州",513400:"凉山彝族自治州"},510100:{510104:"锦江区",510105:"青羊区",510106:"金牛区",510107:"武侯区",510108:"成华区",510112:"龙泉驿区",510113:"青白江区",510114:"新都区",510115:"温江区",510116:"双流区",510121:"金堂县",510124:"郫县",510129:"大邑县",510131:"蒲江县",510132:"新津县",510181:"都江堰市",510182:"彭州市",510183:"邛崃市",510184:"崇州市"},510300:{510302:"自流井区",510303:"贡井区",510304:"大安区",510311:"沿滩区",510321:"荣县",510322:"富顺县"},510400:{510402:"东区",510403:"西区",510411:"仁和区",510421:"米易县",510422:"盐边县"},510500:{510502:"江阳区",510503:"纳溪区",510504:"龙马潭区",510521:"泸县",510522:"合江县",510524:"叙永县",510525:"古蔺县"},510600:{510603:"旌阳区",510623:"中江县",510626:"罗江县",510681:"广汉市",510682:"什邡市",510683:"绵竹市"},510700:{510703:"涪城区",510704:"游仙区",510722:"三台县",510723:"盐亭县",510724:"安县",510725:"梓潼县",510726:"北川羌族自治县",510727:"平武县",510781:"江油市"},510800:{510802:"利州区",510811:"昭化区",510812:"朝天区",510821:"旺苍县",510822:"青川县",510823:"剑阁县",510824:"苍溪县"},510900:{510903:"船山区",510904:"安居区",510921:"蓬溪县",510922:"射洪县",510923:"大英县"},511e3:{511002:"市中区",511011:"东兴区",511024:"威远县",511025:"资中县",511028:"隆昌县"},511100:{511102:"市中区",511111:"沙湾区",511112:"五通桥区",511113:"金口河区",511123:"犍为县",511124:"井研县",511126:"夹江县",511129:"沐川县",511132:"峨边彝族自治县",511133:"马边彝族自治县",511181:"峨眉山市"},511300:{511302:"顺庆区",511303:"高坪区",511304:"嘉陵区",511321:"南部县",511322:"营山县",511323:"蓬安县",511324:"仪陇县",511325:"西充县",511381:"阆中市"},511400:{511402:"东坡区",511403:"彭山区",511421:"仁寿县",511423:"洪雅县",511424:"丹棱县",511425:"青神县"},511500:{511502:"翠屏区",511503:"南溪区",511521:"宜宾县",511523:"江安县",511524:"长宁县",511525:"高县",511526:"珙县",511527:"筠连县",511528:"兴文县",511529:"屏山县"},511600:{511602:"广安区",511603:"前锋区",511621:"岳池县",511622:"武胜县",511623:"邻水县",511681:"华蓥市"},511700:{511702:"通川区",511703:"达川区",511722:"宣汉县",511723:"开江县",511724:"大竹县",511725:"渠县",511781:"万源市"},511800:{511802:"雨城区",511803:"名山区",511822:"荥经县",511823:"汉源县",511824:"石棉县",511825:"天全县",511826:"芦山县",511827:"宝兴县"},511900:{511902:"巴州区",511903:"恩阳区",511921:"通江县",511922:"南江县",511923:"平昌县"},512e3:{512002:"雁江区",512021:"安岳县",512022:"乐至县",512081:"简阳市"},513200:{513201:"马尔康市",513221:"汶川县",513222:"理县",513223:"茂县",513224:"松潘县",513225:"九寨沟县",513226:"金川县",513227:"小金县",513228:"黑水县",513230:"壤塘县",513231:"阿坝县",513232:"若尔盖县",513233:"红原县"},513300:{513301:"康定市",513322:"泸定县",513323:"丹巴县",513324:"九龙县",513325:"雅江县",513326:"道孚县",513327:"炉霍县",513328:"甘孜县",513329:"新龙县",513330:"德格县",513331:"白玉县",513332:"石渠县",513333:"色达县",513334:"理塘县",513335:"巴塘县",513336:"乡城县",513337:"稻城县",513338:"得荣县"},513400:{513401:"西昌市",513422:"木里藏族自治县",513423:"盐源县",513424:"德昌县",513425:"会理县",513426:"会东县",513427:"宁南县",513428:"普格县",513429:"布拖县",513430:"金阳县",513431:"昭觉县",513432:"喜德县",513433:"冕宁县",513434:"越西县",513435:"甘洛县",513436:"美姑县",513437:"雷波县"},52e4:{520100:"贵阳市",520200:"六盘水市",520300:"遵义市",520400:"安顺市",520500:"毕节市",520600:"铜仁市",522300:"黔西南布依族苗族自治州",522600:"黔东南苗族侗族自治州",522700:"黔南布依族苗族自治州"},520100:{520102:"南明区",520103:"云岩区",520111:"花溪区",520112:"乌当区",520113:"白云区",520115:"观山湖区",520121:"开阳县",520122:"息烽县",520123:"修文县",520181:"清镇市"},520200:{520201:"钟山区",520203:"六枝特区",520221:"水城县",520222:"盘县"},520300:{520302:"红花岗区",520303:"汇川区",520321:"遵义县",520322:"桐梓县",520323:"绥阳县",520324:"正安县",520325:"道真仡佬族苗族自治县",520326:"务川仡佬族苗族自治县",520327:"凤冈县",520328:"湄潭县",520329:"余庆县",520330:"习水县",520381:"赤水市",520382:"仁怀市"},520400:{520402:"西秀区",520403:"平坝区",520422:"普定县",520423:"镇宁布依族苗族自治县",520424:"关岭布依族苗族自治县",520425:"紫云苗族布依族自治县"},520500:{520502:"七星关区",520521:"大方县",520522:"黔西县",520523:"金沙县",520524:"织金县",520525:"纳雍县",520526:"威宁彝族回族苗族自治县",520527:"赫章县"},520600:{520602:"碧江区",520603:"万山区",520621:"江口县",520622:"玉屏侗族自治县",520623:"石阡县",520624:"思南县",520625:"印江土家族苗族自治县",520626:"德江县",520627:"沿河土家族自治县",520628:"松桃苗族自治县"},522300:{522301:"兴义市",522322:"兴仁县",522323:"普安县",522324:"晴隆县",522325:"贞丰县",522326:"望谟县",522327:"册亨县",522328:"安龙县"},522600:{522601:"凯里市",522622:"黄平县",522623:"施秉县",522624:"三穗县",522625:"镇远县",522626:"岑巩县",522627:"天柱县",522628:"锦屏县",522629:"剑河县",522630:"台江县",522631:"黎平县",522632:"榕江县",522633:"从江县",522634:"雷山县",522635:"麻江县",522636:"丹寨县"},522700:{522701:"都匀市",522702:"福泉市",522722:"荔波县",522723:"贵定县",522725:"瓮安县",522726:"独山县",522727:"平塘县",522728:"罗甸县",522729:"长顺县",522730:"龙里县",522731:"惠水县",522732:"三都水族自治县"},53e4:{530100:"昆明市",530300:"曲靖市",530400:"玉溪市",530500:"保山市",530600:"昭通市",530700:"丽江市",530800:"普洱市",530900:"临沧市",532300:"楚雄彝族自治州",532500:"红河哈尼族彝族自治州",532600:"文山壮族苗族自治州",532800:"西双版纳傣族自治州",532900:"大理白族自治州",533100:"德宏傣族景颇族自治州",533300:"怒江傈僳族自治州",533400:"迪庆藏族自治州"},530100:{530102:"五华区",530103:"盘龙区",530111:"官渡区",530112:"西山区",530113:"东川区",530114:"呈贡区",530122:"晋宁县",530124:"富民县",530125:"宜良县",530126:"石林彝族自治县",530127:"嵩明县",530128:"禄劝彝族苗族自治县",530129:"寻甸回族彝族自治县",530181:"安宁市"},530300:{530302:"麒麟区",530321:"马龙县",530322:"陆良县",530323:"师宗县",530324:"罗平县",530325:"富源县",530326:"会泽县",530328:"沾益县",530381:"宣威市"},530400:{530402:"红塔区",530403:"江川区",530422:"澄江县",530423:"通海县",530424:"华宁县",530425:"易门县",530426:"峨山彝族自治县",530427:"新平彝族傣族自治县",530428:"元江哈尼族彝族傣族自治县"},530500:{530502:"隆阳区",530521:"施甸县",530523:"龙陵县",530524:"昌宁县",530581:"腾冲市"},530600:{530602:"昭阳区",530621:"鲁甸县",530622:"巧家县",530623:"盐津县",530624:"大关县",530625:"永善县",530626:"绥江县",530627:"镇雄县",530628:"彝良县",530629:"威信县",530630:"水富县"},530700:{530702:"古城区",530721:"玉龙纳西族自治县",530722:"永胜县",530723:"华坪县",530724:"宁蒗彝族自治县"},530800:{530802:"思茅区",530821:"宁洱哈尼族彝族自治县",530822:"墨江哈尼族自治县",530823:"景东彝族自治县",530824:"景谷傣族彝族自治县",530825:"镇沅彝族哈尼族拉祜族自治县",530826:"江城哈尼族彝族自治县",530827:"孟连傣族拉祜族佤族自治县",530828:"澜沧拉祜族自治县",530829:"西盟佤族自治县"},530900:{530902:"临翔区",530921:"凤庆县",530922:"云县",530923:"永德县",530924:"镇康县",530925:"双江拉祜族佤族布朗族傣族自治县",530926:"耿马傣族佤族自治县",530927:"沧源佤族自治县"},532300:{532301:"楚雄市",532322:"双柏县",532323:"牟定县",532324:"南华县",532325:"姚安县",532326:"大姚县",532327:"永仁县",532328:"元谋县",532329:"武定县",532331:"禄丰县"},532500:{532501:"个旧市",532502:"开远市",532503:"蒙自市",532504:"弥勒市",532523:"屏边苗族自治县",532524:"建水县",532525:"石屏县",532527:"泸西县",532528:"元阳县",532529:"红河县",532530:"金平苗族瑶族傣族自治县",532531:"绿春县",532532:"河口瑶族自治县"},532600:{532601:"文山市",532622:"砚山县",532623:"西畴县",532624:"麻栗坡县",532625:"马关县",532626:"丘北县",532627:"广南县",532628:"富宁县"},532800:{532801:"景洪市",532822:"勐海县",532823:"勐腊县"},532900:{532901:"大理市",532922:"漾濞彝族自治县",532923:"祥云县",532924:"宾川县",532925:"弥渡县",532926:"南涧彝族自治县",532927:"巍山彝族回族自治县",532928:"永平县",532929:"云龙县",532930:"洱源县",532931:"剑川县",532932:"鹤庆县"},533100:{533102:"瑞丽市",533103:"芒市",533122:"梁河县",533123:"盈江县",533124:"陇川县"},533300:{533321:"泸水县",533323:"福贡县",533324:"贡山独龙族怒族自治县",533325:"兰坪白族普米族自治县"},533400:{533401:"香格里拉市",533422:"德钦县",533423:"维西傈僳族自治县"},54e4:{540100:"拉萨市",540200:"日喀则市",540300:"昌都市",540400:"林芝市",542200:"山南地区",542400:"那曲地区",542500:"阿里地区"},540100:{540102:"城关区",540103:"堆龙德庆区",540121:"林周县",540122:"当雄县",540123:"尼木县",540124:"曲水县",540126:"达孜县",540127:"墨竹工卡县"},540200:{540202:"桑珠孜区",540221:"南木林县",540222:"江孜县",540223:"定日县",540224:"萨迦县",540225:"拉孜县",540226:"昂仁县",540227:"谢通门县",540228:"白朗县",540229:"仁布县",540230:"康马县",540231:"定结县",540232:"仲巴县",540233:"亚东县",540234:"吉隆县",540235:"聂拉木县",540236:"萨嘎县",540237:"岗巴县"},540300:{540302:"卡若区",540321:"江达县",540322:"贡觉县",540323:"类乌齐县",540324:"丁青县",540325:"察雅县",540326:"八宿县",540327:"左贡县",540328:"芒康县",540329:"洛隆县",540330:"边坝县"},540400:{540402:"巴宜区",540421:"工布江达县",540422:"米林县",540423:"墨脱县",540424:"波密县",540425:"察隅县",540426:"朗县"},542200:{542221:"乃东县",542222:"扎囊县",542223:"贡嘎县",542224:"桑日县",542225:"琼结县",542226:"曲松县",542227:"措美县",542228:"洛扎县",542229:"加查县",542231:"隆子县",542232:"错那县",542233:"浪卡子县"},542400:{542421:"那曲县",542422:"嘉黎县",542423:"比如县",542424:"聂荣县",542425:"安多县",542426:"申扎县",542427:"索县",542428:"班戈县",542429:"巴青县",542430:"尼玛县",542431:"双湖县"},542500:{542521:"普兰县",542522:"札达县",542523:"噶尔县",542524:"日土县",542525:"革吉县",542526:"改则县",542527:"措勤县"},61e4:{610100:"西安市",610200:"铜川市",610300:"宝鸡市",610400:"咸阳市",610500:"渭南市",610600:"延安市",610700:"汉中市",610800:"榆林市",610900:"安康市",611e3:"商洛市"},610100:{610102:"新城区",610103:"碑林区",610104:"莲湖区",610111:"灞桥区",610112:"未央区",610113:"雁塔区",610114:"阎良区",610115:"临潼区",610116:"长安区",610117:"高陵区",610122:"蓝田县",610124:"周至县",610125:"户县"},610200:{610202:"王益区",610203:"印台区",610204:"耀州区",610222:"宜君县"},610300:{610302:"渭滨区",610303:"金台区",610304:"陈仓区",610322:"凤翔县",610323:"岐山县",610324:"扶风县",610326:"眉县",610327:"陇县",610328:"千阳县",610329:"麟游县",610330:"凤县",610331:"太白县"},610400:{610402:"秦都区",610403:"杨陵区",610404:"渭城区",610422:"三原县",610423:"泾阳县",610424:"乾县",610425:"礼泉县",610426:"永寿县",610427:"彬县",610428:"长武县",610429:"旬邑县",610430:"淳化县",610431:"武功县",610481:"兴平市"},610500:{610502:"临渭区",610503:"华州区",610522:"潼关县",610523:"大荔县",610524:"合阳县",610525:"澄城县",610526:"蒲城县",610527:"白水县",610528:"富平县",610581:"韩城市",610582:"华阴市"},610600:{610602:"宝塔区",610621:"延长县",610622:"延川县",610623:"子长县",610624:"安塞县",610625:"志丹县",610626:"吴起县",610627:"甘泉县",610628:"富县",610629:"洛川县",610630:"宜川县",610631:"黄龙县",610632:"黄陵县"},610700:{610702:"汉台区",610721:"南郑县",610722:"城固县",610723:"洋县",610724:"西乡县",610725:"勉县",610726:"宁强县",610727:"略阳县",610728:"镇巴县",610729:"留坝县",610730:"佛坪县"},610800:{610802:"榆阳区",610803:"横山区",610821:"神木县",610822:"府谷县",610824:"靖边县",610825:"定边县",610826:"绥德县",610827:"米脂县",610828:"佳县",610829:"吴堡县",610830:"清涧县",610831:"子洲县"},610900:{610902:"汉滨区",610921:"汉阴县",610922:"石泉县",610923:"宁陕县",610924:"紫阳县",610925:"岚皋县",610926:"平利县",610927:"镇坪县",610928:"旬阳县",610929:"白河县"},611e3:{611002:"商州区",611021:"洛南县",611022:"丹凤县",611023:"商南县",611024:"山阳县",611025:"镇安县",611026:"柞水县"},62e4:{620100:"兰州市",620200:"嘉峪关市",620300:"金昌市",620400:"白银市",620500:"天水市",620600:"武威市",620700:"张掖市",620800:"平凉市",620900:"酒泉市",621e3:"庆阳市",621100:"定西市",621200:"陇南市",622900:"临夏回族自治州",623e3:"甘南藏族自治州"},620100:{620102:"城关区",620103:"七里河区",620104:"西固区",620105:"安宁区",620111:"红古区",620121:"永登县",620122:"皋兰县",620123:"榆中县"},620300:{620302:"金川区",620321:"永昌县"},620400:{620402:"白银区",620403:"平川区",620421:"靖远县",620422:"会宁县",620423:"景泰县"},620500:{620502:"秦州区",620503:"麦积区",620521:"清水县",620522:"秦安县",620523:"甘谷县",620524:"武山县",620525:"张家川回族自治县"},620600:{620602:"凉州区",620621:"民勤县",620622:"古浪县",620623:"天祝藏族自治县"},620700:{620702:"甘州区",620721:"肃南裕固族自治县",620722:"民乐县",620723:"临泽县",620724:"高台县",620725:"山丹县"},620800:{620802:"崆峒区",620821:"泾川县",620822:"灵台县",620823:"崇信县",620824:"华亭县",620825:"庄浪县",620826:"静宁县"},620900:{620902:"肃州区",620921:"金塔县",620922:"瓜州县",620923:"肃北蒙古族自治县",620924:"阿克塞哈萨克族自治县",620981:"玉门市",620982:"敦煌市"},621e3:{621002:"西峰区",621021:"庆城县",621022:"环县",621023:"华池县",621024:"合水县",621025:"正宁县",621026:"宁县",621027:"镇原县"},621100:{621102:"安定区",621121:"通渭县",621122:"陇西县",621123:"渭源县",621124:"临洮县",621125:"漳县",621126:"岷县"},621200:{621202:"武都区",621221:"成县",621222:"文县",621223:"宕昌县",621224:"康县",621225:"西和县",621226:"礼县",621227:"徽县",621228:"两当县"},622900:{622901:"临夏市",622921:"临夏县",622922:"康乐县",622923:"永靖县",622924:"广河县",622925:"和政县",622926:"东乡族自治县",622927:"积石山保安族东乡族撒拉族自治县"},623e3:{623001:"合作市",623021:"临潭县",623022:"卓尼县",623023:"舟曲县",623024:"迭部县",623025:"玛曲县",623026:"碌曲县",623027:"夏河县"},63e4:{630100:"西宁市",630200:"海东市",632200:"海北藏族自治州",632300:"黄南藏族自治州",632500:"海南藏族自治州",632600:"果洛藏族自治州",632700:"玉树藏族自治州",632800:"海西蒙古族藏族自治州"},630100:{630102:"城东区",630103:"城中区",630104:"城西区",630105:"城北区",630121:"大通回族土族自治县",630122:"湟中县",630123:"湟源县"},630200:{630202:"乐都区",630203:"平安区",630222:"民和回族土族自治县",630223:"互助土族自治县",630224:"化隆回族自治县",630225:"循化撒拉族自治县"},632200:{632221:"门源回族自治县",632222:"祁连县",632223:"海晏县",632224:"刚察县"},632300:{632321:"同仁县",632322:"尖扎县",632323:"泽库县",632324:"河南蒙古族自治县"},632500:{632521:"共和县",632522:"同德县",632523:"贵德县",632524:"兴海县",632525:"贵南县"},632600:{632621:"玛沁县",632622:"班玛县",632623:"甘德县",632624:"达日县",632625:"久治县",632626:"玛多县"},632700:{632701:"玉树市",632722:"杂多县",632723:"称多县",632724:"治多县",632725:"囊谦县",632726:"曲麻莱县"},632800:{632801:"格尔木市",632802:"德令哈市",632821:"乌兰县",632822:"都兰县",632823:"天峻县",632825:"海西蒙古族藏族自治州直辖"},64e4:{640100:"银川市",640200:"石嘴山市",640300:"吴忠市",640400:"固原市",640500:"中卫市"},640100:{640104:"兴庆区",640105:"西夏区",640106:"金凤区",640121:"永宁县",640122:"贺兰县",640181:"灵武市"},640200:{640202:"大武口区",640205:"惠农区",640221:"平罗县"},640300:{640302:"利通区",640303:"红寺堡区",640323:"盐池县",640324:"同心县",640381:"青铜峡市"},640400:{640402:"原州区",640422:"西吉县",640423:"隆德县",640424:"泾源县",640425:"彭阳县"},640500:{640502:"沙坡头区",640521:"中宁县",640522:"海原县"},65e4:{650100:"乌鲁木齐市",650200:"克拉玛依市",650400:"吐鲁番市",652200:"哈密地区",652300:"昌吉回族自治州",652700:"博尔塔拉蒙古自治州",652800:"巴音郭楞蒙古自治州",652900:"阿克苏地区",653e3:"克孜勒苏柯尔克孜自治州",653100:"喀什地区",653200:"和田地区",654e3:"伊犁哈萨克自治州",654200:"塔城地区",654300:"阿勒泰地区",659001:"石河子市",659002:"阿拉尔市",659003:"图木舒克市",659004:"五家渠市",659005:"北屯市",659006:"铁门关市",659007:"双河市",659008:"可克达拉市"},650100:{650102:"天山区",650103:"沙依巴克区",650104:"新市区",650105:"水磨沟区",650106:"头屯河区",650107:"达坂城区",650109:"米东区",650121:"乌鲁木齐县"},650200:{650202:"独山子区",650203:"克拉玛依区",650204:"白碱滩区",650205:"乌尔禾区"},650400:{650402:"高昌区",650421:"鄯善县",650422:"托克逊县"},652200:{652201:"哈密市",652222:"巴里坤哈萨克自治县",652223:"伊吾县"},652300:{652301:"昌吉市",652302:"阜康市",652323:"呼图壁县",652324:"玛纳斯县",652325:"奇台县",652327:"吉木萨尔县",652328:"木垒哈萨克自治县"},652700:{652701:"博乐市",652702:"阿拉山口市",652722:"精河县",652723:"温泉县"},652800:{652801:"库尔勒市",652822:"轮台县",652823:"尉犁县",652824:"若羌县",652825:"且末县",652826:"焉耆回族自治县",652827:"和静县",652828:"和硕县",652829:"博湖县"},652900:{652901:"阿克苏市",652922:"温宿县",652923:"库车县",652924:"沙雅县",652925:"新和县",652926:"拜城县",652927:"乌什县",652928:"阿瓦提县",652929:"柯坪县"},653e3:{653001:"阿图什市",653022:"阿克陶县",653023:"阿合奇县",653024:"乌恰县"},653100:{653101:"喀什市",653121:"疏附县",653122:"疏勒县",653123:"英吉沙县",653124:"泽普县",653125:"莎车县",653126:"叶城县",653127:"麦盖提县",653128:"岳普湖县",653129:"伽师县",653130:"巴楚县",653131:"塔什库尔干塔吉克自治县"},653200:{653201:"和田市",653221:"和田县",653222:"墨玉县",653223:"皮山县",653224:"洛浦县",653225:"策勒县",653226:"于田县",653227:"民丰县"},654e3:{654002:"伊宁市",654003:"奎屯市",654004:"霍尔果斯市",654021:"伊宁县",654022:"察布查尔锡伯自治县",654023:"霍城县",654024:"巩留县",654025:"新源县",654026:"昭苏县",654027:"特克斯县",654028:"尼勒克县"},654200:{654201:"塔城市",654202:"乌苏市",654221:"额敏县",654223:"沙湾县",654224:"托里县",654225:"裕民县",654226:"和布克赛尔蒙古自治县"},654300:{654301:"阿勒泰市",654321:"布尔津县",654322:"富蕴县",654323:"福海县",654324:"哈巴河县",654325:"青河县",654326:"吉木乃县"},81e4:{810001:"中西区",810002:"湾仔区",810003:"东区",810004:"南区",810005:"油尖旺区",810006:"深水埗区",810007:"九龙城区",810008:"黄大仙区",810009:"观塘区",810010:"荃湾区",810011:"屯门区",810012:"元朗区",810013:"北区",810014:"大埔区",810015:"西贡区",810016:"沙田区",810017:"葵青区",810018:"离岛区"},82e4:{820001:"花地玛堂区",820002:"花王堂区",820003:"望德堂区",820004:"大堂区",820005:"风顺堂区",820006:"嘉模堂区",820007:"路凼填海区",820008:"圣方济各堂区"}};return"undefined"!=typeof window&&(window.ChineseDistricts=n),n});
-/*!
- * Distpicker v1.0.4
- * https://github.com/fengyuanchen/distpicker
- *
- * Copyright (c) 2014-2016 Fengyuan Chen
- * Released under the MIT license
- *
- * Date: 2016-06-01T15:05:52.606Z
+(function(window, undefined){
+	var ADSupportsTouches = ("createTouch" in document) || ('ontouchstart' in window) || 0,
+		doc=document.documentElement || document.getElementsByTagName('html')[0],
+		ADSupportsTransition = ("WebkitTransition" in doc.style) 
+							|| ("MsTransition" in doc.style) 
+							|| ("MozTransition" in doc.style) 
+							|| ("OTransition" in doc.style) 
+							|| ("transition" in doc.style) 
+							|| 0,
+		ADStartEvent = ADSupportsTouches ? "touchstart" : "mousedown",
+		ADMoveEvent = ADSupportsTouches ? "touchmove" : "mousemove",
+		ADEndEvent = ADSupportsTouches ? "touchend" : "mouseup",
+		TouchSlider=function(opt){
+			this.opt=this.parse_args(opt);
+			this.container=this.$(this.opt.id);
+			try{
+				if(this.container.nodeName.toLowerCase()=='ul'){
+					this.element=this.container;
+					this.container=this.element.parentNode;
+				}else{
+					this.element=this.container.getElementsByTagName('ul')[0];
+				}
+				if(typeof this.element==='undefined')throw new Error('Can\'t find "ul"');
+				for(var i=0;i<this.instance.length;i++){
+					if(this.instance[i]==this.container) throw new Error('An instance is running');
+				}
+				this.instance.push(this.container);
+				this.setup();
+			}catch(e){
+				this.status=-1;
+				this.errorInfo=e.message;
+			}
+		}
+		
+	TouchSlider.prototype={
+		//默认配置
+		_default: {
+			'id': 'slider', //幻灯容器的id
+			'fx': 'ease-out', //css3动画效果（linear,ease,ease-out,ease-in,ease-in-out），不支持css3浏览器只有ease-out效果
+			'auto': 0, //是否自动开始，负数表示非自动开始，0,1,2,3....表示自动开始以及从第几个开始
+			'speed':600, //动画效果持续时间 ms
+			'timeout':5000,//幻灯间隔时间 ms
+			'className':'', //每个幻灯所在的li标签的classname,
+			'direction':'left', //left right up down
+			'mouseWheel':false,
+			'before':new Function(),
+			'after':new Function()
+		},
+		instance:[],
+		//根据id获取节点
+		$:function(id){
+			return document.getElementById(id);
+		},
+		//根据class、标签获取parent下的节点簇 getElementsByClass
+		$E:function(classname, tagname, parent){
+			var result=[],
+				_array=parent.getElementsByTagName(tagname);
+			for(var i=0,j=_array.length;i<j;i++){
+				if((new RegExp("(?:^|\\s+)"+classname+"(?:\\s+|$)")).test(_array[i].className)){
+					result.push(_array[i]);
+				}
+			}
+			return result;
+		},
+		isIE:function(){ //不包括IE9+，IE9开始支持W3C绝大部分事件 方法了
+			return !-[1,];
+		},
+		//设置OR获取节点样式
+		css:(function(){
+			var styleFilter=function(property){
+					switch(property){
+						case 'float' : return ("cssFloat" in document.body.style) ? 'cssFloat' : 'styleFloat';
+									  break;
+						case 'opacity' : return ("opacity" in document.body.style) ? 'opacity' :
+										{
+											get : function(el,style){
+												var ft=style.filter;
+												return ft&&ft.indexOf('opacity')>=0&&parseFloat(ft.match(/opacity=([^)]*)/i)[1])/100+''||'1';
+											},
+											set : function(el,va){
+												el.style.filter='alpha(opacity='+va*100+')';
+												el.style.zoom=1;
+											}
+										} ;
+									  break;
+						default:var arr=property.split('-');
+								for(var i = 1; i < arr.length; i++)
+									arr[i] = arr[i].substring(0,1).toUpperCase() + arr[i].substring(1);
+								property = arr.join('');
+								return property;
+								break;
+					}
+				},
+				getStyle=function(el,property){
+					property=styleFilter(property);
+					var value = el.style[property];
+					if (!value) {
+						var style = document.defaultView && document.defaultView.getComputedStyle && getComputedStyle(el, null) || el.currentStyle || el.style;
+						if(typeof property=='string'){
+							value=style[property];
+						}else value=property.get(el,style);
+					}
+					return value == 'auto' ? '' : value;
+				},
+				setStyle=function(el,css){
+					var attr;
+					for(var key in css){
+						attr=styleFilter(key);
+						if(typeof attr=='string'){
+							el.style[attr]=css[key];
+						}else{
+							attr.set(el,css[key]);
+						}
+					}
+				}
+				return function(el,css){
+					return typeof css=='string'?getStyle(el,css):setStyle(el,css);
+				}
+		})(),
+		//格式化参数
+		parse_args: function(r){
+			var _default={}, toString=Object.prototype.toString;
+			if(r && toString.call(r)=='[object Object]')
+				for(var key in this._default){
+					_default[key]=typeof r[key]==='undefined' ? this._default[key] : toString.call(this._default[key])=='[object Number]' ? parseInt(parseFloat(r[key])*100)/100 : r[key];
+				}
+			else _default=this._default;
+			return _default;
+		},
+		//绑定事件
+		addListener: function(e, n, o, u){
+			if(e.addEventListener){
+				e.addEventListener(n, o, u);
+				return true;
+			} else if(e.attachEvent){
+				e.attachEvent('on' + n, o);
+				return true;
+			}
+			return false;
+		},
+		//获取鼠标坐标
+		getMousePoint:function(ev) {
+			var x = y = 0,
+			doc = document.documentElement,
+			body = document.body;
+			if(!ev) ev=window.event;
+			if (window.pageYoffset) {
+				x = window.pageXOffset;
+				y = window.pageYOffset;
+			}else{
+				x = (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft || body && body.clientLeft || 0);
+				y = (doc && doc.scrollTop  || body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
+			}
+			if(ADSupportsTouches && ev.touches.length){
+				var evt = ev.touches[0];
+				x += evt.clientX;
+				y += evt.clientY;
+			}else{
+				x += ev.clientX;
+				y += ev.clientY;
+			}
+			return {'x' : x, 'y' : y};
+		},
+		//修正函数作用环境
+		bind:function(func, obj){
+			return function(){
+				return func.apply(obj, arguments);
+			}
+		},
+		preventDefault:function(e){
+			if(window.event)window.event.returnValue=false;
+			else e.preventDefault();
+		},
+		//初始化
+		setup: function(){
+			this.status=0;//状态码，0表示停止状态，1表示运行状态，2表示暂停状态，-1表示出错
+			this.slides=this.opt.className?this.$E(this.opt.className,'li',this.element):this.element.getElementsByTagName('li');
+			this.length=this.slides.length; this.opt.timeout=Math.max(this.opt.timeout,this.opt.speed);
+			this.touching=!!ADSupportsTouches; this.css3transition=!!ADSupportsTransition; 
+			this.index=this.opt.auto<0 || this.opt.auto>=this.length ? 0:this.opt.auto;
+			if(this.length<2)return;//小于2不需要滚动
+			switch(this.opt.direction){
+				case 'up': this.direction='up'; this.vertical=true; break;
+				case 'down': this.direction='down'; this.vertical=true; break;
+				case 'right': this.direction='right'; this.vertical=false; break;
+				default:this.direction='left'; this.vertical=false; break;
+			}
+			this.resize(); this.begin();
+
+			this.addListener(this.element,ADStartEvent,this.bind(this._start,this),false);
+			this.addListener(document,ADMoveEvent,this.bind(this._move,this),false);
+			this.addListener(document,ADEndEvent,this.bind(this._end,this),false);
+			this.addListener(this.element,'webkitTransitionEnd',this.bind(this._transitionend,this),false);
+			this.addListener(this.element,'msTransitionEnd',this.bind(this._transitionend,this),false);
+			this.addListener(this.element,'oTransitionEnd',this.bind(this._transitionend,this),false);
+			this.addListener(this.element,'transitionend',this.bind(this._transitionend,this),false);
+			this.addListener(window,'resize',this.bind(function(){
+				clearTimeout(this.resizeTimer);
+				this.resizeTimer=setTimeout(this.bind(this.resize,this),100);
+			},this),false);
+			this.addListener(this.element,'mousewheel',this.bind(this.mouseScroll,this),false);
+			this.addListener(this.element,'DOMMouseScroll',this.bind(this.mouseScroll,this),false);
+		},
+		resize:function(){
+			var css;
+			this.css(this.container,{'overflow':'hidden','visibility':'hidden','listStyle':'none','position':'relative'});
+			this.width=this.container.clientWidth-parseInt(this.css(this.container,'padding-left'))-parseInt(this.css(this.container,'padding-right'));
+			this.height=this.container.clientHeight-parseInt(this.css(this.container,'padding-top'))-parseInt(this.css(this.container,'padding-bottom'));
+			css={'position':'relative','webkitTransitionDuration':'0ms','MozTransitionDuration':'0ms','msTransitionDuration':'0ms','OTransitionDuration':'0ms','transitionDuration':'0ms'}
+			if(this.vertical){
+				css['height']=this.height*this.length+'px';
+				css['top']=-this.height*this.index+'px';
+				this.css(this.container,{'height':this.height+'px'});
+			}else{
+				css['width']=this.width*this.length+'px';
+				css['left']=-this.width*this.index+'px';
+			}
+			this.css(this.element,css);
+			for(var i=0;i<this.length;i++){
+				this.css(this.slides[i],{'width':this.width+'px',height:this.height+'px','display':this.vertical?'table-row':'table-cell',padding:0,margin:0,float:'left',verticalAlign:'top'});
+			}
+			this.css(this.container,{'visibility':'visible'});
+		},
+		slide:function(index, speed){
+			var direction=this.vertical?'top':'left', size=this.vertical?'height':'width';
+			index=index<0?this.length-1:index>=this.length?0:index;
+			speed=typeof speed == 'undefined' ? this.opt.speed : parseInt(speed);
+			var el=this.element, timer=null,
+				style=el.style,
+				_this=this,
+				t=0, //动画开始时间
+				b=parseInt(style[direction]) || 0, //初始量
+				c=-index*this[size]-b, //变化量
+				d=Math.abs(c)<this[size]?Math.ceil(Math.abs(c)/this[size]*speed/10):speed/10,//动画持续时间
+				ani=function(t,b,c,d){ //缓动效果计算公式
+					return -c * ((t=t/d-1)*t*t*t - 1) + b;
+				},
+				run=function(){
+					if(t<d && !ADSupportsTransition){
+						t++;
+						style[direction]=Math.ceil(ani(t,b,c,d))+'px';
+						timer=setTimeout(run, 10);
+					}else{
+						style[direction]=-_this[size]*index+'px';
+						_this.index=index;
+						if(!ADSupportsTransition)_this._transitionend();
+						_this.pause();_this.begin();
+					}
+				}
+			style.WebkitTransition=style.MozTransition=style.msTransition=style.OTransition=style.transition = direction+' '+(d*10)+'ms '+this.opt.fx;
+			this.opt.before.call(this, index, this.slides[this.index]); run();
+		},
+		begin:function(){
+			if(this.timer || this.opt.auto<0)return true;
+			this.timer=setTimeout(this.bind(function(){
+				this.direction=='left'||this.direction=='up' ? this.next() : this.prev();
+			},this), this.opt.timeout);
+			this.status=1;
+		},
+		pause:function(){
+			clearInterval(this.timer);
+			this.timer=null;
+			this.status=2;
+		},
+		stop:function(){
+			this.pause();
+			this.index=0;
+			this.slide(0);
+			this.status=0;
+		},
+		prev:function(offset){
+			offset=typeof offset == 'undefined'?offset=1:offset%this.length;
+			var index=offset>this.index?this.length+this.index-offset:this.index-offset;
+			this.slide(index);
+		},
+		next:function(offset){
+			if(typeof offset == 'undefined') offset=1;
+			this.slide((this.index+offset)%this.length);
+		},
+		_start:function(e){
+			if(!this.touching)this.preventDefault(e);
+			this.element.onclick=null
+			this.startPos=this.getMousePoint(e);
+			var style=this.element.style;
+			style.webkitTransitionDuration = style.MozTransitionDuration = style.msTransitionDuration = style.OTransitionDuration = style.transitionDuration = '0ms';
+			this.scrolling=1;//滚动屏幕
+			this.startTime=new Date();
+		},
+		_move:function(e){
+			if(!this.scrolling || e.touches && e.touches.length>1 || e.scale && e.scale !== 1) return;
+			var direction=this.vertical?'top':'left', size=this.vertical?'height':'width', xy=this.vertical?'y':'x', yx=this.vertical?'x':'y';
+			this.endPos=this.getMousePoint(e);
+			var offx=this.endPos[xy]-this.startPos[xy];
+			if(this.scrolling===2 || Math.abs(offx)>=Math.abs(this.endPos[yx]-this.startPos[yx])){
+				this.preventDefault(e);
+				this.pause(); //暂停幻灯
+				offx=offx/((!this.index&&offx>0 || this.index==this.length-1&&offx<0) ? (Math.abs(offx)/this[size]+1) : 1);
+				this.element.style[direction]=-this.index*this[size]+offx+'px';
+				if(offx!=0)this.scrolling=2;//标记拖动（有效触摸）2
+			}else this.scrolling=0;//设置为摒弃标记0
+		},
+		_end:function(e){
+			if(typeof this.scrolling != 'undefined'){
+				try{
+					var xy=this.vertical?'y':'x', size=this.vertical?'height':'width', offx=this.endPos[xy]-this.startPos[xy];
+					if(this.scrolling===2)this.element.onclick=new Function('return false;');
+				}catch(err){
+					offx=0;
+				}
+				if((new Date()-this.startTime<250 && Math.abs(offx)>this[size]*0.1 || Math.abs(offx)>this[size]/2) && ((offx<0 && this.index+1<this.length) || (offx>0 && this.index>0))){
+					offx>0?this.prev():this.next();
+				}else{
+					this.slide(this.index);
+				}
+				delete this.scrolling;//删掉标记
+				delete this.startPos;
+				delete this.endPos;
+				delete this.startTime;
+				if(this.opt.auto>=0)this.begin();				
+			}
+		},
+		mouseScroll:function(e){
+			if(this.opt.mouseWheel){
+				this.preventDefault(e);
+				e=e||window.event;
+				var wheelDelta=e.wheelDelta || e.detail && e.detail*-1 || 0,
+					flag=wheelDelta/Math.abs(wheelDelta);//这里flag指鼠标滚轮的方向，1表示向上，-1向下
+				wheelDelta>0?this.next():this.prev();
+			}
+		},
+		_transitionend:function(e){
+			this.opt.after.call(this, this.index, this.slides[this.index]);
+		}
+	}
+	window.TouchSlider=TouchSlider;
+})(window, undefined);
+/**
+ * Created by wuyihao on 2017/4/19.
  */
-!function(t){"function"==typeof define&&define.amd?define(["jquery","ChineseDistricts"],t):"object"==typeof exports?t(require("jquery"),require("ChineseDistricts")):t(jQuery,ChineseDistricts)}(function(t,i){"use strict";function e(i,s){this.$element=t(i),this.options=t.extend({},e.DEFAULTS,t.isPlainObject(s)&&s),this.placeholders=t.extend({},e.DEFAULTS),this.active=!1,this.init()}if("undefined"==typeof i)throw new Error('The file "distpicker.data.js" must be included first!');var s="distpicker",n="change."+s,c="province",o="city",r="district";e.prototype={constructor:e,init:function(){var i=this.options,e=this.$element.find("select"),s=e.length,n={};e.each(function(){t.extend(n,t(this).data())}),t.each([c,o,r],t.proxy(function(t,c){n[c]?(i[c]=n[c],this["$"+c]=e.filter("[data-"+c+"]")):this["$"+c]=s>t?e.eq(t):null},this)),this.bind(),this.reset(),this.active=!0},bind:function(){this.$province&&this.$province.on(n,this._changeProvince=t.proxy(function(){this.output(o),this.output(r)},this)),this.$city&&this.$city.on(n,this._changeCity=t.proxy(function(){this.output(r)},this))},unbind:function(){this.$province&&this.$province.off(n,this._changeProvince),this.$city&&this.$city.off(n,this._changeCity)},output:function(e){var s,n,h,d=this.options,u=this.placeholders,a=this["$"+e],f={},p=[];a&&a.length&&(h=d[e],s=e===c?86:e===o?this.$province&&this.$province.find(":selected").data("code"):e===r?this.$city&&this.$city.find(":selected").data("code"):s,f=t.isNumeric(s)?i[s]:null,t.isPlainObject(f)&&t.each(f,function(t,i){var e=i===h;e&&(n=!0),p.push({code:t,address:i,selected:e})}),n||(p.length&&(d.autoSelect||d.autoselect)&&(p[0].selected=!0),!this.active&&h&&(u[e]=h)),d.placeholder&&p.unshift({code:"",address:u[e],selected:!1}),a.html(this.getList(p)))},getList:function(i){var e=[];return t.each(i,function(t,i){e.push('<option value="'+(i.address&&i.code?i.address:"")+'" data-code="'+(i.code||"")+'"'+(i.selected?" selected":"")+">"+(i.address||"")+"</option>")}),e.join("")},reset:function(t){t?this.$province&&this.$province.find(":first").prop("selected",!0).trigger(n):(this.output(c),this.output(o),this.output(r))},destroy:function(){this.unbind(),this.$element.removeData(s)}},e.DEFAULTS={autoSelect:!0,placeholder:!0,province:"—— 省 ——",city:"—— 市 ——",district:"—— 区 ——"},e.setDefaults=function(i){t.extend(e.DEFAULTS,i)},e.other=t.fn.distpicker,t.fn.distpicker=function(i){var n=[].slice.call(arguments,1);return this.each(function(){var c,o,r=t(this),h=r.data(s);if(!h){if(/destroy/.test(i))return;c=t.extend({},r.data(),t.isPlainObject(i)&&i),r.data(s,h=new e(this,c))}"string"==typeof i&&t.isFunction(o=h[i])&&o.apply(h,n)})},t.fn.distpicker.Constructor=e,t.fn.distpicker.setDefaults=e.setDefaults,t.fn.distpicker.noConflict=function(){return t.fn.distpicker=e.other,this},t(function(){t('[data-toggle="distpicker"]').distpicker()})});
-!function(a){var b=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],c=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],d=["January","February","March","April","May","June","July","August","September","October","November","December"],e=[];e.Jan="01",e.Feb="02",e.Mar="03",e.Apr="04",e.May="05",e.Jun="06",e.Jul="07",e.Aug="08",e.Sep="09",e.Oct="10",e.Nov="11",e.Dec="12",a.format=function(){function a(a){return b[parseInt(a,10)]||a}function f(a){var b=parseInt(a,10)-1;return c[b]||a}function g(a){var b=parseInt(a,10)-1;return d[b]||a}var h=function(a){return e[a]||a},i=function(a){var b=a,c="";if(-1!==b.indexOf(".")){var d=b.split(".");b=d[0],c=d[1]}var e=b.split(":");return 3===e.length?(hour=e[0],minute=e[1],second=e[2],{time:b,hour:hour,minute:minute,second:second,millis:c}):{time:"",hour:"",minute:"",second:"",millis:""}},j=function(a,b){for(var c=b-String(a).length,d=0;c>d;d++)a="0"+a;return a};return{date:function(b,c){try{var d=null,e=null,k=null,l=null,m=null,n=null;if("number"==typeof b)return this.date(new Date(b),c);if("function"==typeof b.getFullYear)e=b.getFullYear(),k=b.getMonth()+1,l=b.getDate(),m=b.getDay(),n=i(b.toTimeString());else if(-1!=b.search(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.?\d{0,3}[Z\-+]?(\d{2}:?\d{2})?/)){var o=b.split(/[T\+-]/);e=o[0],k=o[1],l=o[2],n=i(o[3].split(".")[0]),d=new Date(e,k-1,l),m=d.getDay()}else{var o=b.split(" ");switch(o.length){case 6:e=o[5],k=h(o[1]),l=o[2],n=i(o[3]),d=new Date(e,k-1,l),m=d.getDay();break;case 2:var p=o[0].split("-");e=p[0],k=p[1],l=p[2],n=i(o[1]),d=new Date(e,k-1,l),m=d.getDay();break;case 7:case 9:case 10:e=o[3],k=h(o[1]),l=o[2],n=i(o[4]),d=new Date(e,k-1,l),m=d.getDay();break;case 1:var p=o[0].split("");e=p[0]+p[1]+p[2]+p[3],k=p[5]+p[6],l=p[8]+p[9],n=i(p[13]+p[14]+p[15]+p[16]+p[17]+p[18]+p[19]+p[20]),d=new Date(e,k-1,l),m=d.getDay();break;default:return b}}for(var q="",r="",s="",t=0;t<c.length;t++){var u=c.charAt(t);switch(q+=u,s="",q){case"ddd":r+=a(m),q="";break;case"dd":if("d"==c.charAt(t+1))break;r+=j(l,2),q="";break;case"d":if("d"==c.charAt(t+1))break;r+=parseInt(l,10),q="";break;case"D":l+=1==l||21==l||31==l?"st":2==l||22==l?"nd":3==l||23==l?"rd":"th",r+=l,q="";break;case"MMMM":r+=g(k),q="";break;case"MMM":if("M"===c.charAt(t+1))break;r+=f(k),q="";break;case"MM":if("M"==c.charAt(t+1))break;r+=j(k,2),q="";break;case"M":if("M"==c.charAt(t+1))break;r+=parseInt(k,10),q="";break;case"y":case"yyy":if("y"==c.charAt(t+1))break;r+=q,q="";break;case"yy":if("y"==c.charAt(t+1)&&"y"==c.charAt(t+2))break;r+=String(e).slice(-2),q="";break;case"yyyy":r+=e,q="";break;case"HH":r+=j(n.hour,2),q="";break;case"H":if("H"==c.charAt(t+1))break;r+=parseInt(n.hour,10),q="";break;case"hh":var v=0==n.hour?12:n.hour<13?n.hour:n.hour-12;r+=j(v,2),q="";break;case"h":if("h"==c.charAt(t+1))break;var v=0==n.hour?12:n.hour<13?n.hour:n.hour-12;r+=parseInt(v,10),q="";break;case"mm":r+=j(n.minute,2),q="";break;case"m":if("m"==c.charAt(t+1))break;r+=n.minute,q="";break;case"ss":r+=j(n.second.substring(0,2),2),q="";break;case"s":if("s"==c.charAt(t+1))break;r+=n.second,q="";break;case"S":case"SS":if("S"==c.charAt(t+1))break;r+=q,q="";break;case"SSS":r+=n.millis.substring(0,3),q="";break;case"a":r+=n.hour>=12?"PM":"AM",q="";break;case"p":r+=n.hour>=12?"p.m.":"a.m.",q="";break;default:r+=u,q=""}}return r+=s}catch(w){return console.log(w),b}},prettyDate:function(a){var b,c,d;return"string"==typeof a&&(b=new Date(a)),"object"==typeof a&&(b=new Date(a.toString())),c=((new Date).getTime()-b.getTime())/1e3,d=Math.floor(c/86400),isNaN(d)||0>d?void 0:d>=31?"more than 31 days":0==d&&(60>c&&"just now"||120>c&&"1 minute ago"||3600>c&&Math.floor(c/60)+" minutes ago"||7200>c&&"1 hour ago"||86400>c&&Math.floor(c/3600)+" hours ago")||1==d&&"Yesterday"||7>d&&d+" days ago"||31>d&&Math.ceil(d/7)+" weeks ago"},toBrowserTimeZone:function(a,b){return this.date(a,b||"MM/dd/yyyy")}}}()}(jQuery);
+
+/**
+ * 获取url参数
+ * @param name
+ * @returns {null}
+ */
+function getQueryString(name) {
+    var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) {
+        return unescape(r[2]);
+    }
+    return null;
+}
+
+/** * 对Date的扩展，将 Date 转化为指定格式的String * 月(M)、日(d)、12小时(h)、24小时(H)、分(m)、秒(s)、周(E)、季度(q)
+ 可以用 1-2 个占位符 * 年(y)可以用 1-4 个占位符，毫秒(S)只能用 1 个占位符(是 1-3 位的数字) * eg: * (new
+ Date()).pattern("yyyy-MM-dd hh:mm:ss.S")==> 2006-07-02 08:09:04.423
+ * (new Date()).pattern("yyyy-MM-dd E HH:mm:ss") ==> 2009-03-10 二 20:09:04
+ * (new Date()).pattern("yyyy-MM-dd EE hh:mm:ss") ==> 2009-03-10 周二 08:09:04
+ * (new Date()).pattern("yyyy-MM-dd EEE hh:mm:ss") ==> 2009-03-10 星期二 08:09:04
+ * (new Date()).pattern("yyyy-M-d h:m:s.S") ==> 2006-7-2 8:9:4.18
+ */
+Date.prototype.pattern=function(fmt) {
+    var o = {
+        "M+" : this.getMonth()+1, //月份
+        "d+" : this.getDate(), //日
+        "h+" : this.getHours()%12 == 0 ? 12 : this.getHours()%12, //小时
+        "H+" : this.getHours(), //小时
+        "m+" : this.getMinutes(), //分
+        "s+" : this.getSeconds(), //秒
+        "q+" : Math.floor((this.getMonth()+3)/3), //季度
+        "S" : this.getMilliseconds() //毫秒
+    };
+    var week = {
+        "0" : "/u65e5",
+        "1" : "/u4e00",
+        "2" : "/u4e8c",
+        "3" : "/u4e09",
+        "4" : "/u56db",
+        "5" : "/u4e94",
+        "6" : "/u516d"
+    };
+    if(/(y+)/.test(fmt)){
+        fmt=fmt.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length));
+    }
+    if(/(E+)/.test(fmt)){
+        fmt=fmt.replace(RegExp.$1, ((RegExp.$1.length>1) ? (RegExp.$1.length>2 ? "/u661f/u671f" : "/u5468") : "")+week[this.getDay()+""]);
+    }
+    for(var k in o){
+        if(new RegExp("("+ k +")").test(fmt)){
+            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));
+        }
+    }
+    return fmt;
+};
+
 //# sourceMappingURL=framework.js.map

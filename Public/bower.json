@@ -19,15 +19,21 @@
         "tests"
     ],
     "dependencies": {
+        "requirejs": "~2.3.3",
         "require-css": "^0.1.8",
         "requirejs-plugins": "^1.0.3",
         "font-awesome": "^4.6.3",
         "jquery": "^2.2.4",
         "bootstrap": "^3.3.6",
         "nprogress": "^0.2.0",
+        "layer": "^3.0.1",
+        "zepto": "^1.1.6",
+        "jquery.touchslider.min": "http://touchslider.com/jquery.touchslider.min.js",
+        "touchslider": "http://www.bcty365.com/demofile/2015/1019/d6c2b9e7a1/js/touchslider.js",
+        "highcharts": "^5.0.6",
+        "jquery.dateFormat.min": "http://cdn.bootcss.com/jquery-dateFormat/1.0/jquery.dateFormat.min.js",
         "js-sha1": "^0.4.0",
         "distpicker": "^1.0.4",
-        "layer": "^3.0.1",
-        "jquery.dateFormat.min": "http://cdn.bootcss.com/jquery-dateFormat/1.0/jquery.dateFormat.min.js"
+        "underscore": "^1.8.3"
     }
 }

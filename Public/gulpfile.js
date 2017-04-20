@@ -29,9 +29,10 @@ gulp.task('build', ['clean'], function(cb) {
 
 gulp.task('sass', function() {
     gulp.src([
-            'sass/icons/*'
-        ])
-        .pipe(gulp.dest('css/icons'));
+        'sass/icons/*'
+    ])
+    .pipe(gulp.dest('css/icons'));
+
     return gulp.src('./sass/**/*.scss')
         .pipe(maps.init())
         .pipe(sass({
@@ -46,75 +47,81 @@ gulp.task('sass', function() {
 
 
 gulp.task('framework', function() {
+    // TODO: lib js
     gulp.src([
-            'bower_components/jquery/dist/jquery.js',
-            'bower_components/bootstrap/dist/js/bootstrap.js',
-            'bower_components/easyui/jquery.easyui.min.js',
-            'bower_components/nprogress/nprogress.js',
-            'bower_components/js-sha1/src/sha1.js',
-            'js/jquery.plugin.js',
-            'bower_components/distpicker/dist/distpicker.data.min.js',
-            'bower_components/distpicker/dist/distpicker.min.js',
-            'bower_components/jquery.dateFormat.min/index.js'
+        'bower_components/jquery/dist/jquery.js',
+        // 'bower_components/bootstrap/dist/js/bootstrap.js',
+        'bower_components/nprogress/nprogress.js',
+        'bower_components/zepto/zepto.js',
+        'bower_components/highcharts/highcharts.js',
+        'bower_components/highcharts/modules/no-data-to-display.js',
+        'bower_components/highcharts/highcharts-more.js',
+        'bower_components/highcharts/modules/solid-gauge.js',
+        'bower_components/js-sha1/src/sha1.js',
+        // 'js/jquery.plugin.js',
+        // 'bower_components/distpicker/dist/distpicker.data.min.js',
+        // 'bower_components/distpicker/dist/distpicker.min.js',
+        // 'bower_components/jquery.dateFormat.min/index.js',
+        'bower_components/touchslider/index.js',
+        'js/public/common.js'
     ])
-        .pipe(maps.init())
-        .pipe(concat('framework.js'))
-        //.pipe(uglify())
-        .pipe(maps.write('.'))
-        .pipe(gulp.dest('assets/js/'));
+    .pipe(maps.init())
+    .pipe(concat('framework.js'))
+    //.pipe(uglify())
+    .pipe(maps.write('.'))
+    .pipe(gulp.dest('assets/js/'));
 
+    // TODO: requireJS
     gulp.src([
-           'bower_components/bootstrap/dist/css/bootstrap.css',
-            'bower_components/font-awesome/css/font-awesome.css',
-            'bower_components/nprogress/nprogress.css',
-            'bower_components/easyui/themes/metro-pms/easyui.css',
-            'bower_components/easyui/themes/icon.css',
-            'bower_components/easyui/themes/color.css'
+        'bower_components/requirejs/require.js'
     ])
-        .pipe(maps.init())
-        .pipe(cleanCSS())
-        .pipe(concat('framework.css'))
-        .pipe(maps.write('.'))
-        .pipe(gulp.dest('assets/css/'));
+    .pipe(maps.init())
+    .pipe(rename({
+        suffix: '.min'
+    }))
+    .pipe(uglify())
+    .pipe(maps.write('.'))
+    .pipe(gulp.dest('assets/js/'));
 
+    // TODO: lib css
     gulp.src([
-            'bower_components/bootstrap/dist/fonts/*',
-            'bower_components/font-awesome/fonts/*'
-        ])
-        .pipe(gulp.dest('assets/fonts/'));
-
-    gulp.src([
-            'bower_components/easyui/themes/icons/*'
-        ])
-        .pipe(gulp.dest('assets/css/icons'));
-
-    gulp.src([
-            'bower_components/easyui/themes/metro-pms/images/*'
-        ])
-        .pipe(gulp.dest('assets/css/images'));
-
-    gulp.src([
-        'bower_components/layer/src/**/*'
+       // 'bower_components/bootstrap/dist/css/bootstrap.css',
+        'bower_components/font-awesome/css/font-awesome.css',
+        'bower_components/nprogress/nprogress.css'
     ])
-        .pipe(gulp.dest('assets/layer'));
+    .pipe(maps.init())
+    .pipe(cleanCSS())
+    .pipe(concat('framework.css'))
+    .pipe(maps.write('.'))
+    .pipe(gulp.dest('assets/css/'));
 
+    // TODO: fonts
     gulp.src([
-        'sass/layerskin*/*.css'
+        'bower_components/bootstrap/dist/fonts/*',
+        'bower_components/font-awesome/fonts/*'
     ])
-        .pipe(gulp.dest('assets/layer/skin'));
+    .pipe(gulp.dest('assets/fonts/'));
+
+    // TODO: layer
+    gulp.src(['bower_components/layer/src/**/*']).pipe(gulp.dest('assets/layer'));
+
+    // TODO: layer skin
+    gulp.src(['sass/layerskin*/*.css']).pipe(gulp.dest('assets/layer/skin'));
 });
 
 gulp.task('js', function() {
-    return gulp.src([])
-        .pipe(maps.init())
-        .pipe(concat('base-data.js'))
-        .pipe(gulp.dest('assets/js'))
-        .pipe(rename({
-            suffix: '.min'
-        }))
-        .pipe(uglify())
-        .pipe(maps.write('.'))
-        .pipe(gulp.dest('assets/js'));
+    return gulp.src([
+
+    ])
+    .pipe(maps.init())
+    .pipe(concat('base-data.js'))
+    .pipe(gulp.dest('assets/js'))
+    .pipe(rename({
+        suffix: '.min'
+    }))
+    .pipe(uglify())
+    .pipe(maps.write('.'))
+    .pipe(gulp.dest('assets/js'));
 });
 
 gulp.task('watch', ['clean', 'sass'], function() {

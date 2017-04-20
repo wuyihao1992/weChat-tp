@@ -4,49 +4,62 @@
 !require(['conf'], function($conf) {
 
 	require.config({
+        urlArgs: $conf.version,
+        basePath: $conf.PUBLIC + '/js/',
 		paths: {
 			"text": "//cdn.bootcss.com/require-text/2.0.12/text.min",
 			"json": "//cdn.bootcss.com/requirejs-plugins/1.0.3/json.min",
-			"css": "//cdn.bootcss.com/require-css/0.1.8/css.min"
+			"css": "//cdn.bootcss.com/require-css/0.1.8/css.min",
+            "api" : 'public/api'
 		}
 	});
 
-	require.config({
-		urlArgs: $conf.version,
-		basePath: $conf.PUBLIC + '/js/',
-		paths: {
-			"easyuiOption": $conf.path + '/js/easyuiCustomOptions'
-		}
-	});
-
-//	require(['menu'],function( menu ){ menu() });
-
-	require(['controller', 'conf'], function(controller, $conf) {
+	require(['controller'], function(controller) {
         // TODO: 加载js模块
-        var paths = location.pathname.replace(/^\//, '').replace(/;.*$/, '').split(/(?!^)\//)
-        var tab = paths[paths.length - 1],
-            module = paths[paths.length - 2],
-            pModule = paths[paths.length - 3];
-        /*
-        console.group('main');
-        console.log(window.location);
-        console.log(paths);
-        console.log(tab);
-        console.log(module);
-        console.log(pModule);
-        console.groupEnd();
-        */
-        if(['login', 'main'].indexOf(tab) > -1){
-            require(['m_' + tab]);
-        }else{
-            require([$conf.PUBLIC + '/js/models/' + pModule + '/' + module + '/' + tab + '.js']);
+        var paths = location.pathname.replace(/^\//, '').replace(/;.*$/, '').split(/(?!^)\//);
+        var length = paths.length;
+        var tab = paths[length - 1],
+            module = paths[length - 2],
+            pModule = paths[length - 3];
+        var homePath = ['login', 'main', 'Index', $conf.homeName];
+
+        if (!!$conf.dev) {
+            console.group('main');
+            console.log(location);
+
+            console.group('paths ->');
+            console.info(paths);
+            console.groupEnd();
+
+            console.log('tab = ' + tab + '; ' + 'module = ' + module + '; ' + 'pModule = ' + pModule);
+            console.groupEnd();
+
+            console.group('conf');
+            console.info($conf);
+            console.groupEnd();
+        }
+
+        if (!!length && length < 3){
+            var isHome = homePath.indexOf(tab) > -1 ||
+                homePath.indexOf(module) > -1 ||
+                homePath.indexOf(pModule) > -1;
+            if(!!isHome){
+                require([$conf.PUBLIC + '/js/models/' + 'Home' + '/' + 'Index' + '/' + 'index' + '.js']);
+            }
+        }else {
+            if(homePath.indexOf(tab) > -1){
+                require([$conf.PUBLIC + '/js/models/' + 'Home' + '/' + 'Index' + '/' + 'index' + '.js']);
+            }else{
+                require([$conf.PUBLIC + '/js/models/' + pModule + '/' + module + '/' + tab + '.js']);
+            }
         }
 
 		// NProgress = parent.NProgress;
 		NProgress.count = 0;
         NProgress.configure({
             trickleRate: 0.01,
-            trickleSpeed: 800
+            trickleSpeed: 800,
+            showSpinner: false
 		});
 
 		$(document).on('click', '[data-url]', function() {
@@ -64,7 +77,7 @@
             return;
         }
 
-		param = controller.getParam();
+		var param = controller.getParam();
 
 		$.get( `${$conf.path}/html/${param.url}.html`).done(function(html){
             var $html = $(html);
@@ -77,6 +90,7 @@
         });
 	});
 
+	/*
 	require(['conf'],function($conf){
 		$(document).on('dblclick','.tabs li',function(){
 			let index = $(this).parent().children().index(this);
@@ -88,4 +102,5 @@
 			location.reload();
 		});
 	});
+	*/
 });

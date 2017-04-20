@@ -15,7 +15,7 @@
         url : $conf.path +'/index.php/Api/Index/index',
         data : param,
         success : function (result) {
-            console.log(result);
+
         }
     });
 });
