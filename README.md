@@ -29,10 +29,10 @@ This is a ThinkPHP project for weChat <br/>
         
         POST
 
-*   请求参数：
+*   请求参数格式：
 
         {
-            "tranCode" : 0,
+            "tranCode" : 1000,
             "data" : {
                 "id" : 1,
                 "name" : 123

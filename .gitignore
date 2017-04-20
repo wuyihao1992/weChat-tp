@@ -21,3 +21,6 @@
 /Application/Runtime
 # /Application/Home/View/Index/test.html
 # /Public/js/models/Home/Index/test.js
+
+# doc
+~$API.docx

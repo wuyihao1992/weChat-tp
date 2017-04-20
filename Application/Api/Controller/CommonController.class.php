@@ -42,7 +42,7 @@
 				'pageSize' => $pageSize,
 				'limit' => $limit,
 				'pages' => $pages,
-				'count' => $count
+				'count' => $conut
 			);
 			//$result = $Db->table('agent_client as client,agent_user as user,agent_client_vm as vm')->field($field)->where($where)->group("client.id")->limit($limit)->order("id desc")->select();
 		}
