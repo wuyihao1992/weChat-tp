@@ -12,6 +12,10 @@
 /Public/bower_components
 /Public/node_modules
 
+# data
+/data/banner/*
+/data/img/*
+
 # app
 */**/*.bak
 /Application/Runtime

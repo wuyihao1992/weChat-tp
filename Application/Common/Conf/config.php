@@ -42,6 +42,13 @@ return array(
 			'no' => 1, //未支付
 			'yes' => 2,	//已支付
 	),
+
+	//添加自己的模板变量规则
+	'TMPL_PARSE_STRING' => [
+        '__TEST__' => 'TMPL TEST',
+        '__VERSION__' => '1.0',
+        '__HOME_NAME__' => 'weChat' // 前端web主页模版名称
+    ],
 		
 	// 业务操作码对应接口
 	'url_trancode' 	=> [
@@ -53,7 +60,6 @@ return array(
     'reCaptcha' => [
         'siteKey' => '6LdzrhsUAAAAAH3pl7Mbb4lZuRA_G5QVjFHFVUCF',
         'secretKey' => '6LdzrhsUAAAAAG96wkqRcGJkBgvasruf7G-IzMbQ'
-    ]		
-	
+    ]
 		
 );
