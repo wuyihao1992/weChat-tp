@@ -1,0 +1,139 @@
+@import "../../../vars";
+
+.searchWrap{
+    width: $full-w;
+    height: 40px;
+    background-color: $color-deep-red;
+    z-index: 50;
+    //position: fixed;
+    // top: 0;
+    box-shadow: 0 6px 12px rgba(0,0,0,.375);
+
+    &.fixed{
+        position: fixed;
+    }
+}
+
+.banner{
+    width: 100%;
+    height: 26vh;
+    position: relative;
+
+    touch-action: pan-y; //横向滚动时
+
+    ul.sliderContentUl{
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        -webkit-transition: left 600ms ease-out;
+
+        > li{
+            width: 100%;
+            height: 100%;
+            float: left;
+
+            a{
+                display: block;
+                @include full-h-w();
+
+                img{
+                    width: $full-w;
+                    //@include full-h-w();
+                    //@include bg-cover();
+                }
+            }
+        }
+    }
+
+    ul.sliderNav{
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10;
+
+        > li{
+            width: 2vw;
+            height: 2vw;
+            border-radius: 50%;
+            background-color: #fff;
+            float: left;
+            font-size: 0;
+            line-height: 0;
+            text-indent: -9999;
+            margin: 0 5px;
+
+            &.active{
+                background-color: $color-blue;
+            }
+        }
+    }
+}
+
+.menuWrap{
+    width: $full-w;
+    height: 25vh;
+
+    div{
+        width: $full-w;
+        height: 50%;
+        box-sizing: border-box;
+
+        display: -webkit-box;
+        -webkit-box-orient: horizontal; // 子元素排列方式
+        -moz-box-orient: horizontal;
+        -webkit-box-align: center; // 子元素横向排列方式
+        -webkit-box-direction: normal; // 子元素排列顺序：倒序排列（reverse），还有正常（normal，默认顺序）
+
+        > h1{
+            width: 33.33333333333333333333%;
+            height: 100%;
+
+            display: -webkit-box;
+            box-sizing: border-box;
+            -webkit-box-flex: 1;
+            -moz-box-flex: 1;
+
+            display: flex;
+            flex-direction: column; //多个子元素垂直剧中
+            align-items: center;  //垂直
+            justify-content: center;  //水平
+
+            &:not(:last-child){
+                border-right: 1px solid $color-border;
+            }
+        }
+
+        &:last-child{
+            border-top: 1px solid $color-border;
+        }
+    }
+}
+
+.imgListWrap{
+    width: 100%;
+
+    ul{
+        width: 100%;
+
+        > li{
+            width: 100%;
+            height: 25vh;
+
+            a{
+                display: block;
+                @include full-h-w();
+
+                img, div{
+                    @include full-h-w();
+                    @include bg-cover();
+                }
+            }
+        }
+    }
+}
+
+.loadingWrap{
+    width: 100%;
+
+}

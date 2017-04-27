@@ -1,13 +1,20 @@
 @charset "UTF-8";
-/**
- * 色调定义
- * 主色调 ：橙色 #f47920
- * 辅色调 ：浅红 #ff6347
- * 边框色 ：象牙色 #f2eada
- *
+/*
+ ****************************************
+ * 引入 reset                           *
+ * 引入 home                            *
+ * vars 在reset与home中继承             *
+ * @命名规范：                          *
+ * ●公共类用 `-` 连接符命名             *
+ * ●非公共类用驼峰法命名                *
+ * ●scss $var 变量用 `-` 连接符命名     *
+ * ●scss @minxin 用 `_` 下划线开头      *     
+ ****************************************
  */
-/**
- * css reset
+/*
+ ********************
+ * css reset        *
+ ********************
  */
 ::selection, ::-webkit-selection, ::-moz-selection {
   background: none; }
@@ -43,22 +50,39 @@ body {
   /*盒子的大小包括边框的宽度*/
   -webkit-box-sizing: border-box; }
 
+div, section {
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box; }
+
 ul, li, ol {
   list-style: none; }
 
 img, iframe {
-  border: none; }
+  border: 0; }
 
 img {
+  display: block;
   vertical-align: middle; }
 
 table {
   border-collapse: collapse;
   border: 0;
   border-spacing: 0; }
+  table tr td {
+    text-align: center; }
+  table thead tr {
+    background-color: #FFF; }
+  table tbody tr {
+    height: 55px; }
+    table tbody tr:hover {
+      background-color: #f7f7f7; }
+    table tbody tr:nth-child(odd) {
+      background-color: #FFF; }
+    table tbody tr:nth-child(even) {
+      background-color: #F9F9F9; }
 
 a {
-  color: #00b1a5;
+  color: #ff6347;
   text-decoration: none;
   blr: expression(this.onFocus = this.close());
   blr: expression(this.onFocus = this.blur());
@@ -83,6 +107,69 @@ a,a:link,a:visited,a:hover{
 	-webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 */
+input {
+  background-image: none; }
+  input[type=password], input[type=datetime], input[type=datetime-local], input[type=date], input[type=month], input[type=time], input[type=week], input[type=number], input[type=email], input[type=url], input[type=search], input[type=tel], input[type=color], input[type=text] {
+    height: 20px;
+    line-height: 20px;
+    padding: 0;
+    border: 1px solid #ccc;
+    -webkit-box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.075);
+    box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.075);
+    -webkit-transition: border linear .2s,box-shadow linear .2s;
+    -webkit-transition: border linear .2s,-webkit-box-shadow linear .2s;
+    transition: border linear .2s,-webkit-box-shadow linear .2s;
+    transition: border linear .2s,box-shadow linear .2s;
+    transition: border linear .2s,box-shadow linear .2s,-webkit-box-shadow linear .2s; }
+    input[type=password]:focus, input[type=datetime]:focus, input[type=datetime-local]:focus, input[type=date]:focus, input[type=month]:focus, input[type=time]:focus, input[type=week]:focus, input[type=number]:focus, input[type=email]:focus, input[type=url]:focus, input[type=search]:focus, input[type=tel]:focus, input[type=color]:focus, input[type=text]:focus {
+      /*outline-offset: 0;*/
+      background-color: #fff;
+      border-color: rgba(0, 177, 165, 0.8);
+      outline: 0;
+      outline: dotted thin\9;
+      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
+  input[type=checkbox]:focus, input[type=radio]:focus, input[type=button]:focus {
+    -webkit-box-shadow: none;
+            box-shadow: none; }
+
+textarea {
+  height: 20px;
+  line-height: 20px;
+  padding: 0;
+  border: 1px solid #ccc;
+  -webkit-box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.075);
+  box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.075);
+  -webkit-transition: border linear .2s,box-shadow linear .2s;
+  -webkit-transition: border linear .2s,-webkit-box-shadow linear .2s;
+  transition: border linear .2s,-webkit-box-shadow linear .2s;
+  transition: border linear .2s,box-shadow linear .2s;
+  transition: border linear .2s,box-shadow linear .2s,-webkit-box-shadow linear .2s; }
+  textarea:focus {
+    /*outline-offset: 0;*/
+    background-color: #fff;
+    border-color: rgba(0, 177, 165, 0.8);
+    outline: 0;
+    outline: dotted thin\9;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
+
+/**
+ * 三角形
+ */
+.triangle:before {
+  display: block;
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -3px;
+  -webkit-transform: translate(-50%, -50%);
+      -ms-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 6px solid #f47920; }
+
 /**
  * webkit scrollbar
  */
@@ -108,7 +195,151 @@ a,a:link,a:visited,a:hover{
 #nprogress .bar {
   background: #ff6347; }
 
+/**横向排列**/
+.horizon-par {
+  display: -webkit-box;
+  display: -moz-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  box-orient: horizontal;
+  -webkit-box-orient: horizontal; }
+
+.horizon-chi, .vertical-chi {
+  box-flex: 1;
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1; }
+
+/**竖向排列**/
+.vertical-par {
+  -webkit-box-orient: vertical;
+  box-orient: vertical; }
+
+/*
+ ********************
+ * home 模块        *
+ ********************
+ */
+.searchWrap {
+  width: 100%;
+  height: 40px;
+  background-color: #ff6347;
+  z-index: 50;
+  -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.375);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.375); }
+  .searchWrap.fixed {
+    position: fixed; }
+
+.banner {
+  width: 100%;
+  height: 26vh;
+  position: relative;
+  -ms-touch-action: pan-y;
+      touch-action: pan-y; }
+  .banner ul.sliderContentUl {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    -webkit-transition: left 600ms ease-out; }
+    .banner ul.sliderContentUl > li {
+      width: 100%;
+      height: 100%;
+      float: left; }
+      .banner ul.sliderContentUl > li a {
+        display: block;
+        width: 100%;
+        height: 100%; }
+        .banner ul.sliderContentUl > li a img {
+          width: 100%; }
+  .banner ul.sliderNav {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+        -ms-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+    z-index: 10; }
+    .banner ul.sliderNav > li {
+      width: 2vw;
+      height: 2vw;
+      border-radius: 50%;
+      background-color: #fff;
+      float: left;
+      font-size: 0;
+      line-height: 0;
+      text-indent: -9999;
+      margin: 0 5px; }
+      .banner ul.sliderNav > li.active {
+        background-color: #00b1a5; }
+
+.menuWrap {
+  width: 100%;
+  height: 25vh; }
+  .menuWrap div {
+    width: 100%;
+    height: 50%;
+    -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+    display: -webkit-box;
+    -webkit-box-orient: horizontal;
+    -webkit-box-align: center;
+    -webkit-box-direction: normal; }
+    .menuWrap div > h1 {
+      width: 33.33333333333333333333%;
+      height: 100%;
+      display: -webkit-box;
+      -webkit-box-sizing: border-box;
+              box-sizing: border-box;
+      -webkit-box-flex: 1;
+      -moz-box-flex: 1;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-orient: vertical;
+      -webkit-box-direction: normal;
+      -webkit-flex-direction: column;
+          -ms-flex-direction: column;
+              flex-direction: column;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+          -ms-flex-align: center;
+              align-items: center;
+      -webkit-box-pack: center;
+      -webkit-justify-content: center;
+          -ms-flex-pack: center;
+              justify-content: center; }
+      .menuWrap div > h1:not(:last-child) {
+        border-right: 1px solid #E8E8E8; }
+    .menuWrap div:last-child {
+      border-top: 1px solid #E8E8E8; }
+
+.imgListWrap {
+  width: 100%; }
+  .imgListWrap ul {
+    width: 100%; }
+    .imgListWrap ul > li {
+      width: 100%;
+      height: 25vh; }
+      .imgListWrap ul > li a {
+        display: block;
+        width: 100%;
+        height: 100%; }
+        .imgListWrap ul > li a img, .imgListWrap ul > li a div {
+          width: 100%;
+          height: 100%;
+          background-size: cover;
+          background-repeat: no-repeat;
+          background-position: center; }
+
+.loadingWrap {
+  width: 100%; }
+
 a.test {
   color: #f47920; }
+
+/**
+* 禁止鼠标事件
+*/
+.disable-hover {
+  pointer-events: none; }
 
 /*# sourceMappingURL=base.css.map */

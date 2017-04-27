@@ -1,21 +1,14 @@
-!define(['conf'], function ($conf) {
+!define(['conf', 'api'], function ($conf, api) {
     console.info('success required test.js');
 
     var param = {
-        "tranCode" : 0,
+        "tranCode" : 1000,
         "data" : {
             "id" : 1,
             "name" : 123
         }
     };
-    param = JSON.stringify(param);
-    $.ajax({
-        type : 'post',
-        dataType : 'json',
-        url : $conf.path +'/index.php/Api/Index/index',
-        data : param,
-        success : function (result) {
-
-        }
+    api(param).then(function(result){
+    	console.log(result);
     });
 });

@@ -1,11 +1,17 @@
 /**
  * Created by wuyihao on 2017/4/19.
  */
+/**
+ * @method ajax封装
+ * @param object param 请求参数
+ * @param string url 请求结果
+ * @param type 请求类型
+ */
 !define(['conf'],function ($conf) {
-    return function (param, url = '') {
+    return function (param, url = '', type = 'post') {
         return $.ajax({
             url : !!url ? url : ($conf.path +'/index.php/Api/Index/index'),
-            type : 'post',
+            type : type || 'post',
             dataType : 'json',
             data : JSON.stringify(param || {}),
             contentType : 'application/json'

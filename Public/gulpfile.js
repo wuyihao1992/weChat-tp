@@ -1,20 +1,47 @@
 'use strict';
 
-var fs = require('fs');
-var gulp = require('gulp');
-var sass = require('gulp-sass');
-var maps = require('gulp-sourcemaps');
-var pref = require('gulp-autoprefixer');
-var concat = require('gulp-concat');
-var uglify = require('gulp-uglify');
-var cleanCSS = require('gulp-clean-css');
-var rename = require('gulp-rename');
-var zip = require('gulp-zip');
-var del = require('del');
+var fs = require('fs'),
+    gulp = require('gulp'),
+    sass = require('gulp-sass'),
+    maps = require('gulp-sourcemaps'),
+    pref = require('gulp-autoprefixer'),
+    concat = require('gulp-concat'),
+    uglify = require('gulp-uglify'),
+    clean = require('gulp-clean'),
+    cleanCSS = require('gulp-clean-css'),
+    rename = require('gulp-rename'),
+    zip = require('gulp-zip'),
+    del = require('del');
 var runSequence = require('run-sequence').use(gulp);
 var argv = require('yargs').argv;
 var browserSync = require('browser-sync').create();
+var option = {
+    read : false,
+    force : true
+};
 
+/**
+ * 清除.bak文件
+ */
+gulp.task('clear', function (cb) {
+    return gulp.src([
+        '../Application/Home/View/**/*.bak'
+    ])
+        .pipe(clean(option));
+});
+
+/**
+ * FIXME: 删除不了项目外的文件
+ */
+gulp.task('delete', function(cb) {
+    return del([
+        '../Application/Home/View/**/*.bak'
+    ], cb);
+});
+
+/**
+ * 清除打包文件
+ */
 gulp.task('clean', function(cb) {
     return del([
         'dist/**/*',
@@ -23,29 +50,9 @@ gulp.task('clean', function(cb) {
     ], cb);
 });
 
-gulp.task('build', ['clean'], function(cb) {
-    return gulp.start(['framework', 'sass'], cb);
-});
-
-gulp.task('sass', function() {
-    gulp.src([
-        'sass/icons/*'
-    ])
-    .pipe(gulp.dest('css/icons'));
-
-    return gulp.src('./sass/**/*.scss')
-        .pipe(maps.init())
-        .pipe(sass({
-            //outputStyle: 'compressed'
-        }).on('error', sass.logError))
-        .pipe(pref(['last 10 versions']))
-        //.pipe(rename({suffix: '.min'}))
-        //.pipe(cleanCSS())
-        .pipe(maps.write('.'))
-        .pipe(gulp.dest('./css'));
-});
-
-
+/**
+ * 打包资源文件 js & css
+ */
 gulp.task('framework', function() {
     // TODO: lib js
     gulp.src([
@@ -109,6 +116,27 @@ gulp.task('framework', function() {
     gulp.src(['sass/layerskin*/*.css']).pipe(gulp.dest('assets/layer/skin'));
 });
 
+/**
+ * 编译.scss
+ */
+gulp.task('sass', function() {
+    gulp.src(['sass/icons/*']).pipe(gulp.dest('css/icons'));
+
+    return gulp.src('./sass/**/*.scss')
+        .pipe(maps.init())
+        .pipe(sass({
+            //outputStyle: 'compressed'
+        }).on('error', sass.logError))
+        .pipe(pref(['last 10 versions']))
+        //.pipe(rename({suffix: '.min'}))
+        //.pipe(cleanCSS())
+        .pipe(maps.write('.'))
+        .pipe(gulp.dest('./css'));
+});
+
+/**
+ * 用于压缩js
+ */
 gulp.task('js', function() {
     return gulp.src([
 
@@ -129,3 +157,10 @@ gulp.task('watch', ['clean', 'sass'], function() {
 });
 
 gulp.task('default', ['watch']);
+
+/**
+ * function回调，用于配置异步任务。避免边删除边编译的情况。
+ */
+gulp.task('build', ['clean'], function(cb) {
+    return gulp.start(['framework', 'sass'], cb);
+});

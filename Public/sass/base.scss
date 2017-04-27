@@ -1,7 +1,26 @@
+/*
+ ****************************************
+ * 引入 reset                           *
+ * 引入 home                            *
+ * vars 在reset与home中继承             *
+ * @命名规范：                          *
+ * ●公共类用 `-` 连接符命名             *
+ * ●非公共类用驼峰法命名                *
+ * ●scss $var 变量用 `-` 连接符命名     *
+ * ●scss @minxin 用 `_` 下划线开头      *     
+ ****************************************
+ */
 @charset "utf-8";
-
 @import "reset";
+@import "home";
 
 a.test{
-    color: $main-color;
+    color: $color-main;
+}
+
+/**
+* 禁止鼠标事件
+*/
+.disable-hover{
+	pointer-events: none;
 }
