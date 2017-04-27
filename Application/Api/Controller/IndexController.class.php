@@ -32,11 +32,16 @@
 						'name' => 'test'
 					]
 				];
-				$this -> jret(1,'参数错误，tranCode丢失。参数列表如下：',$trueParam);
+				$this -> jret(1, '参数错误，tranCode丢失。请求参数为：param => ' . json_encode($param, JSON_FORCE_OBJECT), $trueParam);
 				return;
 			}
 			
 			$url_tranCode = C('url_tranCode');
+			if(!isset($url_tranCode[$tranCode])){
+				$this -> jret(1, '参数错误，tranCode不存在。请求参数为：param => ' . json_encode($param, JSON_FORCE_OBJECT), $trueParam);
+				return;
+			}
+			
 			R($url_tranCode[$tranCode], array($param['data']));
 		}
 		
@@ -52,12 +57,12 @@
 	
 			$tranCode = $param['tranCode'];
 			if (!isset($tranCode)) {
-				$this -> jret(1,'参数错误，tranCode丢失');
+				$this -> jret(1, '参数错误，tranCode丢失');
 				return;
 			}
 			
 			$url_tranCode = config('url_tranCode');
-			return view($url_tranCode[$tranCode],['name'=>'thinkphp']);		
+			return view($url_tranCode[$tranCode], ['name'=>'thinkphp']);		
 		}
 		
 		/**
@@ -80,9 +85,16 @@
             echo 'ajax success! welcome to Index/test API<br/>您请求的参数为:<br/>'.'<style>#table-5 thead th {background-color: rgb(156, 186, 95);color: #fff;border-bottom-width: 0;}#table-5 td {color: #000;}#table-5 tr, #table-5 th {border: 1px solid rgb(156, 186, 95);}#table-5 td, #table-5 th {padding: 5px 10px;font-size: 12px;font-family: Verdana;font-weight: bold;}#table-5 tr:nth-child(even){background: rgb(230, 238, 214)}#table-5 tr:nth-child(odd){background: #FFF}</style>'.
                 '<table id="table-5"><thead><tr><td>参数</td><td>值</td></tr></thead><tbody>'. $str .'</tbody></table>';
             */
-
-            $msg = 'ajax success! welcome to Index/test API! 您请求的业务参数为: data => ' . json_encode($data, JSON_FORCE_OBJECT);
-			$this -> jret(0, $msg);
+			
+			$user = M('user');
+			$result = $user -> where('id = ' . $data['id']) -> field(array('password'), true) -> find();
+			if(empty($result)){
+				$msg = 'ajax success! welcome to Index/test API! 您请求的业务参数为: data => ' . json_encode($data, JSON_FORCE_OBJECT) . ' ,查询及结果为空！';
+				$this -> jret(0, $msg);
+				return;
+			}
+			
+            $this -> jret(0, '查询成功', $result);
 		}
 	}
 

@@ -10,7 +10,7 @@
 		 * @param object $data 返回数据
 		 * @param object $pager 分页内容
 		 */	
-		protected function jret($ret = 1, $msg = '暂无数据', $data = [], $pager = []){
+		protected function jret($ret = 1, $msg = '暂无数据', $data = array(), $pager = array()){
 			echo json_encode(array(
 				'ret' => $ret,
 				'msg' => $msg,
@@ -19,6 +19,26 @@
 				'time' => time()
 			));
 		}
+		
+		/**
+		 * @method 获取session
+		 * @param string $key session字段
+		 */
+		protected function getSession(){
+			session_start();
+			
+			session_write_close();
+		}
+		
+		/**
+		 * @method 设置session
+		 * @param string $key session字段
+		 */
+		protected function setSession(){
+			session_start();
+			
+			session_write_close();
+		}		
 		
 		/**
 		 * @method 列表分页计算
@@ -60,6 +80,7 @@
 		    }
 		    return trim($str,"&");
 		}
+		
 	
 	}
 
