@@ -11,6 +11,7 @@
 # Public
 /Public/bower_components
 /Public/node_modules
+/Public/img/test.*
 
 # data
 /data/banner/*

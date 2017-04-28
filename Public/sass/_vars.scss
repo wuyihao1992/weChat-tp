@@ -1,4 +1,4 @@
-// TODO: 公共变量
+// TODO: 公共变量定义
 
 // 色调定义
 // ●主色调 ：橙色 #f47920 / rgba(244, 121, 32, 1)
@@ -29,5 +29,96 @@ $full-h: 100%;
     background-repeat: no-repeat;
     background-position: center;
     //background-attachment: fixed;
-    //background-image: url("");
+}
+
+// 公共背景图片地址
+// 字符串变量需要用 #{$string} 获取, 用'string'传递
+@mixin bg-img($img){
+	background-image: url(../img/#{$img});
+	background-repeat: no-repeat;
+}
+
+// 用于按需加载是的背景图片路径，此时编译的css在 css/models/Home/Index/view.css
+@mixin bg-img-model($img){
+    background-image: url(../../../../img/#{$img});
+    background-repeat: no-repeat;
+}
+
+// triangle
+@mixin triangle($direction, $size, $borderColor: $color-main) {
+    content:"";
+    height: 0;
+    width: 0;
+
+    @if $direction == top {
+        border-bottom: $size solid $borderColor;
+        border-left: $size dashed transparent;
+        border-right: $size dashed transparent;
+    } @else if $direction == right {
+        border-left: $size solid $borderColor;
+        border-top: $size dashed transparent;
+        border-bottom: $size dashed transparent;
+    } @else if $direction == bottom {
+        border-top: $size solid $borderColor;
+        border-left: $size dashed transparent;
+        border-right: $size dashed transparent;
+    } @else if $direction == left {
+        border-right: $size solid $borderColor;
+        border-top: $size dashed transparent;
+        border-bottom: $size dashed transparent;
+    }
+}
+.trangleTest{
+    @include triangle(top, 8px);
+}
+
+// 是否兼容ie6,7
+$lte7: true !default;
+
+// @content的使用价值体现在css3的media-queries，animation的keyframes定义，还有为浏览器兼容的定义。
+// @include 调用时 (样式)变量 写在 () 小括号里面，如：@include mixin-name($var1,$var2,...,$varn)
+// @content 调用时 样式写在 {} 大括号里面，如：@include mixin-name{ .test{color:red;} }
+// 1.定义media-queries的最小最大宽度
+@mixin screen($res-min, $res-max){
+    @media screen and ( min-width: $res-min ) and ( max-width: $res-max ){
+        @content;
+    }
+}
+
+// 2.定义animation的keyframes
+@mixin keyframes($name){
+    @keyframes #{$name} {
+        @content;
+    }
+}
+
+// 3.定义所有不支持圆角的浏览器使用背景图片
+// 使用[modernizr](http://modernizr.com/)来检测，在html上加class
+@mixin no-border-radius{
+    .no-border-radius{
+        @content
+    }
+}
+
+%clearFix {
+    @if $lte7 {
+        *zoom: 1;
+    }
+
+    &:before, &:after {
+        content: "";
+        display: table;
+        font: 0/0 a;
+    }
+
+    &:after {
+        clear: both;
+    }
+}
+
+.clearFixTest1{
+    @extend %clearFix;
+}
+.clearFixTest2{
+    @extend %clearFix;
 }

@@ -45,12 +45,16 @@
                 homePath.indexOf(pModule) > -1;
             if(!!isHome){
                 require([$conf.PUBLIC + '/js/models/' + 'Home' + '/' + 'Index' + '/' + 'index' + '.js']);
+                // TODO: 实现按需加载css。需要在sass/models/模块下构建相应的scss，如sass/models/Home/Index/view.scss
+                // require(['css!' + $conf.PUBLIC + '/css/models/' + 'Home' + '/' + 'Index' + '/' + 'view' + '.css']);
             }
         }else {
             if(homePath.indexOf(tab) > -1){
                 require([$conf.PUBLIC + '/js/models/' + 'Home' + '/' + 'Index' + '/' + 'index' + '.js']);
+                // require(['css!' + $conf.PUBLIC + '/css/models/' + 'Home' + '/' + 'Index' + '/' + 'view' + '.css']);
             }else{
                 require([$conf.PUBLIC + '/js/models/' + pModule + '/' + module + '/' + tab + '.js']);
+                // require(['css!' + $conf.PUBLIC + '/css/models/' + pModule + '/' + module + '/' + tab + '.css']);
             }
         }
 

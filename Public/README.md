@@ -1,5 +1,5 @@
 ﻿#### install
-*   npm install --save-dev
+*   npm install --save-dev / npm install --global
 *   bower install
 
 #### run task

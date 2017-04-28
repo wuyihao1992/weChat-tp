@@ -1,9 +1,22 @@
 /**
  * Created by wuyihao on 2017/4/25.
  */
-!define([], function () {
+!define(['api'], function (api) {
     var View = function () {
         var _this = this;
+
+        this.getBanner = function () {
+            var param = {
+                "tranCode" : 1000,
+                "data" : {
+                    "id" : 1,
+                    "name" : 123
+                }
+            };
+            api(param).then(function (result) {
+
+            });
+        };
 
         this.slider = function () {
             var control = navigator.control || {};
@@ -66,13 +79,17 @@
             var callback = function(){
                 var topHeight = $document.scrollTop();
                 if (topHeight > $searchWrap.height()) {
-                    $searchWrap.addClass('fixed');
-                }else{
-                    $searchWrap.removeClass('fixed');
+                    if (!$searchWrap.hasClass('fixed')) {
+                        $searchWrap.addClass('fixed');
+                    }
+                }else {
+                    if ($searchWrap.hasClass('fixed')) {
+                        $searchWrap.removeClass('fixed');
+                    }
                 }
 
                 ticking = false;
-            }
+            };
 
             $document.on('scroll', function (e) {
                 onScroller(callback);
@@ -84,6 +101,7 @@
         };
 
         this.init = function () {
+            _this.getBanner();
             _this.slider();
             _this.scroller();
         }
@@ -91,5 +109,4 @@
 
     var view = new View();
     view.init();
-
 });

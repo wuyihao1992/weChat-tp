@@ -266,7 +266,6 @@ function monthMap(month, type) {
     });
 */
 (function(){
- 
     var special = jQuery.event.special,
         uid1 = 'D' + (+new Date()),
         uid2 = 'D' + (+new Date() + 1);
@@ -334,5 +333,4 @@ function monthMap(month, type) {
             jQuery(this).unbind( 'scroll', jQuery(this).data(uid2) );
         }
     };
- 
 })(jQuery);
