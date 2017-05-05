@@ -8,6 +8,9 @@
 ::selection, ::-webkit-selection, ::-moz-selection{background: none;}
 
 *{padding: 0;margin: 0;list-style: none;border: 0;}
+*, :after, :before {
+    box-sizing: border-box;
+}
 
 body, html{
     height: 100%;

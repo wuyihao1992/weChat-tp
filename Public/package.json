@@ -28,6 +28,7 @@
     "gulp-uglify": "^1.5.1",
     "gulp-zip": "^3.0.2",
     "run-sequence": "^1.1.5",
-    "yargs": "^3.32.0"
+    "yargs": "^3.32.0",
+    "css-sprite": "https://github.com/aslansky/css-sprite.git"
   }
 }

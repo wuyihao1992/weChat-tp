@@ -15,6 +15,9 @@ var fs = require('fs'),
 var runSequence = require('run-sequence').use(gulp);
 var argv = require('yargs').argv;
 var browserSync = require('browser-sync').create();
+var gulpif = require('gulp-if');
+var sprite = require('css-sprite').stream;
+
 var option = {
     read : false,
     force : true
@@ -151,6 +154,32 @@ gulp.task('js', function() {
     .pipe(maps.write('.'))
     .pipe(gulp.dest('assets/js'));
 });
+
+/**
+ * css sprite 生成雪碧图（CSS图像拼合技术，CSS贴图定位）
+ */
+// generate sprite.png and _sprite.scss
+gulp.task('sprites', function () {
+  return gulp.src('./src/img/*.png')
+    .pipe(sprite({
+      name: 'sprite',
+      style: '_sprite.scss',
+      cssPath: './img',
+      processor: 'scss'
+    }))
+    .pipe(gulpif('*.png', gulp.dest('./dist/img/'), gulp.dest('./dist/scss/')))
+});
+// generate scss with base64 encoded images
+gulp.task('base64', function () {
+  return gulp.src('./src/img/*.png')
+    .pipe(sprite({
+      base64: true,
+      style: '_base64.scss',
+      processor: 'scss'
+    }))
+    .pipe(gulp.dest('./dist/scss/'));
+});
+
 
 gulp.task('watch', ['clean', 'sass'], function() {
     gulp.watch('./sass/**/*.scss', ['sass']);
