@@ -15,20 +15,23 @@
   "devDependencies": {
     "bower-installer": "^1.3.4",
     "browser-sync": "^2.11.1",
+    "css-sprite": "https://github.com/aslansky/css-sprite.git",
     "del": "^2.2.0",
     "gulp": "^3.9.0",
     "gulp-autoprefixer": "^3.1.0",
     "gulp-clean": "^0.3.2",
     "gulp-clean-css": "^2.0.9",
     "gulp-concat": "^2.6.0",
+    "gulp-css-spriter": "^0.4.0",
     "gulp-less": "^3.0.5",
     "gulp-rename": "^1.2.2",
     "gulp-sass": "^2.1.1",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-uglify": "^1.5.1",
     "gulp-zip": "^3.0.2",
+    "gulp.spritesmith": "^6.5.0",
     "run-sequence": "^1.1.5",
-    "yargs": "^3.32.0",
-    "css-sprite": "https://github.com/aslansky/css-sprite.git"
+    "sprity": "^1.0.8",
+    "yargs": "^3.32.0"
   }
 }
