@@ -9,7 +9,13 @@
 // | Author: liu21st <liu21st@gmail.com>
 // +----------------------------------------------------------------------
 
-	error_reporting(E_ALL^E_NOTICE);
+	// error_reporting(E_ALL^E_NOTICE);
+
+	 // 关闭错误报告
+	 error_reporting(0);
+
+	 // 报告 runtime 错误
+	 // error_reporting(E_ERROR | E_WARNING | E_PARSE);
 	
 	// 应用入口文件
 	$noCheckLogin = array(

@@ -5,16 +5,24 @@
  * css reset        *
  ********************
  */
-::selection, ::-webkit-selection, ::-moz-selection{background: none;}
+::selection, ::-webkit-selection, ::-moz-selection{
+  background: none;
+}
+:focus {
+  outline: none;
+}
+input:focus, textarea:focus, select:focus {
+  outline-offset: 0;
+}
 
-*{padding: 0;margin: 0;list-style: none;border: 0;}
+*{padding: 0;margin: 0;list-style: none;border: 0;vertical-align: baseline;}
 *, :after, :before {
     box-sizing: border-box;
 }
 
 body, html{
     height: 100%;
-    font-family: 'Arial', 'Microsoft YaHei';
+    font-family: "PingFang SC","Microsoft YaHei",Arial,Helvetica,sans-serif,"宋体";
     tap-highlight-color: rgba(0,0,0,0);
     -webkit-tap-highlight-color: rgba(0,0,0,0);
     // 禁止iOS用户选中文字
@@ -58,6 +66,7 @@ table{
     border-collapse: collapse;
     border: 0;
     border-spacing: 0;
+    width: 100%;
 
     tr{
         td{text-align: center;}
@@ -65,17 +74,17 @@ table{
 
     thead{
         tr{
-            background-color: #FFF;
+            background-color: $color-low-red;
         }
     }
 
     tbody{
         tr{
-            height: 55px;
+            height: 32px;
 
-            &:hover{background-color: #f7f7f7;}
+            &:hover, &:nth-child(odd):hover, &:nth-child(even):hover{background-color: $color-low-red;}
             &:nth-child(odd){background-color: #FFF;}
-            &:nth-child(even){background-color: #F9F9F9;}
+            &:nth-child(even){background-color: $color-low-red;}
         }
     }
 }
@@ -157,7 +166,7 @@ input{
         box-shadow: none;
     }
 }
-textarea{
+select,textarea{
     @include _input;
 
     &:focus{

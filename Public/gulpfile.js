@@ -128,7 +128,7 @@ gulp.task('framework', function() {
  * 编译.scss
  */
 gulp.task('sass', function() {
-    gulp.src(['sass/icons/*']).pipe(gulp.dest('css/icons'));
+    // gulp.src(['sass/icons/*']).pipe(gulp.dest('css/icons'));
 
     return gulp.src('./sass/**/*.scss')
         .pipe(maps.init())
@@ -146,9 +146,7 @@ gulp.task('sass', function() {
  * 用于压缩js
  */
 gulp.task('js', function() {
-    return gulp.src([
-
-    ])
+    return gulp.src([])
     .pipe(maps.init())
     .pipe(concat('base-data.js'))
     .pipe(gulp.dest('assets/js'))
@@ -161,86 +159,59 @@ gulp.task('js', function() {
 });
 
 /**
- * css-sprite 生成雪碧图（CSS图像拼合技术，CSS贴图定位）
+ * css-sprite(未安装) 生成雪碧图（CSS图像拼合技术，CSS贴图定位. 目前用了 gulp.spritesmith生成）
  */
 // generate sprite.png and _sprite.scss
 gulp.task('sprite', function () {
-  return gulp.src('./src/img/*.png')
-    .pipe(sprite({
-      name: 'sprite',
-      style: '_sprite.scss',
-      cssPath: './img',
-      processor: 'scss'
-    }))
-    .pipe(gulpif('*.png', gulp.dest('./dist/img/'), gulp.dest('./dist/scss/')))
+    return gulp.src('sass/icons/*.png')
+        .pipe(sprite({
+            name: 'sprite',
+            style: '_sprite.scss',
+            cssPath: './sass',
+            processor: 'scss'
+        }))
+        .pipe(gulpif('*.png', gulp.dest('./css/icons/'), gulp.dest('./css')));
 });
 // generate scss with base64 encoded images
 gulp.task('base64', function () {
-  return gulp.src('./img/*.png')
-    .pipe(sprite({
-      base64: true,
-      style: '_base64.scss',
-      processor: 'scss'
-    }))
-    .pipe(gulp.dest('./dist/scss/'));
+    return gulp.src('./img/*.png')
+        .pipe(sprite({
+            base64: true,
+            style: '_base64.scss',
+            processor: 'scss'
+        }))
+        .pipe(gulp.dest('./dist/scss/'));
 });
 
 /**
- * gulp-css-spriter 生成雪碧图（CSS图像拼合技术，CSS贴图定位）
+ * FIXME: gulp-css-spriter 生成雪碧图
  */
 gulp.task('cssSpriter', function() {
-    return gulp.src('./css/recharge.css')//比如recharge.css这个样式里面什么都不用改，是你想要合并的图就要引用这个样式。 很重要 注意(recharge.css)这个是我的项目。别傻到家抄我一样的。
+    return gulp.src('./css/cssSpriter.css')//比如recharge.css这个样式里面什么都不用改，是你想要合并的图就要引用这个样式。
         .pipe(spriter({
             // The path and file name of where we will save the sprite sheet
-            'spriteSheet': './dist/images/spritesheet.png', //这是雪碧图自动合成的图。 很重要
+            'spriteSheet': './css/icons/cssSpriter.png', //这是雪碧图自动合成的图。 很重要
             // Because we don't know where you will end up saving the CSS file at this point in the pipe,
             // we need a litle help identifying where it will be.
-            'pathToSpriteSheetFromCSS': '../images/spritesheet.png' //这是在css引用的图片路径，很重要
+            'pathToSpriteSheetFromCSS': './sass/icons/*.png' //这是在css引用的图片路径，很重要
         }))
-        .pipe(gulp.dest('./dist/css')); //最后生成出来
+        .pipe(gulp.dest('./css')); //最后生成出来
 });
 
 /**
- * gulp.spritesmith 生成雪碧图（CSS图像拼合技术，CSS贴图定位）
+ * gulp.spritesmith 生成雪碧图
  */
-gulp.task('spritesmith', function () {
-    return gulp.src('./img/*.png') //需要合并的图片地址
+gulp.task('spriteSmith', function () {
+    return gulp.src('./sass/icons/*.png')
         .pipe(spritesmith({
-            imgName: 'sprite.png', //保存合并后图片的地址
-            cssName: 'css/sprite.css', //保存合并后对于css样式的地址
-            padding: 5, //合并时两个图片的间距
-            algorithm: 'binary-tree',//Algorithm 有四个可选值分别为top-down、left-right、diagonal、alt-diagonal、binary-tree
-            cssTemplate:"css/handlebarsStr.css"//cssTemplate 是生成css的模板文件可以是字符串也可以是函数.字符串是对于相对于的模板地址,模板文件样式格式如下
+            imgName: 'icons/spriteSmith.png',
+            cssName: 'spriteSmith.css',
+            padding: 5,
+            algorithm: 'binary-tree',
+            cssTemplate: "./sass/icons/spriteTemplate.css"
         }))
-        .pipe(gulp.dest('dist/'));
+        .pipe(gulp.dest('./css'));
 });
-/**
-cssTemplate: css/handlebarsStr.css模板文件样式格式是
-
-{{#sprites}}
-.icon-{{name}}{
-    background-image: url("{{escaped_image}}");
-    background-position: {{px.offset_x}} {{px.offset_y}};
-    width: {{px.width}};
-    height: {{px.height}};
-}
-{{/sprites}}
-
-cssTemplate:对于函数样式格式是
-cssTemplate: function (data) {
-    var arr=[];
-    data.sprites.forEach(function (sprite) {
-        arr.push(".icon-"+sprite.name+
-        "{" +
-        "background-image: url('"+sprite.escaped_image+"');"+
-        "background-position: "+sprite.px.offset_x+"px "+sprite.px.offset_y+"px;"+
-        "width:"+sprite.px.width+";"+
-        "height:"+sprite.px.height+";"+
-        "}\n");
-    });
-    return arr.join("");
-}
- */
 
 /**
  * 监听任务

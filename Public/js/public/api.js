@@ -8,10 +8,10 @@
  * @param type 请求类型
  */
 !define(['conf'],function ($conf) {
-    return function (param, url = '', type = 'post') {
+    return function (param, url = $conf.path +'/index.php/Api/Index/index', type = 'post') {
         return $.ajax({
-            url : !!url ? url : ($conf.path +'/index.php/Api/Index/index'),
-            type : type || 'post',
+            url : url,
+            type : type,
             dataType : 'json',
             data : JSON.stringify(param || {}),
             contentType : 'application/json'

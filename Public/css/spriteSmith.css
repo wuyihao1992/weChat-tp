@@ -1,0 +1,96 @@
+.icon-add{
+    background-image: url("icons/spriteSmith.png");
+    background-position: 0px 0px;
+    width: 20px;
+    height: 20px;
+}
+.icon-auth{
+    background-image: url("icons/spriteSmith.png");
+    background-position: -42px -50px;
+    width: 16px;
+    height: 16px;
+}
+.icon-back-colle{
+    background-image: url("icons/spriteSmith.png");
+    background-position: 0px -71px;
+    width: 16px;
+    height: 16px;
+}
+.icon-back-export{
+    background-image: url("icons/spriteSmith.png");
+    background-position: -50px 0px;
+    width: 16px;
+    height: 16px;
+}
+.icon-back{
+    background-image: url("icons/spriteSmith.png");
+    background-position: -71px 0px;
+    width: 16px;
+    height: 16px;
+}
+.icon-building-info{
+    background-image: url("icons/spriteSmith.png");
+    background-position: -50px -21px;
+    width: 16px;
+    height: 16px;
+}
+.icon-cancel-order{
+    background-image: url("icons/spriteSmith.png");
+    background-position: 0px -50px;
+    width: 16px;
+    height: 16px;
+}
+.icon-cancel{
+    background-image: url("icons/spriteSmith.png");
+    background-position: -21px -50px;
+    width: 16px;
+    height: 16px;
+}
+.icon-charge{
+    background-image: url("icons/spriteSmith.png");
+    background-position: -63px -71px;
+    width: 16px;
+    height: 16px;
+}
+.icon-clear{
+    background-image: url("icons/spriteSmith.png");
+    background-position: -25px -25px;
+    width: 16px;
+    height: 16px;
+}
+.icon-click-ok{
+    background-image: url("icons/spriteSmith.png");
+    background-position: -71px -21px;
+    width: 16px;
+    height: 16px;
+}
+.icon-complete-order{
+    background-image: url("icons/spriteSmith.png");
+    background-position: -71px -42px;
+    width: 16px;
+    height: 16px;
+}
+.icon-cust-history{
+    background-image: url("icons/spriteSmith.png");
+    background-position: 0px -25px;
+    width: 20px;
+    height: 20px;
+}
+.icon-cut{
+    background-image: url("icons/spriteSmith.png");
+    background-position: -21px -71px;
+    width: 16px;
+    height: 16px;
+}
+.icon-data-auth{
+    background-image: url("icons/spriteSmith.png");
+    background-position: -42px -71px;
+    width: 16px;
+    height: 16px;
+}
+.icon-delete{
+    background-image: url("icons/spriteSmith.png");
+    background-position: -25px 0px;
+    width: 20px;
+    height: 20px;
+}

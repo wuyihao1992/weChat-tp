@@ -7,10 +7,11 @@
         urlArgs: $conf.version,
         basePath: $conf.PUBLIC + '/js/',
 		paths: {
-			"text": "//cdn.bootcss.com/require-text/2.0.12/text.min",
-			"json": "//cdn.bootcss.com/requirejs-plugins/1.0.3/json.min",
-			"css": "//cdn.bootcss.com/require-css/0.1.8/css.min",
-            "api" : 'public/api'
+			"text" : "//cdn.bootcss.com/require-text/2.0.12/text.min",
+			"json" : "//cdn.bootcss.com/requirejs-plugins/1.0.3/json.min",
+			"css" : "//cdn.bootcss.com/require-css/0.1.8/css.min",
+            "api" : 'public/api',
+            "app" : 'public/app'
 		}
 	});
 

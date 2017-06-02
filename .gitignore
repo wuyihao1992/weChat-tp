@@ -12,6 +12,7 @@
 /Public/bower_components
 /Public/node_modules
 /Public/img/test.*
+/Public/sass/icons/*.png
 
 # data
 /data/banner/*

@@ -89,7 +89,7 @@
 			$user = M('user');
 			$result = $user -> where('id = ' . $data['id']) -> field(array('password'), true) -> find();
 			if(empty($result)){
-				$msg = 'ajax success! welcome to Index/test API! 您请求的业务参数为: data => ' . json_encode($data, JSON_FORCE_OBJECT) . ' ,查询及结果为空！';
+				$msg = 'welcome to Index/test API! 请求成功,业务参数为: data => ' . json_encode($data, JSON_FORCE_OBJECT) . ' ,查询失败！';
 				$this -> jret(0, $msg);
 				return;
 			}

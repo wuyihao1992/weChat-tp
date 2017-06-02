@@ -36,15 +36,26 @@
 ::selection, ::-webkit-selection, ::-moz-selection {
   background: none; }
 
+:focus {
+  outline: none; }
+
+input:focus, textarea:focus, select:focus {
+  outline-offset: 0; }
+
 * {
   padding: 0;
   margin: 0;
   list-style: none;
-  border: 0; }
+  border: 0;
+  vertical-align: baseline; }
+
+*, :after, :before {
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box; }
 
 body, html {
   height: 100%;
-  font-family: 'Arial', 'Microsoft YaHei';
+  font-family: "PingFang SC","Microsoft YaHei",Arial,Helvetica,sans-serif,"宋体";
   tap-highlight-color: transparent;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
@@ -82,19 +93,20 @@ img {
 table {
   border-collapse: collapse;
   border: 0;
-  border-spacing: 0; }
+  border-spacing: 0;
+  width: 100%; }
   table tr td {
     text-align: center; }
   table thead tr {
-    background-color: #FFF; }
+    background-color: #FE8A77; }
   table tbody tr {
-    height: 55px; }
-    table tbody tr:hover {
-      background-color: #f7f7f7; }
+    height: 32px; }
+    table tbody tr:hover, table tbody tr:nth-child(odd):hover, table tbody tr:nth-child(even):hover {
+      background-color: #FE8A77; }
     table tbody tr:nth-child(odd) {
       background-color: #FFF; }
     table tbody tr:nth-child(even) {
-      background-color: #F9F9F9; }
+      background-color: #FE8A77; }
 
 a {
   color: #ff6347;
@@ -148,7 +160,7 @@ input {
     -webkit-box-shadow: none;
             box-shadow: none; }
 
-textarea {
+select, textarea {
   height: 24px;
   line-height: 24px;
   padding: 0;
@@ -161,7 +173,7 @@ textarea {
   transition: border-color linear .2s,-webkit-box-shadow linear .2s;
   transition: border-color linear .2s,box-shadow linear .2s;
   transition: border-color linear .2s,box-shadow linear .2s,-webkit-box-shadow linear .2s; }
-  textarea:focus {
+  select:focus, textarea:focus {
     background-color: #fff;
     border-color: rgba(0, 177, 165, 0.8);
     outline: 0;
