@@ -31,8 +31,7 @@
             'cssTemplate' : 生成css的模板文件。 字符串(模板地址文件)、函数。
                 模板格式如下：
                     `css`
-                    <pre>
-                        <code>
+                    /** spriteTemplate.css start **/
                         {{#sprites}}
                         .icon-{{name}}{
                             background-image: url("{{escaped_image}}");
@@ -41,27 +40,24 @@
                             height: {{px.height}};
                         }
                         {{/sprites}}
-                        </code>
-                    </pre>    
+                    /** spriteTemplate.css end **/  
                 函数样式格式如下:
                     `function`
-                    <pre>
-                        <code>
+                    /** function start **/
                         cssTemplate: function (data) {
-                            var arr=[];
+                            var arr = [];
                             data.sprites.forEach(function (sprite) {
-                                arr.push(".icon-"+sprite.name+
+                                arr.push(".icon-" + sprite.name +
                                 "{" +
-                                "background-image: url('"+sprite.escaped_image+"');"+
-                                "background-position: "+sprite.px.offset_x+"px "+sprite.px.offset_y+"px;"+
-                                "width:"+sprite.px.width+";"+
-                                "height:"+sprite.px.height+";"+
+                                "background-image: url('" + sprite.escaped_image + "');" +
+                                "background-position: " + sprite.px.offset_x + "px " + sprite.px.offset_y + "px;" +
+                                "width: " + sprite.px.width + ";" +
+                                "height: " + sprite.px.height + ";" +
                                 "}\n");
                             });
                             return arr.join("");
                         }                        
-                        </code>
-                    </pre>
+                    /** function end **/
             
 #### run server
 *   node server
