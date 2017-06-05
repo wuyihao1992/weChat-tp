@@ -1,9 +1,11 @@
+/**
+ * es6 to es5 test
+ */
 !define(['conf', 'api', 'app'], function ($conf, api, $app) {
-    console.info('success required test.js');
 
-    var $testBody = $('#testBody');
+    let $testBody = $('#testBody');
     $testBody.html($app.loadTable);
-    var param = {
+    let param = {
         "tranCode" : 1000,
         "data" : {
             "id" : 1,
@@ -11,9 +13,9 @@
         }
     };
     api(param).then(function(result){
-    	console.log(result);
-        var data = result.data;
-        var str = '<tr><td>'+ data.name +'</td><td>'+ data.email +'</td><td>'+ data.createtime +'</td></tr>';
+        console.log(result);
+        let data = result.data;
+        let str = '<tr><td>'+ data.name +'</td><td>'+ data.email +'</td><td>'+ data.createtime +'</td></tr>';
         $testBody.html(str);
     });
 });

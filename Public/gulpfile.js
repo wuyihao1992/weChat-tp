@@ -7,7 +7,7 @@ var fs = require('fs'),
     pref = require('gulp-autoprefixer'),
     concat = require('gulp-concat'),
     uglify = require('gulp-uglify'),
-    clean = require('gulp-clean'),
+    clean = require('gulp-clean'),  // now using this to clean *.bak files
     cleanCSS = require('gulp-clean-css'),
     rename = require('gulp-rename'),
     zip = require('gulp-zip'),
@@ -23,7 +23,10 @@ var sprite = require('sprity');
 var spriter = require('gulp-css-spriter');
 var spritesmith = require('gulp.spritesmith');
 
-var option = {
+// es6 to es5
+var babel = require('gulp-babel');
+
+var clearOption = {
     read : false,
     force : true
 };
@@ -35,11 +38,11 @@ gulp.task('clear', function (cb) {
     return gulp.src([
         '../Application/Home/View/**/*.bak'
     ])
-        .pipe(clean(option));
+        .pipe(clean(clearOption));
 });
 
 /**
- * FIXME: 删除不了项目外的文件
+ * FIXME: 删除不了项目(Public)外的文件
  */
 gulp.task('delete', function(cb) {
     return del([
@@ -66,6 +69,7 @@ gulp.task('framework', function() {
     gulp.src([
         'bower_components/jquery/dist/jquery.js',
         // 'bower_components/bootstrap/dist/js/bootstrap.js',
+        // 'bower_components/easyui/jquery.easyui.min.js',
         'bower_components/nprogress/nprogress.js',
         'bower_components/zepto/zepto.js',
         'bower_components/highcharts/highcharts.js',
@@ -103,6 +107,10 @@ gulp.task('framework', function() {
        // 'bower_components/bootstrap/dist/css/bootstrap.css',
         'bower_components/font-awesome/css/font-awesome.css',
         'bower_components/nprogress/nprogress.css'
+        // ,
+        // 'bower_components/easyui/themes/metro-pms/easyui.css',
+        // 'bower_components/easyui/themes/icon.css',
+        // 'bower_components/easyui/themes/color.css'
     ])
     .pipe(maps.init())
     .pipe(cleanCSS())
@@ -117,11 +125,56 @@ gulp.task('framework', function() {
     ])
     .pipe(gulp.dest('assets/fonts/'));
 
+    // TODO: easyUI
+    // gulp.src(['bower_components/easyui/themes/icons/*']).pipe(gulp.dest('assets/css/icons'));
+    // gulp.src(['bower_components/easyui/themes/metro-pms/images/*']).pipe(gulp.dest('assets/css/images'));
+
     // TODO: layer
     gulp.src(['bower_components/layer/src/**/*']).pipe(gulp.dest('assets/layer'));
 
     // TODO: layer skin
     gulp.src(['sass/layerskin*/*.css']).pipe(gulp.dest('assets/layer/skin'));
+});
+
+/**
+ * es6 转换成 es5
+ * npm install --save-dev gulp-babel
+ * npm install --save-dev babel-preset-es2015
+ * .babelrc 文件 : { "presets": ["es2015"] }
+ */
+gulp.task('toes5', function () {
+    return gulp.src('js/models-es6/**/*.js') // ES6 源码存放的路径 'src/**/*.js'
+        .pipe(babel({
+            presets: ['es2015']
+        }))
+        .pipe(gulp.dest('js/models/')); //转换成 ES5 存放的路径
+});
+
+// 压缩 js 文件
+// 在命令行使用 gulp script 启动此任务
+gulp.task('min', function() {
+    // 1. 找到文件
+    gulp.src('dist/*.js')
+    // 2. 压缩文件
+        .pipe(uglify())
+        // 3. 另存压缩后的文件
+        .pipe(gulp.dest('min/js'))
+});
+
+/**
+ * 用于压缩js
+ */
+gulp.task('js', function() {
+    return gulp.src([])
+    .pipe(maps.init())
+    .pipe(concat('base-data.js'))
+    .pipe(gulp.dest('assets/js'))
+    .pipe(rename({
+        suffix: '.min'
+    }))
+    .pipe(uglify())
+    .pipe(maps.write('.'))
+    .pipe(gulp.dest('assets/js'));
 });
 
 /**
@@ -140,22 +193,6 @@ gulp.task('sass', function() {
         //.pipe(cleanCSS())
         .pipe(maps.write('.'))
         .pipe(gulp.dest('./css'));
-});
-
-/**
- * 用于压缩js
- */
-gulp.task('js', function() {
-    return gulp.src([])
-    .pipe(maps.init())
-    .pipe(concat('base-data.js'))
-    .pipe(gulp.dest('assets/js'))
-    .pipe(rename({
-        suffix: '.min'
-    }))
-    .pipe(uglify())
-    .pipe(maps.write('.'))
-    .pipe(gulp.dest('assets/js'));
 });
 
 /**
@@ -218,6 +255,7 @@ gulp.task('spriteSmith', function () {
  */
 gulp.task('watch', ['clean', 'sass'], function() {
     gulp.watch('./sass/**/*.scss', ['sass']);
+    gulp.watch('js/models-es6/**/*.js', ['toes5']);
 });
 
 gulp.task('default', ['watch']);
@@ -226,5 +264,5 @@ gulp.task('default', ['watch']);
  * function(cb)回调，用于配置异步任务。避免边删除边编译的情况。
  */
 gulp.task('build', ['clean'], function(cb) {
-    return gulp.start(['framework', 'sass'], cb);
+    return gulp.start(['framework', 'sass', 'spriteSmith', 'toes5'], cb);
 });

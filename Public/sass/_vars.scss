@@ -68,7 +68,7 @@ $full-h: 100%;
         border-bottom: $size dashed transparent;
     }
 }
-.trangleTest{
+.triangleTest{
     @include triangle(top, 8px);
 }
 
