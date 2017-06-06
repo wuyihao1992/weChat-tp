@@ -15,6 +15,11 @@ This is a ThinkPHP project for weChat <br/>
 *   首页地址：
         
         {{hostname}}/
+       
+        
+*   前端实际首页
+
+        {{hostname}}/index.php/Home/Index/view
         
 *   测试页面 `test.html` ，访问地址：
         

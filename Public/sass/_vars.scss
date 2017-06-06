@@ -34,8 +34,8 @@ $full-h: 100%;
 // 公共背景图片地址
 // 字符串变量需要用 #{$string} 获取, 用'string'传递
 @mixin bg-img($img){
-	background-image: url(../img/#{$img});
-	background-repeat: no-repeat;
+    background-image: url(../img/#{$img});
+    background-repeat: no-repeat;
 }
 
 // 用于按需加载是的背景图片路径，此时编译的css在 css/models/Home/Index/view.css

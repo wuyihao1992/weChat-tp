@@ -175,7 +175,8 @@ gulp.task('sass', function() {
 });
 
 /**
- * css-sprite(未安装成功) 生成雪碧图（CSS图像拼合技术，CSS贴图定位. 目前用了 gulp.spritesmith生成）
+ * 生成雪碧图（CSS图像拼合技术，CSS贴图定位. 目前用了gulp.spritesmith生成）
+ * css-sprite(未安装成功)
  */
 // generate sprite.png and _sprite.scss
 gulp.task('sprite', function () {
@@ -203,13 +204,13 @@ gulp.task('base64', function () {
  * FIXME: gulp-css-spriter 生成雪碧图
  */
 gulp.task('cssSpriter', function() {
-    return gulp.src('./css/cssSpriter.css')                 //比如recharge.css这个样式里面什么都不用改，是你想要合并的图就要引用这个样式。
+    return gulp.src('./css/cssSpriter.css')                 // cssSpriter.css这个样式什么都不用改,是你想要合并的图就要引用这个样式
         .pipe(spriter({
             // The path and file name of where we will save the sprite sheet
-            'spriteSheet': './css/icons/cssSpriter.png',    //这是雪碧图自动合成的图。 很重要
+            'spriteSheet': './css/icons/cssSpriter.png',    // 雪碧图自动合成的图
             // Because we don't know where you will end up saving the CSS file at this point in the pipe,
             // we need a litle help identifying where it will be.
-            'pathToSpriteSheetFromCSS': './sass/icons/*.png' //这是在css引用的图片路径，很重要
+            'pathToSpriteSheetFromCSS': './sass/icons/*.png' // 在css引用的图片路径
         }))
         .pipe(gulp.dest('./css')); //最后生成出来
 });
