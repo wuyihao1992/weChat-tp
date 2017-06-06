@@ -1,9 +1,15 @@
 @import "../../../vars";
 
+$searchWrap-height: 40px;
+
+body.padTop-searchHeight{
+    padding-top: $searchWrap-height;
+}
+
 .searchWrap{
     width: $full-w;
-    height: 40px;
-    line-height: 40px;
+    height: $searchWrap-height;
+    line-height: $searchWrap-height;
     background-color: $color-deep-red;
     z-index: 50;
     //position: fixed;
@@ -17,14 +23,22 @@
 
     @keyframes show {
         0%{display: none;opacity: 0;}
-        25%{opacity: 25;}
+        10%{opacity: 10;}
+        20%{opacity: 20;}
+        30%{opacity: 30;}
+        40%{opacity: 40;}
         50%{opacity: 50;}
-        75%{opacity: 75;}
+        60%{opacity: 60;}
+        70%{opacity: 70;}
+        80%{opacity: 80;}
+        90%{opacity: 90;}
         100%{display: block; opacity: 100;}
     }
     &.fixed{
         position: fixed;
-        animation: show 4s linear 0ms 1;
+        top: 0;
+        left: 0;
+        animation: show 3s linear 0ms 1;
     }
 
     .searchInput{

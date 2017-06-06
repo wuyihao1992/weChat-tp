@@ -71,7 +71,7 @@
             
             var onScroller = function(cb){
                 if (!ticking) {
-                    requestAnimationFrame(cb);
+                    requestAnimationFrame(cb); // 滚动防抖
                     ticking = true;
                 }
             };
@@ -81,10 +81,12 @@
                 if (topHeight > $searchWrap.height()) {
                     if (!$searchWrap.hasClass('fixed')) {
                         $searchWrap.addClass('fixed');
+                        $body.addClass('padTop-searchHeight');
                     }
                 }else {
                     if ($searchWrap.hasClass('fixed')) {
                         $searchWrap.removeClass('fixed');
+                        $body.removeClass('padTop-searchHeight');
                     }
                 }
 
@@ -97,6 +99,9 @@
                 $body.addClass('disable-hover');
             }).on('scrollstop', function(){
                 $body.removeClass('disable-hover');
+            }).on('focus', '.searchWrap input' , function () {
+                console.log('aaa');
+                // $searchWrap.css("top", $(window).scrollTop());
             });
         };
 
