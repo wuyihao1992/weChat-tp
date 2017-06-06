@@ -1,4 +1,26 @@
-﻿#### install
+﻿#### 文件目录
+* +assets - lib 文件     <br/>
+  &emsp; +css           <br/>
+  &emsp; +fonts         <br/>
+  &emsp; +js            <br/>
+  &emsp; +layer         <br/>
+  
+* +css - sass 编译目录   <br/>
+  &emsp; +icons         <br/>
+  &emsp; -base.css      <br/>
+
+* -img - 图片文件
+
+* +js - js 逻辑代码      <br/>
+  &emsp; +models - es5逻辑目录,es6编译后的目录    <br/>
+  &emsp; +models-es6 - es6逻辑目录               <br/>
+  &emsp; +public                                <br/>
+  &emsp; -controller.js                         <br/>
+  &emsp; -main.js - 程序主入口                   <br/>
+  
+* +sass - sass 开发目录
+
+#### install
 *   npm install --save-dev / npm install --global
 *   bower install
 

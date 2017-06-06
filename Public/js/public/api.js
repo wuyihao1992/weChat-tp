@@ -1,13 +1,11 @@
 /**
- * Created by wuyihao on 2017/4/19.
- */
-/**
+ * @author by wuyihao on 2017/4/19.
  * @method ajax封装
  * @param object param 请求参数
  * @param string url 请求结果
  * @param type 请求类型
  */
-!define(['conf'],function ($conf) {
+!define(['conf'], function ($conf) {
     return function (param, url = $conf.path +'/index.php/Api/Index/index', type = 'post') {
         return $.ajax({
             url : url,
