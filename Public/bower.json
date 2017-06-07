@@ -36,9 +36,11 @@
     "js-sha1": "^0.4.0",
     "distpicker": "^1.0.4",
     "underscore": "^1.8.3",
-    "es6-promise": "http://www.jq22.com/demo/jQuerySweetAlert220160627/lib/es6-promise.min.js"
+    "es6-promise": "http://www.jq22.com/demo/jQuerySweetAlert220160627/lib/es6-promise.min.js",
+    "finally": "http://www.jq22.com/demo/jQuerySweetAlert220160627/lib/finally.js"
   },
   "devDependencies": {
-    "easyui": "*"
+    "easyui": "*",
+    "sweetalert2": "^6.6.5"
   }
 }

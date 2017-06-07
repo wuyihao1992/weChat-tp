@@ -3,7 +3,7 @@ return array(
 	'LOG_RECORD' => true, // 开启日志记录
 	'LOG_LEVEL'  => 'EMERG, ALERT, CRIT, ERR, NOTICE, INFO', // 只记录EMERG ALERT CRIT ERR 错误
 	
-    'MODULE_ALLOW_LIST'    => array('Home','Admin','Api'),
+    'MODULE_ALLOW_LIST'    => array('Home', 'Admin', 'Api', 'Gii'),
     'DEFAULT_MODULE'       => 'Home',
     'URL_CASE_INSENSITIVE' => true,
     'URL_MODEL'            => 2,
