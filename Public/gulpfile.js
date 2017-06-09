@@ -244,7 +244,13 @@ gulp.task('default', ['watch']);
  * function(cb)回调，用于配置异步任务。避免边删除边编译的情况。
  */
 gulp.task('build', ['clean'], function(cb) {
-    return gulp.start(['framework', 'sass', 'spriteSmith', 'toes5'], cb);
+    var taskArr = [];
+    if (dev){
+        taskArr = ['framework', 'sass', 'spriteSmith'];
+    }else {
+        taskArr = ['framework', 'sass', 'spriteSmith', 'toes5'];
+    }
+    return gulp.start(taskArr, cb);
 });
 
 /**

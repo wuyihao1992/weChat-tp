@@ -334,3 +334,112 @@ function monthMap(month, type) {
         }
     };
 })(jQuery);
+
+/**
+ * $.box
+ {
+    message string		打印的信息
+    ok 		function	[可选] 确定事件回调函数
+    okName  string		[可选] 确定按钮名称
+    close 	function	[可选] 关闭事件回调函数
+    closeName string	[可选] 关闭按钮名称
+    tip 	string		[可选] 窗口图标可为[tips_answer,tips_error,tips_success]
+    }
+
+ $.box("hello world");
+ $.box("hello world",function(){alert("closed");});
+ $.box({message:"hi~ ",tip:"tips_error",ok:function(){alert("ok");},okName:"gg",close:function(){alert("close")},closeName:"mm"});
+ */
+(function($){
+    'use strict';
+    var Box = function(opt, cb) {
+        var html = '<div class="box-wrap">'+
+                        '<div class="box-font-wrap">'+
+                            '<div class="box-tips"></div>'+
+                            '<p class="box-content">你不是该小区业主，不能使用该服务，是否注册成为业主？</p>'+
+                            '<div class="box-btnGroup">'+
+                                '<a href="javascript:;">立即注册</a>'+
+                                '<a href="javascript:;">暂不注册</a>'+
+                            '</div>'+
+                        '</div>'+
+                    '</div>';
+        var $box = $(html);
+        var defaultOption = {title: '消息', buttons: [], tip: "tips_answer"};
+        var _this = this;
+
+        var $btnGroup = $('.box-btnGroup', $box);
+
+        if( typeof opt == 'string' ){
+            opt = {message: opt, close: cb};
+        }
+
+        opt = $.extend(defaultOption, opt);
+        opt.html = opt.html || opt.message ;
+
+        opt.ok && opt.buttons.push({name: opt.okName || '确定', click: opt.ok});
+        opt.close && opt.buttons.push({name: opt.closeName || '关闭', click: opt.close});
+        opt.cancel && opt.buttons.push({name: opt.cancelName || '取消', click: opt.cancel});
+
+        $btnGroup.empty();
+
+        $.each(opt.buttons,function(i,btn){
+            $btnGroup.append( $('<a href="javascript:;"></a>').html(btn.name).click(function(e){
+                var result = btn.click.call(this, e);
+                if( result === false ) {
+                    return;
+                }
+
+                _this.hide();
+            }));
+        });
+
+        if( !opt.buttons.length ){
+            $box.click(function(){
+                _this.hide();
+            });
+        }
+
+        $box.find(".box-tips").addClass( opt.tip );
+        $box.hide().appendTo("body");
+
+        this.show = function(html){
+            $box.find(".box-content").html(html);
+            $box.show();
+        };
+
+        this.hide = function(){
+            $box.hide();
+            setTimeout(function(){$box.remove()},20);
+        };
+        this.html = function(){return $box;};
+
+        $box.find(".close").click(function(){
+            _this.hide();
+        });
+        this.show(opt.html);
+
+        if($btnGroup.children().length > 0){
+
+        }else{
+            $btnGroup.hide();
+        }
+    };
+
+    $.box = function( option , cb ){
+        if( typeof option == 'string' ){
+            option = { message: option , close: cb }
+        }
+
+        option.close = option.close || function(){};
+
+        if( option.ok ){
+            return confirm(option.message) ? option.ok() : option.close();
+        }
+        return alert( option.message ) && option.close();
+    };
+
+    $.box = function(opt, cb){
+        var box = new Box(opt, cb);
+        return box.html().data('box', box);
+    };
+})(jQuery);

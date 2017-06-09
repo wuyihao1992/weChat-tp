@@ -102,6 +102,21 @@
             }).on('focus', '.searchWrap input' , function () {
                 console.log('aaa');
                 // $searchWrap.css("top", $(window).scrollTop());
+            }).on('click', '#boxTest', function (e) {
+                $.box({
+                    message: "亲，注册下吧！",
+                    tip: "tips_none", // tips_answer
+                    ok: function () {
+                        // location.href = "";
+                        layer.msg('ok')
+                    },
+                    close: function () {
+
+                    },
+                    okName: "立即注册",
+                    closeName: "暂不注册",
+                    cancelName: "sss"
+                });
             });
         };
 

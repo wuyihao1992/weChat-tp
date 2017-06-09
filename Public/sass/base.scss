@@ -25,3 +25,97 @@
 .disable-hover{
 	pointer-events: none;
 }
+
+/**
+ * jquery $.box 弹窗样式
+ */
+.box-wrap {
+    @include full-h-w();
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    position: fixed;
+    content: "";
+    background: rgba(0, 0, 0, 0.5);
+    left: 0;
+    top: 0;
+    z-index: 999;
+
+    .box-font-wrap {
+        background: #fff;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        -webkit-transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%);
+        min-width: 76%;
+        border-radius: 15px;
+
+        .box-tips {
+            position: relative;
+
+            &:after {
+                content: '';
+                display: block;
+                width: 50px;
+                height: 50px;
+                margin: 5px auto;
+            }
+
+            &.tips_none{
+                display: none;
+
+                &+ p.box-content{
+                    margin: 10px 0; // tips_none时增加一点外边距
+                }
+            }
+
+            &.tips_answer:after {
+                //background: url(../img/pop_answer.png);
+                @include bg-img('test.JPG');
+                background-size: cover;
+            }
+
+            &.tips_error:after {
+                background: url(../img/pop_error.png);
+                background-size: cover;
+            }
+
+            &.tips_success:after {
+                background: url(../img/pop_success.png);
+                background-size: cover;
+            }
+        }
+
+        .box-content {
+            text-align: center;
+            font-size: 1.5rem;
+            padding: 20px 0;
+        }
+
+        .box-btnGroup {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            border-top: 1px solid #e5e5e5;
+
+            a {
+                -webkit-box-flex: 1;
+                -webkit-flex: 1;
+                -ms-flex: 1;
+                flex: 1;
+                text-align: center;
+                color: #000;
+                padding: 10px;
+                font-size: 1.5rem;
+
+                &:nth-child(2) {
+                    border-left: 1px solid #e5e5e5;
+                    box-sizing: border-box;
+                }
+            }
+        }
+    }
+}
