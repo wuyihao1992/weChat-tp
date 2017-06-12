@@ -5,15 +5,15 @@
 // ●辅色调 ：浅红 #ff6347 / rgba(255, 99, 71, .8)
 // ●边框色 ：象牙色 #f2eada / #E8E8E8
 // ●焦点框 ：#00b1a5 / rgba(0, 177, 165, .8)
-$color-main: #f47920;
-$color-main-rgb: rgba(244, 121, 32, 1);
-$color-sub: #ff6347;
-$color-sub-rgb: rgba(255, 99, 71, .8);
-$color-deep-red: #ff6347;
-$color-low-red: #FE8A77;
-$color-border: #E8E8E8;
-$color-blue: #00b1a5;
-$color-blue-rgb: rgba(0, 177, 165, .8);
+$color-main:            #f47920;
+$color-main-rgb:        rgba(244, 121, 32, 1);
+$color-sub:             #ff6347;
+$color-sub-rgb:         rgba(255, 99, 71, .8);
+$color-deep-red:        #ff6347;
+$color-low-red:         #FE8A77;
+$color-border:          #E8E8E8;
+$color-blue:            #00b1a5;
+$color-blue-rgb:        rgba(0, 177, 165, .8);
 
 // 高宽定义
 @mixin full-h-w{

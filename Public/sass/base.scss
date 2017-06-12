@@ -1,14 +1,17 @@
 /*
- ********************************************
- * 引入 reset                                *
- * 引入 home                                 *
- * vars 在reset与home中继承                   *
- * @命名规范：                                *
- * ●公共类用 `-` 连接符命名                    *
- * ●非公共类用驼峰法命名                       *
- * ●scss $var 变量用 `-` 连接符命名            *
- * ●scss @minxin 私有变量 用 `_` 下划线开头    *
- ********************************************
+ ************************************************
+ * 引入 reset                                    *
+ * 引入 home                                     *
+ * vars 在reset与home中继承                       *
+ * @命名规范：                                    *
+ *    1. 通用样式库,用 "面向属性" 的命名方式命名     *
+ *        如： .pb8{padding-bottom:8px;}         *
+ *    2. 模块样式,块样式、组件、用 "BEM" 的方式命名  *
+ *        ●公共类用 `-` 连接符命名                 *
+ *        ●非公共类用驼峰法命名                     *
+ *        ●scss $var 变量用 `-` 连接符命名         *
+ *        ●scss @minxin 私有变量 用 `_` 下划线开头  *
+ *************************************************
  */
 @charset "utf-8";
 @import "reset";
@@ -26,6 +29,15 @@
 	pointer-events: none;
 }
 
+// BEM的意思就是块（block）、元素（element）、修饰符（modifier）
+.block{} // .block 代表了更高级别的抽象或组件。
+.block__element{} // .block__element 代表.block的后代，用于形成一个完整的.block的整体。
+.block--modifier{} // .block--modifier代表.block的不同状态或不同版本。
+// 之所以使用两个连字符和下划线而不是一个，是为了让你自己的块可以用单个连字符来界定，如：
+.site-search{} /* 块 */
+.site-search__field{} /* 元素 */
+.site-search--full{} /* 修饰符 */
+
 /**
  * jquery $.box 弹窗样式
  */
@@ -42,7 +54,7 @@
     top: 0;
     z-index: 999;
 
-    .box-font-wrap {
+    .box-wrap__font {
         background: #fff;
         position: fixed;
         top: 50%;
@@ -52,7 +64,7 @@
         min-width: 76%;
         border-radius: 15px;
 
-        .box-tips {
+        .box-wrap__font--tips {
             position: relative;
 
             &:after {
@@ -88,20 +100,20 @@
             }
         }
 
-        .box-content {
+        .box-wrap__font--content {
             text-align: center;
             font-size: 1.5rem;
             padding: 20px 0;
         }
 
-        .box-btnGroup {
+        .box-wrap__font--btnGroup {
             display: -webkit-box;
             display: -webkit-flex;
             display: -ms-flexbox;
             display: flex;
             border-top: 1px solid #e5e5e5;
 
-            a {
+            [data-name="btn"] {
                 -webkit-box-flex: 1;
                 -webkit-flex: 1;
                 -ms-flex: 1;
@@ -119,3 +131,4 @@
         }
     }
 }
+

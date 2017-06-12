@@ -348,18 +348,18 @@ function monthMap(month, type) {
 
  $.box("hello world");
  $.box("hello world",function(){alert("closed");});
- $.box({message:"hi~ ",tip:"tips_error",ok:function(){alert("ok");},okName:"gg",close:function(){alert("close")},closeName:"mm"});
+ $.box({message:"hi~ ", tip:"tips_error", ok:function(){alert("ok");}, okName:"gg", close:function(){alert("close")}, closeName:"mm"});
  */
 (function($){
     'use strict';
     var Box = function(opt, cb) {
         var html = '<div class="box-wrap">'+
-                        '<div class="box-font-wrap">'+
-                            '<div class="box-tips"></div>'+
-                            '<p class="box-content">你不是该小区业主，不能使用该服务，是否注册成为业主？</p>'+
-                            '<div class="box-btnGroup">'+
-                                '<a href="javascript:;">立即注册</a>'+
-                                '<a href="javascript:;">暂不注册</a>'+
+                        '<div class="box-wrap__font">'+
+                            '<div class="box-wrap__font--tips"></div>'+
+                            '<p class="box-wrap__font--content">您还未注册，是否注册？</p>'+
+                            '<div class="box-wrap__font--btnGroup">'+
+                                '<a data-name="btn" href="javascript:;">立即注册</a>'+
+                                '<a data-name="btn" href="javascript:;">暂不注册</a>'+
                             '</div>'+
                         '</div>'+
                     '</div>';
@@ -367,7 +367,7 @@ function monthMap(month, type) {
         var defaultOption = {title: '消息', buttons: [], tip: "tips_answer"};
         var _this = this;
 
-        var $btnGroup = $('.box-btnGroup', $box);
+        var $btnGroup = $('.box-wrap__font--btnGroup', $box);
 
         if( typeof opt == 'string' ){
             opt = {message: opt, close: cb};
@@ -382,8 +382,8 @@ function monthMap(month, type) {
 
         $btnGroup.empty();
 
-        $.each(opt.buttons,function(i,btn){
-            $btnGroup.append( $('<a href="javascript:;"></a>').html(btn.name).click(function(e){
+        $.each(opt.buttons, function(i, btn){
+            $btnGroup.append( $('<a data-name="btn" href="javascript:;"></a>').html(btn.name).click(function(e) {
                 var result = btn.click.call(this, e);
                 if( result === false ) {
                     return;
@@ -399,11 +399,11 @@ function monthMap(month, type) {
             });
         }
 
-        $box.find(".box-tips").addClass( opt.tip );
+        $(".box-wrap__font--tips", $box).addClass( opt.tip );
         $box.hide().appendTo("body");
 
         this.show = function(html){
-            $box.find(".box-content").html(html);
+            $(".box-wrap__font--content", $box).html(html);
             $box.show();
         };
 
@@ -413,7 +413,7 @@ function monthMap(month, type) {
         };
         this.html = function(){return $box;};
 
-        $box.find(".close").click(function(){
+        $(".close", $box).click(function(){
             _this.hide();
         });
         this.show(opt.html);
