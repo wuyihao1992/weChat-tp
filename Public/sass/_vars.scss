@@ -46,7 +46,7 @@ $full-h: 100%;
 
 // triangle
 @mixin triangle($direction, $size, $borderColor: $color-main) {
-    content:"";
+    content: "";
     height: 0;
     width: 0;
 

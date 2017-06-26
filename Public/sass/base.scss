@@ -1,12 +1,16 @@
 /*
  ************************************************
+ * 基本共用样式                                   *
  * 引入 reset                                    *
  * 引入 home                                     *
  * vars 在reset与home中继承                       *
  * @命名规范：                                    *
  *    1. 通用样式库,用 "面向属性" 的命名方式命名     *
  *        如： .pb8{padding-bottom:8px;}         *
+ *             .mt-20{margin-top:-20px;}         *
  *    2. 模块样式,块样式、组件、用 "BEM" 的方式命名  *
+ *        ●前面添加前缀, "模块/块/组件-"            *
+ *    3. scss                                    *
  *        ●公共类用 `-` 连接符命名                 *
  *        ●非公共类用驼峰法命名                     *
  *        ●scss $var 变量用 `-` 连接符命名         *
@@ -132,3 +136,17 @@
     }
 }
 
+/**
+ * multiply CSS
+ */
+// 块状元素水平居中
+.auto{margin-left:auto; margin-right:auto;}
+// 清除浮动
+.fix{*zoom:1;}
+.fix:after{display:table; content:''; clear:both;}
+// 基于display:table-cell的自适应布局
+.cell{display:table-cell; *display:inline-block; width:2000px; *width:auto;}
+// 双栏自适应cell部分连续英文字符换行
+.cell_bk{display:table; width:100%; table-layout:fixed; word-wrap:break-word;}
+// 单行文字溢出虚点显示
+.ell{text-overflow:ellipsis; white-space:nowrap; overflow:hidden;}

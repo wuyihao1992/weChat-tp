@@ -1,11 +1,11 @@
-@import "vars";
-
 /*
  ********************
  * css reset        *
  * css 通用样式库    *
  ********************
  */
+@import "vars";
+
 ::selection, ::-webkit-selection, ::-moz-selection{
   background: none;
 }

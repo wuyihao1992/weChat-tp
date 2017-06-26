@@ -8,7 +8,7 @@
 // TODO: 改成按模块加载
 //@import 'models/Home/Index/view';
 
-// TODO: 按需引入 - 引入模块.子模块.scss + 子模块.页面.scss
+// TODO: 按需引入 - require.js引入模块.子模块.scss + 子模块.页面.scss
 // 如: Home/Index.scss
 //    Home/Index/view.scss
 // require.js 引入 Home/Index.css,Home/Index/view.css
