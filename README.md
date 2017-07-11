@@ -1,5 +1,6 @@
 ﻿---
-This is a ThinkPHP project for weChat <br/>
+This is a ThinkPHP project for weChat. <br/>
+And this is a multiple pages project. <br/>
 @author wuyihao,840461198@qq.com
 ---
 
