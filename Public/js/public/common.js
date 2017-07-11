@@ -546,74 +546,151 @@ function changeTwoDecimal(v) {
     return fs;
 }
 
-function moutip(a, b) {
-    var c, d, e;
-    try {
-        c = a.toString().split(".")[1].length;
-    } catch (f) {
-        c = 0;
-    }
-    try {
-        d = b.toString().split(".")[1].length;
-    } catch (f) {
-        d = 0;
-    }
-    return e = Math.pow(10, Math.max(c, d)), (mul(a, e) * mul(b, e)) / e;
+// 删除cookie
+function deleteCookie(name) {
+    var expires = new Date();
+    expires.setTime(expires.getTime() - 1000 * 60);
+    setCookie(name, "", expires);
 }
 
-function add(a, b) {
-    var c, d, e;
-    try {
-        c = a.toString().split(".")[1].length;
-    } catch (f) {
-        c = 0;
+// 浮点数加法运算
+function floatAdd(arg1, arg2) {
+    var r1, r2, m;
+    try{
+        r1 = arg1.toString().split(".")[1].length;
+    } catch(e) {
+        r1 = 0;
     }
     try {
-        d = b.toString().split(".")[1].length;
-    } catch (f) {
-        d = 0;
+        r2 = arg2.toString().split(".")[1].length;
+    } catch(e) {
+        r2 = 0;
     }
-    return e = Math.pow(10, Math.max(c, d)), (mul(a, e) + mul(b, e)) / e;
+    m = Math.pow(10, Math.max(r1, r2));
+    return (arg1 * m + arg2 * m) / m;
 }
 
-function sub(a, b) {
-    var c, d, e;
+// 浮点数减法运算
+function floatSub(arg1, arg2) {
+    var r1, r2, m, n;
     try {
-        c = a.toString().split(".")[1].length;
-    } catch (f) {
-        c = 0;
+        r1 = arg1.toString().split(".")[1].length;
+    } catch(e) {
+        r1 = 0
     }
     try {
-        d = b.toString().split(".")[1].length;
-    } catch (f) {
-        d = 0;
+        r2 = arg2.toString().split(".")[1].length;
+    } catch(e) {
+        r2 = 0
     }
-    return e = Math.pow(10, Math.max(c, d)), (mul(a, e) - mul(b, e)) / e;
+    m = Math.pow(10, Math.max(r1, r2));
+    n = (r1 >= r2) ? r1 : r2;
+    return ((arg1 * m - arg2 * m) / m).toFixed(n);
 }
 
-function mul(a, b) {
-    var c = 0,
-        d = a.toString(),
-        e = b.toString();
+// 浮点数乘法运算
+function floatMul(arg1, arg2) {
+    var m = 0, s1 = arg1.toString(), s2 = arg2.toString();
     try {
-        c += d.split(".")[1].length;
-    } catch (f) {}
+        m += s1.split(".")[1].length;
+    } catch(e) {}
     try {
-        c += e.split(".")[1].length;
-    } catch (f) {}
-    return Number(d.replace(".", "")) * Number(e.replace(".", "")) / Math.pow(10, c);
+        m += s2.split(".")[1].length;
+    } catch(e) {}
+    return Number(s1.replace(".", "")) * Number(s2.replace(".", "")) / Math.pow(10, m);
 }
 
-function div(a, b) {
-    var c, d, e = 0,
-        f = 0;
+// 浮点数除法运算
+function floatDiv(arg1, arg2) {
+    var t1 = 0, t2 = 0, r1, r2;
     try {
-        e = a.toString().split(".")[1].length;
-    } catch (g) {}
+        t1 = arg1.toString().split(".")[1].length;
+    } catch(e) {}
     try {
-        f = b.toString().split(".")[1].length;
-    } catch (g) {}
-    return c = Number(a.toString().replace(".", "")), d = Number(b.toString().replace(".", "")), mul(c / d, Math.pow(10, f - e));
+        t2 = arg2.toString().split(".")[1].length;
+    } catch(e) {}
+    with(Math) {
+        r1 = Number(arg1.toString().replace(".", ""));
+        r2 = Number(arg2.toString().replace(".", ""));
+        return (r1 / r2) * Math.pow(10, t2 - t1);
+    }
+}
+
+/**
+ * 将参数对象转化为参数字符串 a=c&s=c
+ * @param {} param ｛a:c,s:c｝
+ * @return {String}
+ */
+function objToParamstr(param){
+    if(param != null && typeof(param)=='object'){
+        var paramStr = "";
+        for(var o in param){
+
+            if(o != null && typeof(o)=='string' &&( typeof(param[o])=='string'||typeof(param[o])=='number')){
+                paramStr += o+"="+param[o]+"&";
+            }
+        }
+        if(paramStr.length > 1){
+            return paramStr.substring(0,paramStr.length-1);
+        }
+    }
+    return "";
+}
+
+/**
+ * 将当前参数后的字符串转 为script 对象
+ * @param {} url
+ * @return {}
+ */
+function urlToObj(url){
+    if(url!=null){
+        var paramm = url.split("&");
+        var paramobj = {};
+        for(var i=0;i<paramm.length;i++){
+            var ppparam = paramm[i];
+            var pps = ppparam.split("=");
+            if(pps.length >1 && pps[1] != "" ){
+                paramobj[pps[0]]=pps[1];
+            }
+        }
+        return paramobj;
+
+        return null;
+    }
+}
+
+/**
+ * 保存键值对到cookie中
+ * @param name
+ * @param value
+ * @param time 保存天数
+ */
+function setCookie(name,value,time){
+    var exdate=new Date();
+    exdate.setDate(exdate.getDate()+parseInt(time));
+    document.cookie=name+ "=" +escape(value)+ ";expires="+exdate.toGMTString();
+
+}
+function getCookie(c_name){
+    if (document.cookie.length>0)
+    {
+        var c_start=document.cookie.indexOf(c_name + "=");
+        if (c_start!=-1)
+        {
+            c_start=c_start + c_name.length+1;
+            var c_end=document.cookie.indexOf(";",c_start);
+            if (c_end==-1) c_end=document.cookie.length;
+            return unescape(document.cookie.substring(c_start,c_end))
+        }
+    }
+    return ""
+}
+
+// 删除cookie
+function deleteCookie(name) {
+    var expires = new Date();
+    expires.setTime(expires.getTime() - 1000 * 60);
+    setCookie(name, "", expires);
 }
 
 /**
@@ -853,6 +930,21 @@ function inArray(val) {
     return false;
 }
 
+function serializeObject(form) {
+    var o = {};
+    $.each(form.serializeArray(), function(index) {
+        if (this['value'] != undefined && this['value'].length > 0) {// 如果表单项的值非空，才进行序列化操作
+            var value = this['value'];
+            if (o[this['name']]) {
+                o[this['name']] = o[this['name']] + "," + value;
+            } else {
+                o[this['name']] = value;
+            }
+        }
+    });
+    return o;
+}
+
 /**
  * JS版的Server.UrlEncode编码函数
  * 调用： var desc = desc.UrlEncode();
@@ -1034,7 +1126,7 @@ function inArray(val) {
         $body.removeClass('disable-hover');
     });
 */
-(function(){
+;(function(){
     var special = jQuery.event.special,
         uid1 = 'D' + (+new Date()),
         uid2 = 'D' + (+new Date() + 1);
@@ -1119,7 +1211,7 @@ function inArray(val) {
  $.box("hello world",function(){alert("closed");});
  $.box({message:"hi~ ", tip:"tips_error", ok:function(){alert("ok");}, okName:"gg", close:function(){alert("close")}, closeName:"mm"});
  */
-(function($){
+;(function($){
     'use strict';
     var Box = function(opt, cb) {
         var html = '<div class="box-wrap">'+
@@ -1214,9 +1306,165 @@ function inArray(val) {
 })(jQuery);
 
 /**
+ * ajax 请求缓存
+ * 外部可调用的方法$.ajaxCacheUr , $.getCache , $.postCache , $.ajaxCache
+ *
+ * @param win
+ * @param doc
+ * @param $
+ */
+;(function(win, doc ,$){
+
+    //需要缓存的url
+    var CACHE_PATH_LIST = [
+        '/baseinfo/org-frame!searchGrid.action',
+        '/baseinfo/area-company!searchGrid.action',
+        '/baseinfo/group!searchgrid.action'
+    ];
+
+    //改用map存储
+    var CACHE_PATH = (function(list){
+        var map = {};
+        $.each(list, function(i, path){
+            map['basePath' + path] = true;
+        });
+        return map;
+    })(CACHE_PATH_LIST);
+
+    /**
+     * 动态添加缓存url
+     */
+    $.ajaxCacheUrl = function( url ){
+        CACHE_PATH[url] = true;
+    };
+
+    /**
+     * localStorage
+     * @param  storage could be window.sessionStorage/window.localStorage
+     * @param  String key
+     */
+    var Storage = function( key , storage  ){
+        storage = storage || win.localStorage || {};
+        var data = JSON.parse(storage[key] || "{}") || {};
+
+        /**
+         * get all value
+         */
+        this.getAll = function(){
+            return data;
+        };
+
+        /**
+         * get a value
+         */
+        this.get = function(key){
+            return data[key];
+        };
+
+        /**
+         * set a value
+         */
+        this.set = function( k , v){
+            if( arguments.length == 1 ){
+                data = k;
+            }else{
+                data[k] = v;
+            }
+            storage[key] = JSON.stringify(data);
+        };
+
+        /**
+         * delete a key
+         */
+        this.remove = function(k){
+            delete data[k];
+            storage[key] = JSON.stringify(data);
+        };
+
+        /**
+         * destory this storage
+         */
+        this.destory = function(){
+            if( storage.removeItem ){
+                storage.removeItem(key);
+            }else{
+                storage[key] = null;
+            }
+            data = {};
+        };
+    };
+
+    /**
+     * 缓存工具方法
+     */
+    var stor = new Storage('ht_cache',win.sessionStorage);
+    var cache = function( url , param , resurl ){
+        var key = url + JSON.stringify(param);
+        if( arguments.length == 3 ){
+            stor.set(key,resurl);
+        }
+        return stor.get(key);
+    };
+
+    /**
+     * 重写ajax方法
+     */
+    var _ajax = $.ajax;
+    $.ajax = function( param ){
+        if( CACHE_PATH[param.url] ){
+            var result = cache( param.url , param.data );
+            if( result ){
+                return param.success.call(this,result)
+            }
+        }
+        var req = _ajax(param);
+        req.cacheData = param.data;
+        return req;
+    };
+
+    /**
+     * 一个缓存的post请求
+     * 用户与$.post一样
+     */
+    $.postCache = function(url){
+        $.ajaxCacheUrl(url);
+        return $.post.apply(this,arguments);
+    };
+
+    /**
+     * 一个会缓存的get请求，
+     * 用法与$.get一样
+     */
+    $.getCache = function(url){
+        $.ajaxCacheUrl(url);
+        return $.get.apply(this,arguments);
+    };
+
+    /**
+     * 读取与一个缓存数据
+     */
+    $.ajaxCache = function( url , param ){
+        return cache(url,param);
+    };
+    /**
+     * ajax请求成功事件，只有success情况下才缓存数据
+     */
+    $(doc).ajaxSuccess(function(e , request , setting , data){
+        if( !CACHE_PATH[setting.url] )return;
+
+        cache(setting.url ,request.cacheData , data );
+    });
+
+    $.ajaxClearCache = function(){
+        stor.destory();
+    };
+
+})( window , document , window.jQuery );
+
+/**
  * 浏览器版本判断
  */
-(function($){
+;(function($){
     $.extend({
         NV: function(name){
             var NV = {},
@@ -1276,3 +1524,216 @@ function inArray(val) {
         }
     });
 })(jQuery);
+
+/**
+ * created by lcs 2012-07-13 16:27:17
+ * JQuery的 一些工具方法
+ */
+(function($){
+    if(!$)return;
+
+    /**
+     * 信息提示，要结合bootstrap使用
+     * @param message	信息内容
+     * @param id		[可选]标识Id
+     */
+    $.alertMessage = (function(){
+        var $alertMessage = $("<div class='alert alert-warning' style='z-index: 1000;position: fixed;top: 0; right: 0;'><a class='close' data-dismiss='alert'>×</a></div>");
+        var total = 30;
+        return function(message , id){
+            if( message == 'close' ){
+                return $alertMessage.remove();
+            }
+
+            if( $alertMessage.parent().length == 0 ){
+                $alertMessage.find("span").remove();
+                $("body").append($alertMessage);
+            }
+            var $span = false;
+            if( id ){
+                $span = $alertMessage.find("span#"+id);
+                $span = $span.length > 0 && $span;
+            }
+
+            if( !$span ){
+                $span = $("<span "+ (id?"id='"+id+"'":"") +"></span>");
+                $alertMessage.append($span);
+            }
+            $span.html(message+"<br>");
+
+            var count = $alertMessage.find(">span").length - total;
+            if( count > 0 ){
+                $alertMessage.find(">span:lt("+count+")").remove();
+            }
+
+        };
+    })();
+
+})(window.jQuery);
+
+//设置&获取表单的值
+(function($){
+    if( !$ || $.fn.setData )return;
+
+    $.fn.setData = function(data,key){
+        var _this = $(this);
+        $.each(data ||{}, function(name,value){
+            try{
+                name = "name='" + ( key ? key+"."+name : name ) + "'";
+                _this.find("input["+name+"]:not([type=radio],[type=checkbox]),textarea["+name+"],select["+name+"]").val(value);
+
+                _this.find("input["+name+"][type=radio][value="+value+"]").attr("checked",true);
+                _this.find("input["+name+"][type=checkbox][value="+value+"]").attr("checked",true);
+            }catch (e){}
+        });
+        return _this;
+    };
+
+    $.fn.getData = function(){
+        var data = {};
+        this.find("[name]:not([type=radio],[type=checkbox])").each(function(){
+            var _this = $(this);
+            data[_this.attr("name")] = _this.val();
+        });
+        this.find("[name][type=radio]:checked,[name][type=checkbox]:checked").each(function(){
+            var _this = $(this);
+            data[_this.attr("name")] = _this.val();
+        });
+        return data;
+    };
+})(window.jQuery);
+
+/**
+ * 以粘贴或拖拽的形式获取图片(文件)
+ */
+(function($){
+    /**
+     * 以粘贴或拖拽的形式获取图片
+     * @param  Function cb 成功读到图片后的回调函数,会传入两全参数，第一个为String，是图片的dataUrl(based4)；
+     *                     第二个是个File对象
+     * @return
+     */
+    $.fn.getImage = function(cb){
+        var $this = this;
+        if( !window.FileReader )return this;
+
+        $this.getFile(function(file){
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload =function(e){
+                /^data:image.+/.test(reader.result) && cb && cb.call && cb.call($this,reader.result,file);
+            };
+        });
+
+        return $this;
+    };
+
+    /**
+     * 以粘贴或拖拽的形式获取文件
+     * @param  Function cb 成功读到文件后的回调函数,会传入两全参数，第一个为File，第二个为FileL数组；
+     * @return {[type]}      [description]
+     */
+    $.fn.getFile = function(cb){
+        if(!$.isFunction(cb))return this;
+
+        var $this = $(this);
+        $this.on("paste",function(e){
+            if( e.originalEvent.clipboardData  && e.originalEvent.clipboardData.items  ){
+                var files = [];
+                for( var i = 0 , item ; item =  e.originalEvent.clipboardData.items[i] ; i++ ){
+                    item.kind == "file" && files.push(item.getAsFile());
+                }
+                files.length && cb.call($this,files[0],files);
+            }
+            return e;
+        }).on("dragenter",function(e){
+            $this.addClass("drag");
+        }).on("dragleave",function(e){
+            $this.removeClass("drag");
+        }).on("drop",function(e){
+            $this.removeClass("drag");
+            var files = e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.files && e.originalEvent.dataTransfer.files;
+            files && cb.call($this , files[0] , files);
+            e.preventDefault();
+        }).filter(":file").change(function(){
+            if( this.files && this.files.length > 0 ){
+                cb.call($this,this.files[0],this.files);
+            }
+        });
+
+        return this;
+    };
+})(window.jQuery);
+
+/**
+ * 在选中节点上显示一个提示信息
+ * @param  string   text    提示信息内容
+ * @param  int   timeout 	[可选]固定时间后自动消失
+ * @param  Function cb      [可选]消失后会调用此方法
+ * @return
+ */
+(function($) {
+    if (!$) return;
+
+    //样式
+    var style_tip = {
+        position: 'absolute',
+        zIndex: '1030',
+        display: 'block',
+        fontSize: '11px',
+        lineHeight: 1.4,
+        opacity:0,
+        visibility: 'visible'
+    };
+    var style_tip_text = {
+        whiteSpace: 'nowrap',
+        fontSize: '12px',
+        padding: '8px',
+        color: '#5C5C5C',
+        textAlign: 'center',
+        textDecoration: 'none',
+        backgroundColor: '#FFFFFF',
+        border: '1px solid rgb(181, 210, 255)',
+        borderRadius: '4px',
+        boxShadow:'rgb(201, 201, 201) 0px 0px 33px 5px'
+    };
+
+    var getPosition = $.fn.getPosition = function(el) {
+        return $.extend({}, (typeof el.getBoundingClientRect == 'function') ? el.getBoundingClientRect() : {
+            width: el.offsetWidth,
+            height: el.offsetHeight
+        }, this.offset());
+    };
+
+    $.fn.tip = function(text , timeout , cb ){
+        if($.isFunction(timeout)){
+            cb = timeout;
+            timeout = 1000;
+        }
+        cb = $.isFunction(cb) ? cb : function(){};
+        timeout = timeout*1 || 1000;
+        var $this = this;
+        this.each(function(){
+            var $this = $(this);
+            var $tip = $("<div ></div>").css(style_tip).html($("<div></div>").css(style_tip_text).html(text));
+            $this.after($tip);
+            var pos = $this.getPosition(this);
+
+            var tipWidth = $tip[0].offsetWidth
+            var tipHeight = $tip[0].offsetHeight
+            var css = {top: pos.top -tipHeight , left: pos.left + pos.width / 2 - tipWidth / 2};
+            $tip.offset(css);
+            $tip.animate({opacity:1});
+            var hide = function(){
+                $tip.animate({opacity:0,top:"-="+tipHeight},function(){
+                    $tip.remove();
+                    cb.call($this,$tip);
+                });
+            };
+            timeout > 0 && setTimeout(hide,timeout);
+
+            $tip.click(hide);
+        });
+        return this;
+    };
+})(window.jQuery);
