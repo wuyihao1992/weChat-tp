@@ -195,6 +195,17 @@ select,textarea{
 }
 
 /**
+ * 文字溢出
+ */
+.p{
+    display: block;
+    width: 100px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/**
  * webkit scrollbar
  */
 ::-webkit-scrollbar-track{
